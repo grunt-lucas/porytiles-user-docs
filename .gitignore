@@ -1,0 +1,11 @@
+# Sphinx build artifacts
+docsrc/_build/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# OS
+.DS_Store

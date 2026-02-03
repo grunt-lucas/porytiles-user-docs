@@ -1,0 +1,13 @@
+[project]
+name = "porytiles-user-docs"
+version = "0.1.0"
+description = "User documentation for Porytiles"
+requires-python = ">=3.10"
+dependencies = [
+    "sphinx>=7.0.0",
+    "sphinx-rtd-theme>=2.0.0",
+    "myst-parser>=2.0.0",
+]
+
+[tool.uv]
+package = false
