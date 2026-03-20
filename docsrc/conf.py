@@ -7,8 +7,10 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'Porytiles User Documentation'
-copyright = '2024, grunt-lucas'
+copyright = '2026, grunt-lucas'
 author = 'grunt-lucas'
+version = '2.0'
+release = '2.0.0'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

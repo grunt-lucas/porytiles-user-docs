@@ -3,12 +3,19 @@ Porytiles User Documentation
 
 Welcome to the Porytiles user documentation! Porytiles is a command-line tool for compiling overworld tilesets for Pokémon Generation III decompilation projects.
 
+.. note::
+
+   This documentation is for Porytiles **v2.0.0**. For documentation matching an older release,
+   checkout the corresponding `git tag <https://github.com/grunt-lucas/porytiles-user-docs/tags>`_
+   and build locally with ``cd docsrc && uv run make html``.
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
    getting-started
    guide
+   tile-sharing
    reference
 
 Getting Started
