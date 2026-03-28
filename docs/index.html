@@ -20,7 +20,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Getting Started" href="getting-started.html" /> 
+    <link rel="next" title="How the GBA + Gen III Decomp Tileset System Works" href="gba-decomp-tileset-system.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -42,12 +42,34 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Background</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="guide.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gba-decomp-tileset-system.html">How the GBA + Gen III Decomp Tileset System Works</a></li>
+<li class="toctree-l1"><a class="reference internal" href="manual-tileset-insertion.html">Inserting a Tileset Manually</a></li>
+<li class="toctree-l1"><a class="reference internal" href="porytiles-concepts.html">Porytiles Concepts and Terminology</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="creating-your-first-tileset.html">Creating Your First Tileset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="importing-an-existing-tileset.html">Importing an Existing Tileset</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">How-to Guides</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="compile-decompile-workflow.html">The Compile/Decompile Workflow</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Topics</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="palette-packing.html">Palette Packing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tile-sharing.html">Tile Sharing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="animations.html">Animations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="diagnostics.html">Understanding Diagnostics</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="metatile-attributes.html">Metatile Attributes Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli-reference.html">CLI Command Reference</a></li>
 </ul>
 
         </div>
@@ -76,26 +98,49 @@
              
   <section id="porytiles-user-documentation">
 <h1>Porytiles User Documentation<a class="headerlink" href="#porytiles-user-documentation" title="Link to this heading"></a></h1>
-<p>Welcome to the Porytiles user documentation! Porytiles is a command-line tool for compiling overworld tilesets for Pokémon Generation III decompilation projects.</p>
+<p>Welcome to the Porytiles user documentation! Porytiles is a command-line tool for compiling overworld tilesets for Pokemon Generation III decompilation projects.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>This documentation is for Porytiles <strong>v2.0.0</strong>. For documentation matching an older release,
 checkout the corresponding <a class="reference external" href="https://github.com/grunt-lucas/porytiles-user-docs/tags">git tag</a>
 and build locally with <code class="docutils literal notranslate"><span class="pre">cd</span> <span class="pre">docsrc</span> <span class="pre">&amp;&amp;</span> <span class="pre">uv</span> <span class="pre">run</span> <span class="pre">make</span> <span class="pre">html</span></code>.</p>
 </div>
+<section id="about-this-documentation">
+<h2>About This Documentation<a class="headerlink" href="#about-this-documentation" title="Link to this heading"></a></h2>
+<p>This guidebook is organized according to the <a class="reference external" href="https://diataxis.fr/">Diataxis framework</a>, a systematic approach to technical documentation that distinguishes four types of content based on the reader’s needs:</p>
+<ul class="simple">
+<li><p><strong>Explanation</strong> (Background) — understanding-oriented content that clarifies concepts, context, and the “why” behind the system. Read these pages when you want to build a mental model of how GBA tilesets and Porytiles work.</p></li>
+<li><p><strong>Tutorials</strong> (Getting Started) — learning-oriented, step-by-step walkthroughs that guide you through a complete task from start to finish. Follow these when you are new to Porytiles.</p></li>
+<li><p><strong>How-to Guides</strong> — task-oriented instructions for accomplishing specific goals. Consult these when you already understand the basics and need practical guidance for your daily workflow.</p></li>
+<li><p><strong>Reference</strong> — information-oriented, precise descriptions of configuration values, CLI commands, and data formats. Look things up here when you need exact details.</p></li>
+</ul>
+<p>The <strong>Topics</strong> section is a pragmatic hybrid of explanation and reference for Porytiles subsystems (palette packing, tile sharing, animations, diagnostics) that are too complex for a pure reference listing but too detailed for a pure conceptual overview.</p>
 <div class="toctree-wrapper compound">
-<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<p class="caption" role="heading"><span class="caption-text">Background</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="getting-started.html#installation">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="getting-started.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gba-decomp-tileset-system.html">How the GBA + Gen III Decomp Tileset System Works</a></li>
+<li class="toctree-l1"><a class="reference internal" href="manual-tileset-insertion.html">Inserting a Tileset Manually</a></li>
+<li class="toctree-l1"><a class="reference internal" href="porytiles-concepts.html">Porytiles Concepts and Terminology</a></li>
 </ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="guide.html">User Guide</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="guide.html#preparing-your-assets">Preparing Your Assets</a></li>
-<li class="toctree-l2"><a class="reference internal" href="guide.html#compiling-tilesets">Compiling Tilesets</a></li>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="creating-your-first-tileset.html">Creating Your First Tileset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="importing-an-existing-tileset.html">Importing an Existing Tileset</a></li>
 </ul>
-</li>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">How-to Guides</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="compile-decompile-workflow.html">The Compile/Decompile Workflow</a></li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Topics</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="palette-packing.html">Palette Packing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tile-sharing.html">Tile Sharing</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="tile-sharing.html#how-it-works">How It Works</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tile-sharing.html#how-alignment-works">How Alignment Works</a></li>
@@ -107,16 +152,18 @@ and build locally with <code class="docutils literal notranslate"><span class="p
 <li class="toctree-l2"><a class="reference internal" href="tile-sharing.html#acknowledgments">Acknowledgments</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="reference.html#cli-reference">CLI Reference</a></li>
-<li class="toctree-l2"><a class="reference internal" href="reference.html#configuration">Configuration</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="animations.html">Animations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="diagnostics.html">Understanding Diagnostics</a></li>
 </ul>
 </div>
-<section id="getting-started">
-<h2>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading"></a></h2>
-<p>Check out the <a class="reference internal" href="getting-started.html"><span class="doc">Getting Started</span></a> guide to install Porytiles and compile your first tileset.</p>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="metatile-attributes.html">Metatile Attributes Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli-reference.html">CLI Command Reference</a></li>
+</ul>
+</div>
 </section>
 </section>
 <section id="indices-and-tables">
@@ -131,7 +178,7 @@ and build locally with <code class="docutils literal notranslate"><span class="p
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="getting-started.html" class="btn btn-neutral float-right" title="Getting Started" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="gba-decomp-tileset-system.html" class="btn btn-neutral float-right" title="How the GBA + Gen III Decomp Tileset System Works" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

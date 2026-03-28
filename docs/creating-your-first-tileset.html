@@ -3,25 +3,25 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Search &mdash; Porytiles User Documentation 2.0.0 documentation</title>
+  <title>Creating Your First Tileset &mdash; Porytiles User Documentation 2.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/css/custom.css?v=e6b1eb62" />
 
   
-    
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="_static/documentation_options.js?v=51b770b3"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
-    <script src="_static/searchtools.js"></script>
-    <script src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="#" /> 
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Importing an Existing Tileset" href="importing-an-existing-tileset.html" />
+    <link rel="prev" title="Installation" href="installation.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -36,7 +36,7 @@
             Porytiles User Documentation
           </a>
 <div role="search">
-  <form id="rtd-search-form" class="wy-form" action="#" method="get">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
@@ -50,9 +50,9 @@
 <li class="toctree-l1"><a class="reference internal" href="porytiles-concepts.html">Porytiles Concepts and Terminology</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="creating-your-first-tileset.html">Creating Your First Tileset</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Creating Your First Tileset</a></li>
 <li class="toctree-l1"><a class="reference internal" href="importing-an-existing-tileset.html">Importing an Existing Tileset</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">How-to Guides</span></p>
@@ -87,8 +87,9 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Search</li>
+      <li class="breadcrumb-item active">Creating Your First Tileset</li>
       <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/grunt-lucas/porytiles-user-docs/blob/main/docsrc/creating-your-first-tileset.md" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -96,22 +97,32 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <noscript>
-  <div id="fallback" class="admonition warning">
-    <p class="last">
-      Please activate JavaScript to enable the search functionality.
-    </p>
-  </div>
-  </noscript>
+  <section id="creating-your-first-tileset">
+<h1>Creating Your First Tileset<a class="headerlink" href="#creating-your-first-tileset" title="Link to this heading"></a></h1>
+<div class="warning admonition">
+<p class="admonition-title">Page Status</p>
+<p>This page is a placeholder. Content coming soon.</p>
+</div>
+<p>The primary tutorial — a step-by-step walkthrough for new users:</p>
+<ul class="simple">
+<li><p>Prerequisites: working pokeemerald/expansion project, Porytiles installed, Porymap installed</p></li>
+<li><p>Preparing RGBA layer PNGs (bottom, middle, top): dimensions, transparency rules, extrinsic transparency color</p></li>
+<li><p>Writing <code class="docutils literal notranslate"><span class="pre">attributes.csv</span></code>: format, columns, <code class="docutils literal notranslate"><span class="pre">MB_NORMAL</span></code></p></li>
+<li><p>Running <code class="docutils literal notranslate"><span class="pre">porytiles2</span> <span class="pre">create-tileset</span> <span class="pre">gTileset_MyTileset</span></code></p></li>
+<li><p>What happens: directory creation, artifact generation</p></li>
+<li><p>Running <code class="docutils literal notranslate"><span class="pre">porytiles2</span> <span class="pre">compile-tileset</span> <span class="pre">gTileset_MyTileset</span></code> and viewing in Porymap</p></li>
+<li><p>Common first-time errors and how to fix them</p></li>
+</ul>
+<p><strong>Cross-references:</strong> <a class="reference internal" href="gba-decomp-tileset-system.html"><span class="doc">How the GBA + Gen III Decomp Tileset System Works</span></a> for “what is a metatile”, <a class="reference internal" href="metatile-attributes.html"><span class="doc">Metatile Attributes Reference</span></a> for attributes, <a class="reference internal" href="configuration.html"><span class="doc">Configuration Reference</span></a> for customization</p>
+</section>
 
-  
-  <div id="search-results">
-  
-  </div>
 
            </div>
           </div>
-          <footer>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="importing-an-existing-tileset.html" class="btn btn-neutral float-right" title="Importing an Existing Tileset" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
 
   <hr/>
 
@@ -133,14 +144,7 @@
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-  <script>
-    jQuery(function() { Search.loadIndex("searchindex.js"); });
-  </script>
-  
-  <script id="searchindexloader"></script>
-   
-
+  </script> 
 
 </body>
 </html>

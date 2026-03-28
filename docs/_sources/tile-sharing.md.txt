@@ -1,18 +1,18 @@
 # Tile Sharing
 
-Tile sharing is an optimization that reduces the number of unique 8x8 tiles in your compiled tileset. When two metatile subtiles have the same pixel shape but different colors — for example, a red roof and a blue roof with identical geometry — Porytiles can store a single tile image and render it with different palettes. This frees up tile slots in the GBA's limited tile memory (primary tilesets have a hard cap of ~512 tiles).
+Tile sharing is an optimization that reduces the number of unique 8x8 tiles in your compiled tileset. When two metatile subtiles have the same pixel shape but different colors (for example, a red roof and a blue roof with identical geometry), Porytiles can store a single tile image and render it with different palettes. This frees up tile slots in the GBA's limited tile memory (primary tilesets have a hard cap of ~512 tiles).
 
 ## How It Works
 
 ### GBA Tiles Are Indexed
 
-On the GBA, each 8x8 tile in `tiles.png` is a **4-bit indexed image**. Each pixel is not a color — it's a slot number (0–15) that points into one of the hardware palettes. When the GBA renders a tile, it looks up each pixel's slot number in the assigned palette to get the actual color.
+On the GBA, each 8x8 tile in `tiles.png` is a **4-bit indexed image**. Each pixel is not a color, but a slot number (0–15) that points into one of the hardware palettes. When the GBA renders a tile, it looks up each pixel's slot number in the assigned palette to get the actual color.
 
 This means the same tile image can produce completely different colors depending on which palette is assigned to it. If two palettes have different colors at the same slot positions, one tile image renders correctly with both.
 
 ### Color-Isomorphic Tiles
 
-Porytiles identifies **color-isomorphic tiles** — tiles that share the same pixel shape (which pixels form which regions) but assign different colors to those regions. For example:
+Porytiles identifies **color-isomorphic tiles**: tiles that share the same pixel shape (which pixels form which regions) but assign different colors to those regions. For example:
 
 - A tile with a red triangle on a green background
 - A tile with a blue triangle on a green background
@@ -29,25 +29,25 @@ Palette 1:  [ transparent | green | brown | BLUE  | ... ]
               slot 0        slot 1  slot 2  slot 3
 ```
 
-With this layout, an indexed tile where the triangle pixels are `3` renders as red with Palette 0 and blue with Palette 1 — using a single tile image. But if blue ended up at slot 7 instead of slot 3, you would need two separate tile images. That wastes a tile slot.
+With this layout, an indexed tile where the triangle pixels are `3` renders as red with Palette 0 and blue with Palette 1, using a single tile image. But if blue ended up at slot 7 instead of slot 3, you would need two separate tile images. That wastes a tile slot.
 
 ### The Indirect Link System
 
 Porytiles uses an **indirect link** mechanism to align palette slots. Rather than dictating "put this color at slot 5," the system creates links between corresponding colors: "this red in palette 0 and this blue in palette 1 should share the same slot index." The actual slot number is determined later during palette construction.
 
-This indirection is what makes the system flexible — it doesn't need to know final slot positions in advance.
+This indirection makes the system flexible. It doesn't need to know final slot positions in advance.
 
 ## How Alignment Works
 
 The `greedy` alignment pipeline has four stages. Understanding these helps explain the diagnostic messages you may see. We will walk through a concrete example to illustrate each stage. (The `optimal` alignment mode, not yet implemented, will use a different approach based on constraint satisfaction rather than this staged pipeline.)
 
-**Example setup:** Suppose you have two color-isomorphic tiles — a red house and a blue house with the same pixel shape. Both use transparent, brown, and green, but differ in their accent color (red vs. blue). After packing, the red house lands in Palette 0 and the blue house lands in Palette 1.
+**Example setup:** Suppose you have two color-isomorphic tiles, a red house and a blue house with the same pixel shape. Both use transparent, brown, and green, but differ in their accent color (red vs. blue). After packing, the red house lands in Palette 0 and the blue house lands in Palette 1.
 
 ### Stage 1: Build Draft Palettes
 
 Colors are assigned to palette slots sequentially, with no sharing considerations. This produces a "draft" palette layout that the system uses to map each tile to its hardware palette.
 
-In our example, the draft palettes look like this (JASC `.pal` format — each line is one slot):
+In our example, the draft palettes look like this (JASC `.pal` format, each line is one slot):
 
 ```
 Palette 00.pal (draft):               Palette 01.pal (draft):
@@ -66,7 +66,7 @@ different indexed tiles, so they can't share yet.
 
 ### Stage 2: Generate Indirect Links
 
-For each group of color-isomorphic tiles that span multiple palettes, the system identifies corresponding colors and creates indirect links between them. One member of the group is chosen as the **reference** — its palette slot layout becomes the target that other members align to.
+For each group of color-isomorphic tiles that span multiple palettes, the system identifies corresponding colors and creates indirect links between them. One member of the group is chosen as the **reference**. Its palette slot layout becomes the target that other members align to.
 
 The system picks the reference member that minimizes conflicts with prefilled (locked) palette slots in other palettes, since those slots cannot be moved.
 
@@ -78,7 +78,7 @@ blue  in Palette 1 → red   in Palette 0   ("put blue at whatever slot Palette 
 green in Palette 1 → green in Palette 0   ("put green at whatever slot Palette 0's green gets")
 ```
 
-Links reference colors, not slot numbers. This is important: it means the links remain valid even if other (non-shared) colors shift around during final palette construction.
+Links reference colors, not slot numbers. The links remain valid even if other (non-shared) colors shift around during final palette construction.
 
 ### Stage 3: Rebuild Palettes with Links
 
@@ -88,7 +88,7 @@ Palettes are rebuilt from scratch with the indirect links applied:
 2. Colors with indirect links are resolved: follow the link to find where the reference color landed, and place the linked color at the same slot.
 3. If the target slot is already occupied by a non-locked color, the occupant is **evicted** to the next available slot.
 
-In our example, Palette 0 is the reference palette, so it rebuilds identically — its colors weren't linked *from* anywhere. Palette 1 is rebuilt as follows:
+In our example, Palette 0 is the reference palette, so it rebuilds identically. Its colors weren't linked *from* anywhere. Palette 1 is rebuilt as follows:
 
 1. **Sequential fill for non-linked colors**: pink is not involved in any link, so it fills sequentially → slot 1.
 2. **Resolve brown**: brown in Palette 1 is linked to brown in Palette 0, which is at slot 1. But slot 1 is occupied by pink! Pink is **evicted** to the next free slot (slot 4). Brown is placed at slot 1.
@@ -111,18 +111,18 @@ Now brown, the accent color (red/blue), and green occupy the same slots (1, 2, 3
 
 This stage can also produce **shared color conflicts** and **prefilled source conflicts**.
 When multiple shape groups share a common color (e.g., brown) in the same palette, each group creates a link for that color pointing to a different reference palette.
-The system applies links in order — the first group's link wins, and later groups' links for the same color are silently dropped.
+The system applies links in order: the first group's link wins, and later groups' links for the same color are silently dropped.
 The losing group's alignment fails because the shared color ends up at a slot chosen by the winning group, not the slot the losing group needed.
 The diagnostic reports these as "Shared color conflict" failures under each affected group (see [Shared Color Conflicts](#shared-color-conflicts) below).
-Additionally, if a link's source color is prefilled (locked) in its palette, the link is dropped entirely — see [Prefilled Source Conflicts](#prefilled-source-conflicts).
+Additionally, if a link's source color is prefilled (locked) in its palette, the link is dropped entirely (see [Prefilled Source Conflicts](#prefilled-source-conflicts)).
 
 ### Stage 4: Verify Alignment
 
 Each color-isomorphic group is checked against the final palettes. The system indexes each member's tile against its assigned palette and checks whether all members produce identical indexed output. Groups where every member matches are confirmed as sharing-aligned, and the duplicate tiles are removed.
 
-Verification can be **partial** — not all members of a group may produce matching indexed output. If some members' indexed tiles diverge from the reference (e.g., due to link resolution failures affecting only some palettes), those members are dropped from the sharing result. The group can still succeed with the remaining subset, as long as at least two members across at least two palettes still align. In this case, the group is reported as "partially succeeded" rather than "succeeded."
+Verification can be **partial**. Not all members of a group may produce matching indexed output. If some members' indexed tiles diverge from the reference (e.g., due to link resolution failures affecting only some palettes), those members are dropped from the sharing result. The group can still succeed with the remaining subset, as long as at least two members across at least two palettes still align. In this case, the group is reported as "partially succeeded" rather than "succeeded."
 
-In our example, both the red house and blue house now index as `{1, 2, 3}` — identical indexed tiles. One tile image is stored in `tiles.png`, and the GBA renders it with Palette 0 (showing red) or Palette 1 (showing blue) as needed. One tile slot saved.
+In our example, both the red house and blue house now index as `{1, 2, 3}`: identical indexed tiles. One tile image is stored in `tiles.png`, and the GBA renders it with Palette 0 (showing red) or Palette 1 (showing blue) as needed. One tile slot saved.
 
 ## Configuration
 
@@ -176,7 +176,7 @@ Or via CLI flags:
 --tile-sharing-packing biased --tile-sharing-alignment greedy
 ```
 
-Using `biased` packing is the single biggest improvement — it actively distributes color-isomorphic tiles across palettes, giving the alignment system more opportunities to work with.
+Using `biased` packing is the single biggest improvement. It actively distributes color-isomorphic tiles across palettes, giving the alignment system more opportunities to work with.
 
 ## Reading the Diagnostics
 
@@ -205,13 +205,13 @@ If your packing is `off`, this remark includes a caveat explaining that the pale
 
 ### `tile-sharing-palette-partition-summary`
 
-Emitted after all Phase 2 per-group remarks. Shows how many of the detected groups survived palette packing — i.e., ended up spanning multiple palettes:
+Emitted after all Phase 2 per-group remarks. Shows how many of the detected groups survived palette packing, i.e., ended up spanning multiple palettes:
 
 > Tile sharing partition: '9' of '17' shape group(s) eligible for sharing after palette packing.
 
 ### `tile-sharing-result-<N>`
 
-Shows groups that were **successfully aligned** — tiles that will actually be deduplicated in the output. For each group, you will see a representative tile per palette and the metatile entries that reference it.
+Shows groups that were **successfully aligned**, i.e., tiles that will actually be deduplicated in the output. For each group, you will see a representative tile per palette and the metatile entries that reference it.
 
 There are two outcomes:
 
@@ -222,7 +222,7 @@ If your alignment is `off`, this remark includes a caveat explaining that any al
 
 ### `tile-sharing-result-summary`
 
-The aggregate summary, showing the full pipeline funnel — how many groups were detected, how many were eligible after packing, and how many were ultimately aligned. For example:
+The aggregate summary, showing the full pipeline funnel: how many groups were detected, how many were eligible after packing, and how many were ultimately aligned. For example:
 
 > Tile sharing summary:
 > '17' detected → '9' eligible after packing → '9' aligned.
@@ -239,9 +239,9 @@ A "Partially aligned groups" sub-section appears before any unaligned groups, sh
 
 If any groups failed to align entirely, the summary provides additional detail:
 
-- **Unaligned group listing with per-group failures** — Each unaligned group is shown with its color versions, which palette(s) each version ended up in (e.g., "Version '1' assigned to palette(s): '03.pal'."), and an inline failure breakdown showing why *that specific group* failed to align. For example:
+- **Unaligned group listing with per-group failures.** Each unaligned group is shown with its color versions, which palette(s) each version ended up in (e.g., "Version '1' assigned to palette(s): '03.pal'."), and an inline failure breakdown showing why *that specific group* failed to align. For example:
 
-  > Unaligned group (group id '5') — '2' color version(s):
+  > Unaligned group (group id '5'), '2' color version(s):
   >   [tile art]
   >   Version '1' assigned to palette(s): '03.pal'.
   >   Version '2' assigned to palette(s): '01.pal'.
@@ -254,7 +254,7 @@ If any groups failed to align entirely, the summary provides additional detail:
   >       '01.pal': color (...) linked to '03.pal' by group '2',
   >         this group wanted ref color (...) in '05.pal'.
 
-- **Aggregate total** — After all unaligned groups, a one-line summary of total link resolution failures across all groups, followed by actionable suggestions. See [Understanding Alignment Failures](#understanding-alignment-failures) for what each failure type means.
+- **Aggregate total.** After all unaligned groups, a one-line summary of total link resolution failures across all groups, followed by actionable suggestions. See [Understanding Alignment Failures](#understanding-alignment-failures) for what each failure type means.
 
 (understanding-alignment-failures)=
 ## Understanding Alignment Failures
@@ -274,17 +274,17 @@ A very common type of alignment failure. Under each affected group, the diagnost
 
 Each detail line shows both sides of the conflict: which group won the color's link (and to which reference palette), and which reference the losing group wanted instead.
 
-This happens when multiple shape groups share a common color in the same palette — common colors like brown, green, or gray often appear in many tile groups. Each group creates an indirect link for the shared color pointing to a different reference palette and target slot. Since a color can only have one link, the system applies the first link it encounters and silently drops subsequent ones (first-writer-wins).
+This happens when multiple shape groups share a common color in the same palette. Common colors like brown, green, or gray often appear in many tile groups. Each group creates an indirect link for the shared color pointing to a different reference palette and target slot. Since a color can only have one link, the system applies the first link it encounters and silently drops later ones (first-writer-wins).
 
 The losing group's alignment fails because the shared color lands at the slot chosen by the winning group, not the slot the losing group needed.
 
 ```{note}
-When two groups both link the same color to the *same* reference (same palette, same color), the links are **compatible** — the existing link already satisfies both groups. Compatible links are automatically detected and are **not** reported as conflicts. Only genuinely incompatible links (different reference palette or different reference color) appear in the diagnostic output.
+When two groups both link the same color to the *same* reference (same palette, same color), the links are **compatible**. The existing link already satisfies both groups. Compatible links are automatically detected and are **not** reported as conflicts. Only genuinely incompatible links (different reference palette or different reference color) appear in the diagnostic output.
 
-In practice, color variants of the same visual element — for example, a red building and a blue building with identical tile geometry — naturally produce compatible links. Their shape groups all create links pointing in the same direction for any shared colors, so no conflicts arise. Conflicts typically occur between shape groups from *different* visual elements that happen to share a common color in the same palette. For example, a building's shape group might link a shared green to a brown in another palette (because green and brown are corresponding colors in the building's two variants), while a tree's shape group links that same green to a yellow in a third palette (because green and yellow correspond in the tree's variants). Same source color, different destinations — that is a conflict.
+In practice, color variants of the same visual element (for example, a red building and a blue building with identical tile geometry) naturally produce compatible links. Their shape groups all create links pointing in the same direction for any shared colors, so no conflicts arise. Conflicts typically occur between shape groups from *different* visual elements that happen to share a common color in the same palette. For example, a building's shape group might link a shared green to a brown in another palette (because green and brown are corresponding colors in the building's two variants), while a tree's shape group links that same green to a yellow in a third palette (because green and yellow correspond in the tree's variants). Same source color, different destinations. That is a conflict.
 ```
 
-**This is a fundamental limitation of greedy alignment.** The `optimal` alignment (not yet implemented) would resolve these conflicts globally using constraint satisfaction, finding slot assignments that satisfy all groups simultaneously rather than processing them one at a time.
+**Greedy alignment cannot resolve this.** The `optimal` alignment (not yet implemented) would resolve these conflicts globally using constraint satisfaction, finding slot assignments that satisfy all groups simultaneously rather than processing them one at a time.
 
 (prefilled-source-conflicts)=
 ### Prefilled Source Conflicts
@@ -317,12 +317,12 @@ All indirect links for this group were applied and resolved successfully, but th
 > Post-resolution slot mismatch: 'N'.
 >   '01.pal': color '(R, G, B)' ended at slot '15', but ref color '(R, G, B)' in '03.pal' is at slot '14'.
 
-The greedy alignment processes palettes sequentially (palette 0 first, then 1, 2, ...). When palette 1 resolves its links against palette 3's current state, and palette 3 is later processed and its own resolutions evict colors to different slots, palette 1's already-resolved positions become stale. This is a fundamental limitation of the sequential greedy approach — the `optimal` alignment (not yet implemented) would resolve all palettes globally and avoid these cascading evictions.
+The greedy alignment processes palettes sequentially (palette 0 first, then 1, 2, ...). When palette 1 resolves its links against palette 3's current state, and palette 3 is later processed and its own resolutions evict colors to different slots, palette 1's already-resolved positions become stale. The `optimal` alignment (not yet implemented) would resolve all palettes globally and avoid these cascading evictions.
 
 (improving-tile-sharing-results)=
 ## Improving Tile Sharing Results
 
-Tile sharing is **best-effort**. Not every color-isomorphic group will align successfully, and that is normal. Individual groups can also partially succeed — some members share a tile while others fall back to separate tiles due to alignment divergence. Even partial sharing can significantly reduce your tile count. Here are ways to improve results:
+Tile sharing is **best-effort**. Not every color-isomorphic group will align successfully, and that is normal. Individual groups can also partially succeed: some members share a tile while others fall back to separate tiles due to alignment divergence. Even partial sharing can significantly reduce your tile count. Here are ways to improve results:
 
 **Use `biased` packing.** This is the single most impactful change. It actively distributes color-isomorphic tiles across different palettes, giving the alignment system more groups to work with. Without it, tiles may cluster in the same palette where sharing is impossible.
 
@@ -330,9 +330,9 @@ Tile sharing is **best-effort**. Not every color-isomorphic group will align suc
 
 **If you see prefilled source conflicts,** a color that needs to be linked is itself locked in its palette. The diagnostic shows which prefilled color is blocking the link. If that color is not critical at its current position, rearranging or wildcarding it may allow the link to be applied.
 
-**If you see shared color conflicts,** the detail lines show which groups are competing and what reference each wanted. Multiple shape groups are competing for the same color's slot position. This is a fundamental limitation of greedy alignment — the `optimal` alignment (not yet implemented) would resolve these globally. In the meantime, shared color conflicts are expected and usually harmless; the groups that *did* align represent genuine savings. Note that compatible links (where two groups want the same reference) are automatically detected and not reported as conflicts.
+**If you see shared color conflicts,** the detail lines show which groups are competing and what reference each wanted. Multiple shape groups are competing for the same color's slot position. Greedy alignment cannot resolve these conflicts. The `optimal` alignment (not yet implemented) would handle them globally. In the meantime, shared color conflicts are expected and usually harmless; the groups that *did* align represent genuine savings. Note that compatible links (where two groups want the same reference) are automatically detected and not reported as conflicts.
 
-**If you see post-resolution slot mismatches,** colors were displaced by eviction after they were already successfully placed. The detail lines show the final slot positions for each mismatched color pair. This is an inherent limitation of the sequential greedy approach. The `optimal` alignment (not yet implemented) would avoid these cascading evictions by considering all palette constraints simultaneously.
+**If you see post-resolution slot mismatches,** colors were displaced by eviction after they were already successfully placed. The detail lines show the final slot positions for each mismatched color pair. The sequential greedy approach cannot prevent these cascading evictions. The `optimal` alignment (not yet implemented) would avoid them by considering all palette constraints simultaneously.
 
 **Design tiles with sharing in mind.** Tiles that share the same geometric pattern (identical pixel layout, different colors) are sharing candidates. When creating color variants of buildings, terrain, or other elements, keeping the pixel shape exactly the same maximizes sharing potential. Even a single pixel difference breaks the color-isomorphic relationship.
 
@@ -341,7 +341,7 @@ Tile sharing is **best-effort**. Not every color-isomorphic group will align suc
 
 You can control which tile sharing diagnostics appear in the output using the `--diagnostic-remarks-exclude` and `--diagnostic-remarks-include` CLI flags (or their YAML equivalents). These accept regex patterns matched against the remark tag names.
 
-Both flags are list-valued — repeat them on the CLI to specify multiple patterns:
+Both flags are list-valued. Repeat them on the CLI to specify multiple patterns:
 
 ```
 --diagnostic-remarks-exclude 'pattern1' --diagnostic-remarks-exclude 'pattern2'
@@ -392,7 +392,7 @@ Porytiles' tile sharing system draws significant design inspiration from [boryti
 
 - **Color isomorphism detection.** Borytiles introduced the concept of representing tiles as shape-indexed structures (mapping pixel regions to color indices) and grouping them by canonical shape. Porytiles2 adapts borytiles' `Shape_indexable_tile` and `get_ideal_flip` canonicalization into its own `ShapeTile`, `ShapeMask`, and `CanonicalShapeTile` types.
 
-- **Indirect position linking.** Borytiles' `Position_in_palette` enum demonstrated that palette slot assignment can be decoupled from palette construction by linking colors to other colors rather than to absolute slot indices. This insight — that links referencing colors remain valid even when non-shared colors shift around — is the foundation of Porytiles' `IndirectPosition` system.
+- **Indirect position linking.** Borytiles' `Position_in_palette` enum demonstrated that palette slot assignment can be decoupled from palette construction by linking colors to other colors rather than to absolute slot indices. The key insight is that links referencing colors remain valid even when non-shared colors shift around. This is the foundation of Porytiles' `IndirectPosition` system.
 
 - **Greedy alignment algorithm.** Borytiles' `account_for_palette_swaps` function showed how to detect same-shape tiles across different palettes and emit indirect links pairing their corresponding colors. Porytiles2 extends this approach with a conflict-minimization heuristic for reference member selection and integrates the link generation into a multi-phase pipeline with diagnostic reporting.
 
