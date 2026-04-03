@@ -77,6 +77,13 @@
 <li class="toctree-l3"><a class="reference internal" href="#stage-4-verify-alignment">Stage 4: Verify Alignment</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#cross-tileset-sharing">Cross-Tileset Sharing</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id2">How It Works</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#why-it-matters">Why It Matters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#automatic-behavior">Automatic Behavior</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#diagnostics">Diagnostics</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#configuration">Configuration</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#packing">Packing</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#alignment">Alignment</a></li>
@@ -156,6 +163,7 @@
 <li><p>A tile with a blue triangle on a green background</p></li>
 </ul>
 <p>These two tiles have identical geometry (the triangle occupies the same pixels), just with different colors in some regions. They are candidates for tile sharing.</p>
+<p>For secondary tilesets compiled with a paired primary, color-isomorphic detection extends across the tileset boundary. Tiles in the secondary can share tile images with tiles already present in the primary. See <a class="reference internal" href="#cross-tileset-sharing">Cross-Tileset Sharing</a> for details.</p>
 </section>
 <section id="slot-alignment">
 <h3>Slot Alignment<a class="headerlink" href="#slot-alignment" title="Link to this heading"></a></h3>
@@ -247,6 +255,37 @@ Additionally, if a link’s source color is prefilled (locked) in its palette, t
 <p>In our example, both the red house and blue house now index as <code class="docutils literal notranslate"><span class="pre">{1,</span> <span class="pre">2,</span> <span class="pre">3}</span></code>: identical indexed tiles. One tile image is stored in <code class="docutils literal notranslate"><span class="pre">tiles.png</span></code>, and the GBA renders it with Palette 0 (showing red) or Palette 1 (showing blue) as needed. One tile slot saved.</p>
 </section>
 </section>
+<section id="cross-tileset-sharing">
+<span id="id1"></span><h2>Cross-Tileset Sharing<a class="headerlink" href="#cross-tileset-sharing" title="Link to this heading"></a></h2>
+<p>When compiling a secondary tileset with a paired primary, Porytiles extends shape group analysis across the tileset boundary. Tiles in the secondary that are color-isomorphic with tiles already present in the compiled primary can share tile images, freeing slots in the secondary’s tile memory.</p>
+<section id="id2">
+<h3>How It Works<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<p>The compiler reconstructs the primary’s tiles from its compiled <code class="docutils literal notranslate"><span class="pre">tiles.png</span></code> and palette data, converting them back to RGBA pixel tiles. These reconstructed tiles are then included alongside the secondary’s own tiles during shape group analysis. If a secondary tile and a primary tile share the same pixel shape (differing only in color), they form a color-isomorphic group that spans the tileset boundary.</p>
+<p>Primary tiles have <strong>fixed palette assignments</strong>. They are already compiled and their palette slots cannot be moved. During alignment, primary tile members act as immovable references: the secondary’s palette slots are adjusted to match the primary’s existing layout, never the other way around.</p>
+</section>
+<section id="why-it-matters">
+<h3>Why It Matters<a class="headerlink" href="#why-it-matters" title="Link to this heading"></a></h3>
+<p>Secondary tilesets have their own tile slot budget. Without cross-tileset sharing, the secondary must store its own copy of every tile image, even if an identical shape already exists in the primary. Cross-tileset sharing lets the secondary reuse tile images from the primary, freeing those slots for other tiles.</p>
+</section>
+<section id="automatic-behavior">
+<h3>Automatic Behavior<a class="headerlink" href="#automatic-behavior" title="Link to this heading"></a></h3>
+<p>No additional configuration is required. Cross-tileset sharing happens automatically whenever:</p>
+<ol class="arabic simple">
+<li><p>You are compiling a secondary tileset with a paired primary.</p></li>
+<li><p>Tile sharing settings (packing and/or alignment) are active.</p></li>
+</ol>
+<p>If tile sharing is disabled entirely (both packing and alignment set to <code class="docutils literal notranslate"><span class="pre">off</span></code>), cross-tileset analysis is still performed for diagnostic purposes but has no effect on the output.</p>
+</section>
+<section id="diagnostics">
+<h3>Diagnostics<a class="headerlink" href="#diagnostics" title="Link to this heading"></a></h3>
+<p>Cross-tileset groups appear in the standard tile sharing diagnostics (see <a class="reference internal" href="#reading-the-diagnostics">Reading the Diagnostics</a>). When primary tiles are part of a shape group, the diagnostics include additional annotations:</p>
+<ul class="simple">
+<li><p><strong>Phase 1</strong> (<code class="docutils literal notranslate"><span class="pre">tile-sharing-shareable-tiles-&lt;N&gt;</span></code>): Shows the count of color versions originating from the paired primary, e.g., “‘2’ color version(s) from paired primary.” Primary tile art is displayed alongside the secondary’s color versions.</p></li>
+<li><p><strong>Phase 2</strong> (<code class="docutils literal notranslate"><span class="pre">tile-sharing-palette-partition-&lt;N&gt;</span></code>): Notes “Includes cross-tileset member(s) from paired primary.” when primary tiles are present in the partition group.</p></li>
+<li><p><strong>Phase 3</strong> (<code class="docutils literal notranslate"><span class="pre">tile-sharing-result-&lt;N&gt;</span></code>): Notes “Includes cross-tileset member(s) from paired primary.” when aligned groups include primary tile members. Representative tiles per palette are shown for both secondary and primary members.</p></li>
+</ul>
+</section>
+</section>
 <section id="configuration">
 <h2>Configuration<a class="headerlink" href="#configuration" title="Link to this heading"></a></h2>
 <p>Tile sharing is controlled by two configuration options that work together: one controls how tiles are distributed across palettes during packing, and the other controls whether palette slot alignment is attempted.</p>
@@ -306,7 +345,7 @@ Additionally, if a link’s source color is prefilled (locked) in its palette, t
 </section>
 </section>
 <section id="reading-the-diagnostics">
-<h2>Reading the Diagnostics<a class="headerlink" href="#reading-the-diagnostics" title="Link to this heading"></a></h2>
+<span id="id3"></span><h2>Reading the Diagnostics<a class="headerlink" href="#reading-the-diagnostics" title="Link to this heading"></a></h2>
 <p>Porytiles emits several diagnostic remarks during tile sharing analysis. Each is tagged with a name you can use to filter output (see <a class="reference internal" href="#filtering-diagnostics">Filtering Diagnostics</a>).</p>
 <section id="tile-sharing-shareable-tiles-n">
 <h3><code class="docutils literal notranslate"><span class="pre">tile-sharing-shareable-tiles-&lt;N&gt;</span></code><a class="headerlink" href="#tile-sharing-shareable-tiles-n" title="Link to this heading"></a></h3>
@@ -316,25 +355,29 @@ Additionally, if a link’s source color is prefilled (locked) in its palette, t
 <li><p>Which metatile entries reference these tiles</p></li>
 </ul>
 <p>This remark is always emitted when shape groups are detected, regardless of your configuration. It tells you: “these tiles <em>could</em> share if alignment succeeds.”</p>
+<p>When compiling a secondary tileset with a paired primary, groups that include primary tiles show an additional count line: “‘N’ color version(s) from paired primary.” The primary tile art is displayed after the secondary’s color versions.</p>
 </section>
 <section id="tile-sharing-shareable-tiles-summary">
 <h3><code class="docutils literal notranslate"><span class="pre">tile-sharing-shareable-tiles-summary</span></code><a class="headerlink" href="#tile-sharing-shareable-tiles-summary" title="Link to this heading"></a></h3>
 <p>Emitted after all Phase 1 per-group remarks. Shows how many shareable shape groups were detected in total:</p>
-<blockquote>
-<div><p>Tile sharing detection: ‘17’ shareable shape group(s) found.</p>
-</div></blockquote>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>TODO: insert screencap of the <code class="docutils literal notranslate"><span class="pre">tile-sharing-shareable-tiles-summary</span></code> remark showing the total count of shareable shape groups detected.</p>
+</div>
 </section>
 <section id="tile-sharing-palette-partition-n">
 <h3><code class="docutils literal notranslate"><span class="pre">tile-sharing-palette-partition-&lt;N&gt;</span></code><a class="headerlink" href="#tile-sharing-palette-partition-n" title="Link to this heading"></a></h3>
 <p>After palette packing, shows which palettes each color version landed in. Groups where members span two or more palettes are <strong>eligible</strong> for sharing (a tile can only be shared across palettes, not within the same one).</p>
 <p>If your packing is <code class="docutils literal notranslate"><span class="pre">off</span></code>, this remark includes a caveat explaining that the palette distribution is coincidental and may improve with <code class="docutils literal notranslate"><span class="pre">biased</span></code> packing.</p>
+<p>When primary tiles are present in the partition group, the remark includes the annotation “Includes cross-tileset member(s) from paired primary.” Representative tile art is shown for both secondary and primary members.</p>
 </section>
 <section id="tile-sharing-palette-partition-summary">
 <h3><code class="docutils literal notranslate"><span class="pre">tile-sharing-palette-partition-summary</span></code><a class="headerlink" href="#tile-sharing-palette-partition-summary" title="Link to this heading"></a></h3>
 <p>Emitted after all Phase 2 per-group remarks. Shows how many of the detected groups survived palette packing, i.e., ended up spanning multiple palettes:</p>
-<blockquote>
-<div><p>Tile sharing partition: ‘9’ of ‘17’ shape group(s) eligible for sharing after palette packing.</p>
-</div></blockquote>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>TODO: insert screencap of the <code class="docutils literal notranslate"><span class="pre">tile-sharing-palette-partition-summary</span></code> remark showing how many detected groups survived palette packing.</p>
+</div>
 </section>
 <section id="tile-sharing-result-n">
 <h3><code class="docutils literal notranslate"><span class="pre">tile-sharing-result-&lt;N&gt;</span></code><a class="headerlink" href="#tile-sharing-result-n" title="Link to this heading"></a></h3>
@@ -345,59 +388,49 @@ Additionally, if a link’s source color is prefilled (locked) in its palette, t
 <li><p><strong>Partial success</strong> (“Tile sharing partially succeeded”): Some members aligned, but others diverged and were dropped. The remark shows how many color versions diverged, separated by a <code class="docutils literal notranslate"><span class="pre">--------</span></code> divider. The group still shares tiles among the aligned subset.</p></li>
 </ul>
 <p>If your alignment is <code class="docutils literal notranslate"><span class="pre">off</span></code>, this remark includes a caveat explaining that any alignment is coincidental and may improve with <code class="docutils literal notranslate"><span class="pre">greedy</span></code> alignment.</p>
+<p>When aligned groups include primary tile members, the remark includes the annotation “Includes cross-tileset member(s) from paired primary.” Representative tiles per palette are shown for both secondary and primary members.</p>
 </section>
 <section id="tile-sharing-result-summary">
 <h3><code class="docutils literal notranslate"><span class="pre">tile-sharing-result-summary</span></code><a class="headerlink" href="#tile-sharing-result-summary" title="Link to this heading"></a></h3>
-<p>The aggregate summary, showing the full pipeline funnel: how many groups were detected, how many were eligible after packing, and how many were ultimately aligned. For example:</p>
-<blockquote>
-<div><p>Tile sharing summary:
-‘17’ detected → ‘9’ eligible after packing → ‘9’ aligned.</p>
-</div></blockquote>
-<p>When any groups are partially aligned, the aligned count includes a breakdown:</p>
-<blockquote>
-<div><p>Tile sharing summary:
-‘17’ detected → ‘9’ eligible after packing → ‘9’ aligned (‘8’ fully, ‘1’ partially).</p>
-</div></blockquote>
-<p>A “Partially aligned groups” sub-section appears before any unaligned groups, showing per-group dropped color version counts:</p>
-<blockquote>
-<div><p>Partially aligned groups:
-Group ‘16’: ‘3’ color version(s) dropped.</p>
-</div></blockquote>
+<p>The aggregate summary, showing the full pipeline funnel: how many groups were detected, how many were eligible after packing, and how many were ultimately aligned.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>TODO: insert screencap of the <code class="docutils literal notranslate"><span class="pre">tile-sharing-result-summary</span></code> header line showing the pipeline funnel (detected -&gt; eligible after packing -&gt; aligned).</p>
+</div>
+<p>When any groups are partially aligned, the aligned count includes a breakdown of how many groups were fully aligned vs. partially aligned.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>TODO: insert screencap of the <code class="docutils literal notranslate"><span class="pre">tile-sharing-result-summary</span></code> header line when partial alignments are present, showing the “N aligned (X fully, Y partially)” breakdown.</p>
+</div>
+<p>A “Partially aligned groups” sub-section appears before any unaligned groups, showing per-group dropped color version counts.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>TODO: insert screencap of the “Partially aligned groups” sub-section listing per-group dropped color version counts.</p>
+</div>
 <p>If any groups failed to align entirely, the summary provides additional detail:</p>
 <ul>
-<li><p><strong>Unaligned group listing with per-group failures.</strong> Each unaligned group is shown with its color versions, which palette(s) each version ended up in (e.g., “Version ‘1’ assigned to palette(s): ‘03.pal’.”), and an inline failure breakdown showing why <em>that specific group</em> failed to align. For example:</p>
-<blockquote>
-<div><p>Unaligned group (group id ‘5’), ‘2’ color version(s):
-[tile art]
-Version ‘1’ assigned to palette(s): ‘03.pal’.
-Version ‘2’ assigned to palette(s): ‘01.pal’.
-‘3’ link failure(s) for this group:
-Prefilled destination conflict: ‘1’.
-Palette ‘03.pal’ slot ‘5’: color (…) blocked by locked color (…).
-Shared color conflict: ‘2’.
-‘01.pal’: color (…) linked to ‘03.pal’ by group ‘0’,
-this group wanted ref color (…) in ‘05.pal’.
-‘01.pal’: color (…) linked to ‘03.pal’ by group ‘2’,
-this group wanted ref color (…) in ‘05.pal’.</p>
-</div></blockquote>
+<li><p><strong>Unaligned group listing with per-group failures.</strong> Each unaligned group is shown with its color versions, which palette(s) each version ended up in (e.g., “Version ‘1’ assigned to palette(s): ‘03.pal’.”), and an inline failure breakdown showing why <em>that specific group</em> failed to align.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>TODO: insert screencap of an unaligned-group entry showing the group id, the color-version tile art, the per-version palette assignments, and the inline link-failure breakdown (prefilled destination conflicts, shared color conflicts, etc.).</p>
+</div>
 </li>
 <li><p><strong>Aggregate total.</strong> After all unaligned groups, a one-line summary of total link resolution failures across all groups, followed by actionable suggestions. See <a class="reference internal" href="#understanding-alignment-failures">Understanding Alignment Failures</a> for what each failure type means.</p></li>
 </ul>
 </section>
 </section>
 <section id="understanding-alignment-failures">
-<span id="id1"></span><h2>Understanding Alignment Failures<a class="headerlink" href="#understanding-alignment-failures" title="Link to this heading"></a></h2>
+<span id="id4"></span><h2>Understanding Alignment Failures<a class="headerlink" href="#understanding-alignment-failures" title="Link to this heading"></a></h2>
 <p>When alignment is active, each failure is attributed to the shape group that caused it.
 Failures appear inline under each unaligned group in the <code class="docutils literal notranslate"><span class="pre">tile-sharing-result-summary</span></code> remark,
 with counts and detail lines specific to that group.</p>
 <section id="shared-color-conflicts">
-<span id="id2"></span><h3>Shared Color Conflicts<a class="headerlink" href="#shared-color-conflicts" title="Link to this heading"></a></h3>
-<p>A very common type of alignment failure. Under each affected group, the diagnostic will show a count followed by per-record detail lines:</p>
-<blockquote>
-<div><p>Shared color conflict: ‘N’.
-‘01.pal’: color ‘(R, G, B)’ linked to ‘03.pal’ by group ‘0’,
-this group wanted ref color ‘(R, G, B)’ in ‘05.pal’.</p>
-</div></blockquote>
+<span id="id5"></span><h3>Shared Color Conflicts<a class="headerlink" href="#shared-color-conflicts" title="Link to this heading"></a></h3>
+<p>A very common type of alignment failure. Under each affected group, the diagnostic will show a count followed by per-record detail lines.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>TODO: insert screencap of a “Shared color conflict” failure entry showing the count line and a per-record “linked to” detail line that names the winning group and reference palette alongside the losing group’s desired reference.</p>
+</div>
 <p>Each detail line shows both sides of the conflict: which group won the color’s link (and to which reference palette), and which reference the losing group wanted instead.</p>
 <p>This happens when multiple shape groups share a common color in the same palette. Common colors like brown, green, or gray often appear in many tile groups. Each group creates an indirect link for the shared color pointing to a different reference palette and target slot. Since a color can only have one link, the system applies the first link it encounters and silently drops later ones (first-writer-wins).</p>
 <p>The losing group’s alignment fails because the shared color lands at the slot chosen by the winning group, not the slot the losing group needed.</p>
@@ -409,37 +442,37 @@ this group wanted ref color ‘(R, G, B)’ in ‘05.pal’.</p>
 <p><strong>Greedy alignment cannot resolve this.</strong> The <code class="docutils literal notranslate"><span class="pre">optimal</span></code> alignment (not yet implemented) would resolve these conflicts globally using constraint satisfaction, finding slot assignments that satisfy all groups simultaneously rather than processing them one at a time.</p>
 </section>
 <section id="prefilled-source-conflicts">
-<span id="id3"></span><h3>Prefilled Source Conflicts<a class="headerlink" href="#prefilled-source-conflicts" title="Link to this heading"></a></h3>
-<p>A color that needs to be linked to a reference in another palette is itself <strong>prefilled (locked)</strong> in its source palette. Under each affected group, the diagnostic shows which palette and colors are involved:</p>
-<blockquote>
-<div><p>Prefilled source conflict: ‘N’.
-Palette ‘01.pal’: prefilled color ‘(R, G, B)’ could not be linked to color ‘(R, G, B)’ in palette ‘00.pal’.</p>
-</div></blockquote>
+<span id="id6"></span><h3>Prefilled Source Conflicts<a class="headerlink" href="#prefilled-source-conflicts" title="Link to this heading"></a></h3>
+<p>A color that needs to be linked to a reference in another palette is itself <strong>prefilled (locked)</strong> in its source palette. Under each affected group, the diagnostic shows which palette and colors are involved.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>TODO: insert screencap of a “Prefilled source conflict” failure entry showing the count line and the detail line naming the locked source color, its source palette, and the reference color and palette the link targeted.</p>
+</div>
 <p>Because the color is locked at its current slot, the alignment system cannot reassign it to follow the reference color’s slot position. The link is dropped entirely and the shape group’s alignment fails.</p>
 <p>This is distinct from a <a class="reference internal" href="#prefilled-destination-conflicts">prefilled destination conflict</a>, where the <em>destination</em> slot is blocked by a locked color. Here, the <em>source</em> color itself is locked and cannot participate in linking at all.</p>
 <p>If the prefilled color is not critical at its current position, rearranging or wildcarding it in your palette files may allow the link to be applied.</p>
 </section>
 <section id="prefilled-destination-conflicts">
-<span id="id4"></span><h3>Prefilled Destination Conflicts<a class="headerlink" href="#prefilled-destination-conflicts" title="Link to this heading"></a></h3>
-<p>A color needs to go at a specific slot to match another palette, but that destination slot is already occupied by a <strong>prefilled (locked)</strong> color from your input palettes. Under each affected group, the diagnostic shows exactly which palette, slot, and colors are involved:</p>
-<blockquote>
-<div><p>Prefilled destination conflict: ‘N’.
-Palette ‘03.pal’ slot ‘5’: color ‘(R, G, B)’ blocked by locked color ‘(R, G, B)’.</p>
-</div></blockquote>
+<span id="id7"></span><h3>Prefilled Destination Conflicts<a class="headerlink" href="#prefilled-destination-conflicts" title="Link to this heading"></a></h3>
+<p>A color needs to go at a specific slot to match another palette, but that destination slot is already occupied by a <strong>prefilled (locked)</strong> color from your input palettes. Under each affected group, the diagnostic shows exactly which palette, slot, and colors are involved.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>TODO: insert screencap of a “Prefilled destination conflict” failure entry showing the count line and the detail line naming the blocked palette, slot index, incoming color, and the locked color occupying the slot.</p>
+</div>
 <p>Prefilled slots are colors you explicitly placed in your palette files. They cannot be moved by the alignment system. If these slots are blocking alignment, you may be able to rearrange them (see <a class="reference internal" href="#improving-tile-sharing-results">Improving Tile Sharing Results</a>).</p>
 </section>
 <section id="post-resolution-slot-mismatch">
 <h3>Post-Resolution Slot Mismatch<a class="headerlink" href="#post-resolution-slot-mismatch" title="Link to this heading"></a></h3>
-<p>All indirect links for this group were applied and resolved successfully, but the final slot positions don’t match. This happens when a <em>later</em> resolution step (for a different group or different palette) evicts a color from the slot it was placed at, displacing it to a different position. Under each affected group, the diagnostic shows where each color ended up versus where it should have been:</p>
-<blockquote>
-<div><p>Post-resolution slot mismatch: ‘N’.
-‘01.pal’: color ‘(R, G, B)’ ended at slot ‘15’, but ref color ‘(R, G, B)’ in ‘03.pal’ is at slot ‘14’.</p>
-</div></blockquote>
+<p>All indirect links for this group were applied and resolved successfully, but the final slot positions don’t match. This happens when a <em>later</em> resolution step (for a different group or different palette) evicts a color from the slot it was placed at, displacing it to a different position. Under each affected group, the diagnostic shows where each color ended up versus where it should have been.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>TODO: insert screencap of a “Post-resolution slot mismatch” failure entry showing the count line and the detail line comparing where each color actually ended up versus its intended reference slot in the other palette.</p>
+</div>
 <p>The greedy alignment processes palettes sequentially (palette 0 first, then 1, 2, …). When palette 1 resolves its links against palette 3’s current state, and palette 3 is later processed and its own resolutions evict colors to different slots, palette 1’s already-resolved positions become stale. The <code class="docutils literal notranslate"><span class="pre">optimal</span></code> alignment (not yet implemented) would resolve all palettes globally and avoid these cascading evictions.</p>
 </section>
 </section>
 <section id="improving-tile-sharing-results">
-<span id="id5"></span><h2>Improving Tile Sharing Results<a class="headerlink" href="#improving-tile-sharing-results" title="Link to this heading"></a></h2>
+<span id="id8"></span><h2>Improving Tile Sharing Results<a class="headerlink" href="#improving-tile-sharing-results" title="Link to this heading"></a></h2>
 <p>Tile sharing is <strong>best-effort</strong>. Not every color-isomorphic group will align successfully, and that is normal. Individual groups can also partially succeed: some members share a tile while others fall back to separate tiles due to alignment divergence. Even partial sharing can significantly reduce your tile count. Here are ways to improve results:</p>
 <p><strong>Use <code class="docutils literal notranslate"><span class="pre">biased</span></code> packing.</strong> This is the single most impactful change. It actively distributes color-isomorphic tiles across different palettes, giving the alignment system more groups to work with. Without it, tiles may cluster in the same palette where sharing is impossible.</p>
 <p><strong>If you see prefilled destination conflicts,</strong> the diagnostic tells you exactly which palette slots are blocking alignment and which colors are involved. If those prefilled colors are not critical to your tileset layout, rearranging them to different slot positions may allow more groups to align.</p>
@@ -449,7 +482,7 @@ Palette ‘03.pal’ slot ‘5’: color ‘(R, G, B)’ blocked by locked color
 <p><strong>Design tiles with sharing in mind.</strong> Tiles that share the same geometric pattern (identical pixel layout, different colors) are sharing candidates. When creating color variants of buildings, terrain, or other elements, keeping the pixel shape exactly the same maximizes sharing potential. Even a single pixel difference breaks the color-isomorphic relationship.</p>
 </section>
 <section id="filtering-diagnostics">
-<span id="id6"></span><h2>Filtering Diagnostics<a class="headerlink" href="#filtering-diagnostics" title="Link to this heading"></a></h2>
+<span id="id9"></span><h2>Filtering Diagnostics<a class="headerlink" href="#filtering-diagnostics" title="Link to this heading"></a></h2>
 <p>You can control which tile sharing diagnostics appear in the output using the <code class="docutils literal notranslate"><span class="pre">--diagnostic-remarks-exclude</span></code> and <code class="docutils literal notranslate"><span class="pre">--diagnostic-remarks-include</span></code> CLI flags (or their YAML equivalents). These accept regex patterns matched against the remark tag names.</p>
 <p>Both flags are list-valued. Repeat them on the CLI to specify multiple patterns:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">--</span><span class="n">diagnostic</span><span class="o">-</span><span class="n">remarks</span><span class="o">-</span><span class="n">exclude</span> <span class="s1">&#39;pattern1&#39;</span> <span class="o">--</span><span class="n">diagnostic</span><span class="o">-</span><span class="n">remarks</span><span class="o">-</span><span class="n">exclude</span> <span class="s1">&#39;pattern2&#39;</span>

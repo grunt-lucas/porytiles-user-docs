@@ -19,6 +19,8 @@ Porytiles identifies **color-isomorphic tiles**: tiles that share the same pixel
 
 These two tiles have identical geometry (the triangle occupies the same pixels), just with different colors in some regions. They are candidates for tile sharing.
 
+For secondary tilesets compiled with a paired primary, color-isomorphic detection extends across the tileset boundary. Tiles in the secondary can share tile images with tiles already present in the primary. See [Cross-Tileset Sharing](#cross-tileset-sharing) for details.
+
 ### Slot Alignment
 
 For sharing to work, corresponding colors must occupy the **same slot index** in their respective palettes. Consider:
@@ -124,6 +126,38 @@ Verification can be **partial**. Not all members of a group may produce matching
 
 In our example, both the red house and blue house now index as `{1, 2, 3}`: identical indexed tiles. One tile image is stored in `tiles.png`, and the GBA renders it with Palette 0 (showing red) or Palette 1 (showing blue) as needed. One tile slot saved.
 
+(cross-tileset-sharing)=
+## Cross-Tileset Sharing
+
+When compiling a secondary tileset with a paired primary, Porytiles extends shape group analysis across the tileset boundary. Tiles in the secondary that are color-isomorphic with tiles already present in the compiled primary can share tile images, freeing slots in the secondary's tile memory.
+
+### How It Works
+
+The compiler reconstructs the primary's tiles from its compiled `tiles.png` and palette data, converting them back to RGBA pixel tiles. These reconstructed tiles are then included alongside the secondary's own tiles during shape group analysis. If a secondary tile and a primary tile share the same pixel shape (differing only in color), they form a color-isomorphic group that spans the tileset boundary.
+
+Primary tiles have **fixed palette assignments**. They are already compiled and their palette slots cannot be moved. During alignment, primary tile members act as immovable references: the secondary's palette slots are adjusted to match the primary's existing layout, never the other way around.
+
+### Why It Matters
+
+Secondary tilesets have their own tile slot budget. Without cross-tileset sharing, the secondary must store its own copy of every tile image, even if an identical shape already exists in the primary. Cross-tileset sharing lets the secondary reuse tile images from the primary, freeing those slots for other tiles.
+
+### Automatic Behavior
+
+No additional configuration is required. Cross-tileset sharing happens automatically whenever:
+
+1. You are compiling a secondary tileset with a paired primary.
+2. Tile sharing settings (packing and/or alignment) are active.
+
+If tile sharing is disabled entirely (both packing and alignment set to `off`), cross-tileset analysis is still performed for diagnostic purposes but has no effect on the output.
+
+### Diagnostics
+
+Cross-tileset groups appear in the standard tile sharing diagnostics (see [Reading the Diagnostics](#reading-the-diagnostics)). When primary tiles are part of a shape group, the diagnostics include additional annotations:
+
+- **Phase 1** (`tile-sharing-shareable-tiles-<N>`): Shows the count of color versions originating from the paired primary, e.g., "'2' color version(s) from paired primary." Primary tile art is displayed alongside the secondary's color versions.
+- **Phase 2** (`tile-sharing-palette-partition-<N>`): Notes "Includes cross-tileset member(s) from paired primary." when primary tiles are present in the partition group.
+- **Phase 3** (`tile-sharing-result-<N>`): Notes "Includes cross-tileset member(s) from paired primary." when aligned groups include primary tile members. Representative tiles per palette are shown for both secondary and primary members.
+
 ## Configuration
 
 Tile sharing is controlled by two configuration options that work together: one controls how tiles are distributed across palettes during packing, and the other controls whether palette slot alignment is attempted.
@@ -178,6 +212,7 @@ Or via CLI flags:
 
 Using `biased` packing is the single biggest improvement. It actively distributes color-isomorphic tiles across palettes, giving the alignment system more opportunities to work with.
 
+(reading-the-diagnostics)=
 ## Reading the Diagnostics
 
 Porytiles emits several diagnostic remarks during tile sharing analysis. Each is tagged with a name you can use to filter output (see [Filtering Diagnostics](#filtering-diagnostics)).
@@ -191,11 +226,15 @@ Shows all detected color-isomorphic tile groups. For each group, you will see:
 
 This remark is always emitted when shape groups are detected, regardless of your configuration. It tells you: "these tiles *could* share if alignment succeeds."
 
+When compiling a secondary tileset with a paired primary, groups that include primary tiles show an additional count line: "'N' color version(s) from paired primary." The primary tile art is displayed after the secondary's color versions.
+
 ### `tile-sharing-shareable-tiles-summary`
 
 Emitted after all Phase 1 per-group remarks. Shows how many shareable shape groups were detected in total:
 
-> Tile sharing detection: '17' shareable shape group(s) found.
+```{note}
+TODO: insert screencap of the `tile-sharing-shareable-tiles-summary` remark showing the total count of shareable shape groups detected.
+```
 
 ### `tile-sharing-palette-partition-<N>`
 
@@ -203,11 +242,15 @@ After palette packing, shows which palettes each color version landed in. Groups
 
 If your packing is `off`, this remark includes a caveat explaining that the palette distribution is coincidental and may improve with `biased` packing.
 
+When primary tiles are present in the partition group, the remark includes the annotation "Includes cross-tileset member(s) from paired primary." Representative tile art is shown for both secondary and primary members.
+
 ### `tile-sharing-palette-partition-summary`
 
 Emitted after all Phase 2 per-group remarks. Shows how many of the detected groups survived palette packing, i.e., ended up spanning multiple palettes:
 
-> Tile sharing partition: '9' of '17' shape group(s) eligible for sharing after palette packing.
+```{note}
+TODO: insert screencap of the `tile-sharing-palette-partition-summary` remark showing how many detected groups survived palette packing.
+```
 
 ### `tile-sharing-result-<N>`
 
@@ -220,39 +263,35 @@ There are two outcomes:
 
 If your alignment is `off`, this remark includes a caveat explaining that any alignment is coincidental and may improve with `greedy` alignment.
 
+When aligned groups include primary tile members, the remark includes the annotation "Includes cross-tileset member(s) from paired primary." Representative tiles per palette are shown for both secondary and primary members.
+
 ### `tile-sharing-result-summary`
 
-The aggregate summary, showing the full pipeline funnel: how many groups were detected, how many were eligible after packing, and how many were ultimately aligned. For example:
+The aggregate summary, showing the full pipeline funnel: how many groups were detected, how many were eligible after packing, and how many were ultimately aligned.
 
-> Tile sharing summary:
-> '17' detected → '9' eligible after packing → '9' aligned.
+```{note}
+TODO: insert screencap of the `tile-sharing-result-summary` header line showing the pipeline funnel (detected -> eligible after packing -> aligned).
+```
 
-When any groups are partially aligned, the aligned count includes a breakdown:
+When any groups are partially aligned, the aligned count includes a breakdown of how many groups were fully aligned vs. partially aligned.
 
-> Tile sharing summary:
-> '17' detected → '9' eligible after packing → '9' aligned ('8' fully, '1' partially).
+```{note}
+TODO: insert screencap of the `tile-sharing-result-summary` header line when partial alignments are present, showing the "N aligned (X fully, Y partially)" breakdown.
+```
 
-A "Partially aligned groups" sub-section appears before any unaligned groups, showing per-group dropped color version counts:
+A "Partially aligned groups" sub-section appears before any unaligned groups, showing per-group dropped color version counts.
 
-> Partially aligned groups:
->   Group '16': '3' color version(s) dropped.
+```{note}
+TODO: insert screencap of the "Partially aligned groups" sub-section listing per-group dropped color version counts.
+```
 
 If any groups failed to align entirely, the summary provides additional detail:
 
-- **Unaligned group listing with per-group failures.** Each unaligned group is shown with its color versions, which palette(s) each version ended up in (e.g., "Version '1' assigned to palette(s): '03.pal'."), and an inline failure breakdown showing why *that specific group* failed to align. For example:
+- **Unaligned group listing with per-group failures.** Each unaligned group is shown with its color versions, which palette(s) each version ended up in (e.g., "Version '1' assigned to palette(s): '03.pal'."), and an inline failure breakdown showing why *that specific group* failed to align.
 
-  > Unaligned group (group id '5'), '2' color version(s):
-  >   [tile art]
-  >   Version '1' assigned to palette(s): '03.pal'.
-  >   Version '2' assigned to palette(s): '01.pal'.
-  >   '3' link failure(s) for this group:
-  >     Prefilled destination conflict: '1'.
-  >       Palette '03.pal' slot '5': color (...) blocked by locked color (...).
-  >     Shared color conflict: '2'.
-  >       '01.pal': color (...) linked to '03.pal' by group '0',
-  >         this group wanted ref color (...) in '05.pal'.
-  >       '01.pal': color (...) linked to '03.pal' by group '2',
-  >         this group wanted ref color (...) in '05.pal'.
+  ```{note}
+  TODO: insert screencap of an unaligned-group entry showing the group id, the color-version tile art, the per-version palette assignments, and the inline link-failure breakdown (prefilled destination conflicts, shared color conflicts, etc.).
+  ```
 
 - **Aggregate total.** After all unaligned groups, a one-line summary of total link resolution failures across all groups, followed by actionable suggestions. See [Understanding Alignment Failures](#understanding-alignment-failures) for what each failure type means.
 
@@ -266,11 +305,11 @@ with counts and detail lines specific to that group.
 (shared-color-conflicts)=
 ### Shared Color Conflicts
 
-A very common type of alignment failure. Under each affected group, the diagnostic will show a count followed by per-record detail lines:
+A very common type of alignment failure. Under each affected group, the diagnostic will show a count followed by per-record detail lines.
 
-> Shared color conflict: 'N'.
->   '01.pal': color '(R, G, B)' linked to '03.pal' by group '0',
->     this group wanted ref color '(R, G, B)' in '05.pal'.
+```{note}
+TODO: insert screencap of a "Shared color conflict" failure entry showing the count line and a per-record "linked to" detail line that names the winning group and reference palette alongside the losing group's desired reference.
+```
 
 Each detail line shows both sides of the conflict: which group won the color's link (and to which reference palette), and which reference the losing group wanted instead.
 
@@ -289,10 +328,11 @@ In practice, color variants of the same visual element (for example, a red build
 (prefilled-source-conflicts)=
 ### Prefilled Source Conflicts
 
-A color that needs to be linked to a reference in another palette is itself **prefilled (locked)** in its source palette. Under each affected group, the diagnostic shows which palette and colors are involved:
+A color that needs to be linked to a reference in another palette is itself **prefilled (locked)** in its source palette. Under each affected group, the diagnostic shows which palette and colors are involved.
 
-> Prefilled source conflict: 'N'.
->   Palette '01.pal': prefilled color '(R, G, B)' could not be linked to color '(R, G, B)' in palette '00.pal'.
+```{note}
+TODO: insert screencap of a "Prefilled source conflict" failure entry showing the count line and the detail line naming the locked source color, its source palette, and the reference color and palette the link targeted.
+```
 
 Because the color is locked at its current slot, the alignment system cannot reassign it to follow the reference color's slot position. The link is dropped entirely and the shape group's alignment fails.
 
@@ -303,19 +343,21 @@ If the prefilled color is not critical at its current position, rearranging or w
 (prefilled-destination-conflicts)=
 ### Prefilled Destination Conflicts
 
-A color needs to go at a specific slot to match another palette, but that destination slot is already occupied by a **prefilled (locked)** color from your input palettes. Under each affected group, the diagnostic shows exactly which palette, slot, and colors are involved:
+A color needs to go at a specific slot to match another palette, but that destination slot is already occupied by a **prefilled (locked)** color from your input palettes. Under each affected group, the diagnostic shows exactly which palette, slot, and colors are involved.
 
-> Prefilled destination conflict: 'N'.
->   Palette '03.pal' slot '5': color '(R, G, B)' blocked by locked color '(R, G, B)'.
+```{note}
+TODO: insert screencap of a "Prefilled destination conflict" failure entry showing the count line and the detail line naming the blocked palette, slot index, incoming color, and the locked color occupying the slot.
+```
 
 Prefilled slots are colors you explicitly placed in your palette files. They cannot be moved by the alignment system. If these slots are blocking alignment, you may be able to rearrange them (see [Improving Tile Sharing Results](#improving-tile-sharing-results)).
 
 ### Post-Resolution Slot Mismatch
 
-All indirect links for this group were applied and resolved successfully, but the final slot positions don't match. This happens when a *later* resolution step (for a different group or different palette) evicts a color from the slot it was placed at, displacing it to a different position. Under each affected group, the diagnostic shows where each color ended up versus where it should have been:
+All indirect links for this group were applied and resolved successfully, but the final slot positions don't match. This happens when a *later* resolution step (for a different group or different palette) evicts a color from the slot it was placed at, displacing it to a different position. Under each affected group, the diagnostic shows where each color ended up versus where it should have been.
 
-> Post-resolution slot mismatch: 'N'.
->   '01.pal': color '(R, G, B)' ended at slot '15', but ref color '(R, G, B)' in '03.pal' is at slot '14'.
+```{note}
+TODO: insert screencap of a "Post-resolution slot mismatch" failure entry showing the count line and the detail line comparing where each color actually ended up versus its intended reference slot in the other palette.
+```
 
 The greedy alignment processes palettes sequentially (palette 0 first, then 1, 2, ...). When palette 1 resolves its links against palette 3's current state, and palette 3 is later processed and its own resolutions evict colors to different slots, palette 1's already-resolved positions become stale. The `optimal` alignment (not yet implemented) would resolve all palettes globally and avoid these cascading evictions.
 
