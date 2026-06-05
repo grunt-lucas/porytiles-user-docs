@@ -6,11 +6,15 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
+from pathlib import Path
+
 project = 'Porytiles User Documentation'
 copyright = '2026, grunt-lucas'
 author = 'grunt-lucas'
-version = '2.0'
-release = '2.0.0'
+
+# Version read from the top-level VERSION file (kept in lockstep with the main porytiles repo).
+_version_str = (Path(__file__).parent.parent / 'VERSION').read_text().strip()
+version = release = _version_str
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -41,7 +45,7 @@ html_context = {
     'display_github': True,
     'github_user': 'grunt-lucas',
     'github_repo': 'porytiles-user-docs',
-    'github_version': 'main',
+    'github_version': 'develop',
     'conf_py_path': '/docsrc/',
 }
 

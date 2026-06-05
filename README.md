@@ -17,6 +17,15 @@ uv run make html
 open _build/html/index.html
 ```
 
+## Viewing Docs For Other Versions
+
+The public site at https://grunt-lucas.github.io/porytiles-user-docs/ always shows the latest stable release's documentation. To view docs for a different version, check out the desired branch or tag in your local clone:
+
+- Released version: `git checkout v1.0.0` (or any other released tag)
+- In-progress snapshot: `git checkout develop`
+
+Then follow the [Building Locally](#building-locally) steps above. The version label in the rendered docs reflects the `VERSION` file at the checked-out commit.
+
 ## Deploying to GitHub Pages
 
 ```bash

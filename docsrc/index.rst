@@ -5,7 +5,7 @@ Welcome to the Porytiles user documentation! Porytiles is a command-line tool fo
 
 .. note::
 
-   This documentation is for Porytiles **v2.0.0**. For documentation matching an older release,
+   This documentation is for Porytiles |release|. For documentation matching an older release,
    checkout the corresponding `git tag <https://github.com/grunt-lucas/porytiles-user-docs/tags>`_
    and build locally with ``cd docsrc && uv run make html``.
 

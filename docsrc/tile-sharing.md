@@ -432,10 +432,10 @@ Include patterns override exclude patterns, so you can exclude broadly and then 
 
 Porytiles' tile sharing system draws significant design inspiration from [borytiles](https://github.com/ishax-kos/borytiles) by ishax-kos, a Rust-based tileset compiler for GBA Pokémon decomp projects. Three core ideas in Porytiles' tile sharing pipeline originated in borytiles:
 
-- **Color isomorphism detection.** Borytiles introduced the concept of representing tiles as shape-indexed structures (mapping pixel regions to color indices) and grouping them by canonical shape. Porytiles2 adapts borytiles' `Shape_indexable_tile` and `get_ideal_flip` canonicalization into its own `ShapeTile`, `ShapeMask`, and `CanonicalShapeTile` types.
+- **Color isomorphism detection.** Borytiles introduced the concept of representing tiles as shape-indexed structures (mapping pixel regions to color indices) and grouping them by canonical shape. Porytiles adapts borytiles' `Shape_indexable_tile` and `get_ideal_flip` canonicalization into its own `ShapeTile`, `ShapeMask`, and `CanonicalShapeTile` types.
 
 - **Indirect position linking.** Borytiles' `Position_in_palette` enum demonstrated that palette slot assignment can be decoupled from palette construction by linking colors to other colors rather than to absolute slot indices. The key insight is that links referencing colors remain valid even when non-shared colors shift around. This is the foundation of Porytiles' `IndirectPosition` system.
 
-- **Greedy alignment algorithm.** Borytiles' `account_for_palette_swaps` function showed how to detect same-shape tiles across different palettes and emit indirect links pairing their corresponding colors. Porytiles2 extends this approach with a conflict-minimization heuristic for reference member selection and integrates the link generation into a multi-phase pipeline with diagnostic reporting.
+- **Greedy alignment algorithm.** Borytiles' `account_for_palette_swaps` function showed how to detect same-shape tiles across different palettes and emit indirect links pairing their corresponding colors. Porytiles extends this approach with a conflict-minimization heuristic for reference member selection and integrates the link generation into a multi-phase pipeline with diagnostic reporting.
 
 Thank you to ishax-kos for the creative and well-engineered work in borytiles that made Porytiles' tile sharing possible.
