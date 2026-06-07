@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Porytiles User Documentation &mdash; Porytiles User Documentation 2.0.0 documentation</title>
+  <title>Porytiles User Documentation &mdash; Porytiles User Documentation 1.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/css/custom.css?v=e6b1eb62" />
@@ -14,13 +14,13 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=51b770b3"></script>
+      <script src="_static/documentation_options.js?v=8d563738"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="How the GBA + Gen III Decomp Tileset System Works" href="gba-decomp-tileset-system.html" /> 
+    <link rel="next" title="Quick Start" href="quickstart.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -42,7 +42,11 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Background</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Quick Start</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Background</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="gba-decomp-tileset-system.html">How the GBA + Gen III Decomp Tileset System Works</a></li>
 <li class="toctree-l1"><a class="reference internal" href="manual-tileset-insertion.html">Inserting a Tileset Manually</a></li>
@@ -88,7 +92,7 @@
       <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
       <li class="breadcrumb-item active">Porytiles User Documentation</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/grunt-lucas/porytiles-user-docs/blob/main/docsrc/index.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/grunt-lucas/porytiles-user-docs/blob/develop/docsrc/index.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -98,23 +102,48 @@
              
   <section id="porytiles-user-documentation">
 <h1>Porytiles User Documentation<a class="headerlink" href="#porytiles-user-documentation" title="Link to this heading"></a></h1>
-<p>Welcome to the Porytiles user documentation! Porytiles is a command-line tool for compiling overworld tilesets for Pokemon Generation III decompilation projects.</p>
+<p>Welcome to the Porytiles user documentation!
+Porytiles is a command-line tool for creating and editing overworld tilesets for Pokémon Generation III decompilation projects.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>This documentation is for Porytiles <strong>v2.0.0</strong>. For documentation matching an older release,
+<p>This documentation is for Porytiles 1.0.0. For documentation matching an older release,
 checkout the corresponding <a class="reference external" href="https://github.com/grunt-lucas/porytiles-user-docs/tags">git tag</a>
 and build locally with <code class="docutils literal notranslate"><span class="pre">cd</span> <span class="pre">docsrc</span> <span class="pre">&amp;&amp;</span> <span class="pre">uv</span> <span class="pre">run</span> <span class="pre">make</span> <span class="pre">html</span></code>.</p>
 </div>
 <section id="about-this-documentation">
 <h2>About This Documentation<a class="headerlink" href="#about-this-documentation" title="Link to this heading"></a></h2>
-<p>This guidebook is organized according to the <a class="reference external" href="https://diataxis.fr/">Diataxis framework</a>, a systematic approach to technical documentation that distinguishes four types of content based on the reader’s needs:</p>
+<p>This guidebook is organized according to the <a class="reference external" href="https://diataxis.fr/">Diataxis framework</a>,
+a systematic approach to technical documentation that distinguishes four types of content based on the reader’s needs:</p>
 <ul class="simple">
-<li><p><strong>Explanation</strong> (Background) — understanding-oriented content that clarifies concepts, context, and the “why” behind the system. Read these pages when you want to build a mental model of how GBA tilesets and Porytiles work.</p></li>
+<li><p><strong>Explanation</strong> (Background) — understanding-oriented content that clarifies concepts, context, and the “why” behind the system. Read these pages when you want to build a mental model of how tilesets and Porytiles work.</p></li>
 <li><p><strong>Tutorials</strong> (Getting Started) — learning-oriented, step-by-step walkthroughs that guide you through a complete task from start to finish. Follow these when you are new to Porytiles.</p></li>
-<li><p><strong>How-to Guides</strong> — task-oriented instructions for accomplishing specific goals. Consult these when you already understand the basics and need practical guidance for your daily workflow.</p></li>
+<li><p><strong>How-to Guides</strong> — task-oriented instructions for accomplishing specific goals. Consult these when you already understand the basics and need practical guidance for an unfamiliar workflow.</p></li>
 <li><p><strong>Reference</strong> — information-oriented, precise descriptions of configuration values, CLI commands, and data formats. Look things up here when you need exact details.</p></li>
 </ul>
-<p>The <strong>Topics</strong> section is a pragmatic hybrid of explanation and reference for Porytiles subsystems (palette packing, tile sharing, animations, diagnostics) that are too complex for a pure reference listing but too detailed for a pure conceptual overview.</p>
+<p>The <strong>Topics</strong> section is a pragmatic hybrid of explanation and reference for Porytiles subsystems (palette packing, tile sharing, animations, diagnostics)
+that are too complex for a pure reference listing but too detailed for a pure conceptual overview.</p>
+<p>The <strong>Quick Start</strong> page deliberately sits outside the four Diataxis types.
+It exists so you can install Porytiles and do something real without first learning how the documentation is organized.
+Check it out if you want just enough to start tinkering, and follow its cross-references when you want more details.</p>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Quick Start</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#what-it-is">What it is</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#the-mental-model-src-bin">The mental model: <code class="docutils literal notranslate"><span class="pre">src</span></code> ⇄ <code class="docutils literal notranslate"><span class="pre">bin</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#install-sanity-check">Install / sanity check</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#running-it-project-root">Running it: project root</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#the-commands">The commands</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#three-common-flows">Three common flows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#input-files-what-you-put-in-porytiles-src">Input files (what <em>you</em> put in <code class="docutils literal notranslate"><span class="pre">porytiles_src/</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#output-files-what-porytiles-writes-to-porytiles-bin">Output files (what Porytiles writes to <code class="docutils literal notranslate"><span class="pre">porytiles_bin/</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#directory-layout-a-managed-tileset">Directory layout (a managed tileset)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#configuration">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#getting-unstuck">Getting unstuck</a></li>
+</ul>
+</li>
+</ul>
+</div>
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">Background</span></p>
 <ul>
@@ -179,7 +208,7 @@ and build locally with <code class="docutils literal notranslate"><span class="p
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="gba-decomp-tileset-system.html" class="btn btn-neutral float-right" title="How the GBA + Gen III Decomp Tileset System Works" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="quickstart.html" class="btn btn-neutral float-right" title="Quick Start" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

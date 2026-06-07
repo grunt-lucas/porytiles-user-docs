@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Importing an Existing Tileset &mdash; Porytiles User Documentation 2.0.0 documentation</title>
+  <title>Importing an Existing Tileset &mdash; Porytiles User Documentation 1.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/css/custom.css?v=e6b1eb62" />
@@ -14,7 +14,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=51b770b3"></script>
+      <script src="_static/documentation_options.js?v=8d563738"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
@@ -43,7 +43,11 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Background</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Quick Start</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Background</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="gba-decomp-tileset-system.html">How the GBA + Gen III Decomp Tileset System Works</a></li>
 <li class="toctree-l1"><a class="reference internal" href="manual-tileset-insertion.html">Inserting a Tileset Manually</a></li>
@@ -89,7 +93,7 @@
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
       <li class="breadcrumb-item active">Importing an Existing Tileset</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/grunt-lucas/porytiles-user-docs/blob/main/docsrc/importing-an-existing-tileset.md" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/grunt-lucas/porytiles-user-docs/blob/develop/docsrc/importing-an-existing-tileset.md" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -106,7 +110,7 @@
 <p>Tutorial for bringing pre-existing tilesets under Porytiles management:</p>
 <ul class="simple">
 <li><p>When to import vs create</p></li>
-<li><p>Running <code class="docutils literal notranslate"><span class="pre">porytiles2</span> <span class="pre">import-tileset</span> <span class="pre">gTileset_General</span></code></p></li>
+<li><p>Running <code class="docutils literal notranslate"><span class="pre">porytiles</span> <span class="pre">import-tileset</span> <span class="pre">gTileset_General</span></code></p></li>
 <li><p>What happens: Porytiles reads Porymap artifacts, decompiles to RGBA layers + <code class="docutils literal notranslate"><span class="pre">attributes.csv</span></code>, creates manifest</p></li>
 <li><p>Verifying the import: re-compile and diff, or visual inspection in Porymap</p></li>
 <li><p>Import transparency options (<code class="docutils literal notranslate"><span class="pre">import_transparency</span></code>: alpha, extrinsic, mixed)</p></li>
