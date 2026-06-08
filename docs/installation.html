@@ -55,7 +55,21 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#supported-platforms">Supported platforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#homebrew-recommended">Homebrew (recommended)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#download-release-binaries">Download release binaries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#building-from-source">Building from source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#verifying-the-installation">Verifying the installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#shell-completion">Shell completion</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#bash">bash</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#zsh">zsh</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fish">fish</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#next-steps">Next steps</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="creating-your-first-tileset.html">Creating Your First Tileset</a></li>
 <li class="toctree-l1"><a class="reference internal" href="importing-an-existing-tileset.html">Importing an Existing Tileset</a></li>
 </ul>
@@ -103,19 +117,210 @@
              
   <section id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h1>
-<div class="warning admonition">
-<p class="admonition-title">Page Status</p>
-<p>This page is a placeholder. Content coming soon.</p>
+<p>This page covers every way to install Porytiles,
+how to confirm it worked,
+and how to turn on shell completion.
+The simplest and recommended method is <a class="reference internal" href="#homebrew-recommended">Homebrew</a>.</p>
+<section id="supported-platforms">
+<h2>Supported platforms<a class="headerlink" href="#supported-platforms" title="Link to this heading"></a></h2>
+<p>Porytiles publishes prebuilt binaries for the platforms below.
+Anything not on this list can still run Porytiles by <a class="reference internal" href="#building-from-source">building from source</a>.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Platform</p></th>
+<th class="head"><p>Prebuilt binary</p></th>
+<th class="head"><p>Homebrew</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Linux x86_64</p></td>
+<td><p>Yes (<code class="docutils literal notranslate"><span class="pre">porytiles-linux-amd64.zip</span></code>)</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-odd"><td><p>Linux ARM64</p></td>
+<td><p>Yes (<code class="docutils literal notranslate"><span class="pre">porytiles-linux-arm64.zip</span></code>)</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-even"><td><p>macOS (Apple Silicon)</p></td>
+<td><p>Yes (<code class="docutils literal notranslate"><span class="pre">porytiles-macos-arm64.zip</span></code>)</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-odd"><td><p>macOS (Intel)</p></td>
+<td><p>No</p></td>
+<td><p>No (build from source)</p></td>
+</tr>
+<tr class="row-even"><td><p>Windows</p></td>
+<td><p>No native build; use <a class="reference external" href="https://learn.microsoft.com/windows/wsl/">WSL</a> with the Linux binary</p></td>
+<td><p>Yes, inside WSL</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>On Windows, run Porytiles inside the Windows Subsystem for Linux (WSL).
+A WSL environment is a Linux environment,
+so the Linux instructions on this page apply there directly,
+including Homebrew.</p>
 </div>
-<p>Short, procedural installation guide:</p>
+</section>
+<section id="homebrew-recommended">
+<span id="id1"></span><h2>Homebrew (recommended)<a class="headerlink" href="#homebrew-recommended" title="Link to this heading"></a></h2>
+<p><a class="reference external" href="https://brew.sh">Homebrew</a> is the simplest option on Linux, macOS, and WSL.
+It downloads the right prebuilt binary for your platform and puts <code class="docutils literal notranslate"><span class="pre">porytiles</span></code> on your <code class="docutils literal notranslate"><span class="pre">PATH</span></code> automatically.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Latest versioned release (recommended for most users):</span>
+brew<span class="w"> </span>install<span class="w"> </span>grunt-lucas/porytiles/porytiles
+
+<span class="c1"># Or the latest rolling snapshot (newest changes, less stable):</span>
+brew<span class="w"> </span>install<span class="w"> </span>grunt-lucas/porytiles/porytiles-snapshot
+</pre></div>
+</div>
+<p>To update later:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>brew<span class="w"> </span>upgrade<span class="w"> </span>porytiles
+</pre></div>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">grunt-lucas/porytiles/</span></code> prefix is the tap-qualified formula name,
+so the commands above work without tapping first.
+If you prefer, you can <code class="docutils literal notranslate"><span class="pre">brew</span> <span class="pre">tap</span> <span class="pre">grunt-lucas/porytiles</span></code> once
+and then refer to the formula as just <code class="docutils literal notranslate"><span class="pre">porytiles</span></code>.</p>
+</div>
+</section>
+<section id="download-release-binaries">
+<h2>Download release binaries<a class="headerlink" href="#download-release-binaries" title="Link to this heading"></a></h2>
+<p>If you would rather not use Homebrew,
+download a release archive directly from the
+<a class="reference external" href="https://github.com/grunt-lucas/porytiles/releases">Releases page</a>.</p>
+<p>Each archive is named for its platform:</p>
 <ul class="simple">
-<li><p>Homebrew installation (primary)</p></li>
-<li><p>Download release binaries (Linux, macOS, Windows/WSL)</p></li>
-<li><p>Building from source (brief, link to dev docs for details)</p></li>
-<li><p>Verifying installation (<code class="docutils literal notranslate"><span class="pre">porytiles</span> <span class="pre">--version</span></code>)</p></li>
-<li><p>Shell completion setup (<code class="docutils literal notranslate"><span class="pre">porytiles</span> <span class="pre">completion</span> <span class="pre">bash/zsh/fish</span></code>)</p></li>
+<li><p>Linux x86_64: <code class="docutils literal notranslate"><span class="pre">porytiles-linux-amd64.zip</span></code></p></li>
+<li><p>Linux ARM64: <code class="docutils literal notranslate"><span class="pre">porytiles-linux-arm64.zip</span></code></p></li>
+<li><p>macOS (Apple Silicon): <code class="docutils literal notranslate"><span class="pre">porytiles-macos-arm64.zip</span></code></p></li>
 </ul>
-<p><strong>Cross-references:</strong> <a class="reference internal" href="creating-your-first-tileset.html"><span class="doc">Creating Your First Tileset</span></a> as next step</p>
+<p>Unzip the archive and copy the <code class="docutils literal notranslate"><span class="pre">porytiles</span></code> binary somewhere on your <code class="docutils literal notranslate"><span class="pre">PATH</span></code>,
+for example <code class="docutils literal notranslate"><span class="pre">~/.local/bin</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>unzip<span class="w"> </span>porytiles-linux-amd64.zip
+<span class="nb">cd</span><span class="w"> </span>porytiles-linux-amd64
+cp<span class="w"> </span>porytiles<span class="w"> </span>~/.local/bin/
+<span class="c1"># If you also want the legacy compiler:</span>
+cp<span class="w"> </span>porytiles-legacy<span class="w"> </span>~/.local/bin/
+</pre></div>
+</div>
+<p>The archive contains some extra files (test binaries, example resources, the README, and the license).
+You only need the <code class="docutils literal notranslate"><span class="pre">porytiles</span></code> binary itself (and the <code class="docutils literal notranslate"><span class="pre">porytiles-legacy</span></code> binary if you want it).</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>On macOS, a binary downloaded through your browser is quarantined by Gatekeeper,
+so the first run may be blocked.
+Clear the quarantine flag once and it will run normally:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>xattr -d com.apple.quarantine ./porytiles
+</pre></div>
+</div>
+<p>A <code class="docutils literal notranslate"><span class="pre">No</span> <span class="pre">such</span> <span class="pre">xattr</span></code> message just means it was never quarantined, which is fine.
+<code class="docutils literal notranslate"><span class="pre">xattr</span> <span class="pre">-c</span> <span class="pre">./porytiles</span></code> is guaranteed to succeed but clears every attribute, so it is overkill.
+Installing through Homebrew avoids this step entirely.</p>
+</div>
+</section>
+<section id="building-from-source">
+<span id="id2"></span><h2>Building from source<a class="headerlink" href="#building-from-source" title="Link to this heading"></a></h2>
+<p>Build from source when you are on a platform without a prebuilt binary (such as an Intel Mac),
+when you want changes that aren’t in the latest snapshot,
+or when you intend to modify Porytiles yourself.</p>
+<p>You will need:</p>
+<ul class="simple">
+<li><p>A C++23 compiler (Clang 17+ or GCC 14+)</p></li>
+<li><p>CMake 3.20 or newer</p></li>
+<li><p><a class="reference external" href="https://docs.astral.sh/uv/"><code class="docutils literal notranslate"><span class="pre">uv</span></code></a> (used for the code-generation scripts in the build)</p></li>
+</ul>
+<p>Clone, build, and install:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/grunt-lucas/porytiles.git
+<span class="nb">cd</span><span class="w"> </span>porytiles
+cmake<span class="w"> </span>-S<span class="w"> </span>.<span class="w"> </span>-B<span class="w"> </span>porytiles-build-release<span class="w"> </span>-DCMAKE_BUILD_TYPE<span class="o">=</span>Release
+cmake<span class="w"> </span>--build<span class="w"> </span>porytiles-build-release<span class="w"> </span>-j4
+cmake<span class="w"> </span>--install<span class="w"> </span>porytiles-build-release<span class="w"> </span>--prefix<span class="w"> </span>~/.local
+</pre></div>
+</div>
+<p>This installs <code class="docutils literal notranslate"><span class="pre">porytiles</span></code> to <code class="docutils literal notranslate"><span class="pre">~/.local/bin</span></code>,
+so make sure that directory is on your <code class="docutils literal notranslate"><span class="pre">PATH</span></code>.</p>
+<p>For the full build walkthrough, including platform-specific compiler notes,
+running the test suite, and troubleshooting first-build issues,
+see the
+<a class="reference external" href="https://grunt-lucas.github.io/porytiles-dev-docs/dev-environment-setup.html">development environment setup guide</a>
+in the developer documentation.</p>
+</section>
+<section id="verifying-the-installation">
+<h2>Verifying the installation<a class="headerlink" href="#verifying-the-installation" title="Link to this heading"></a></h2>
+<p>Confirm Porytiles is installed and on your <code class="docutils literal notranslate"><span class="pre">PATH</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>porytiles<span class="w"> </span>--version
+porytiles<span class="w"> </span>--help
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">--version</span></code> prints the release you installed,
+and <code class="docutils literal notranslate"><span class="pre">--help</span></code> lists every subcommand.
+Each subcommand has its own help as well:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>porytiles<span class="w"> </span>compile-tileset<span class="w"> </span>--help
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If your shell reports that <code class="docutils literal notranslate"><span class="pre">porytiles</span></code> is not found,
+the binary is not on your <code class="docutils literal notranslate"><span class="pre">PATH</span></code>.
+Homebrew handles this for you;
+for a manual install or a build from source,
+make sure the directory you copied <code class="docutils literal notranslate"><span class="pre">porytiles</span></code> into
+(for example <code class="docutils literal notranslate"><span class="pre">~/.local/bin</span></code>) is listed in your <code class="docutils literal notranslate"><span class="pre">PATH</span></code>.</p>
+</div>
+</section>
+<section id="shell-completion">
+<h2>Shell completion<a class="headerlink" href="#shell-completion" title="Link to this heading"></a></h2>
+<p>Porytiles can generate completion scripts for bash, zsh, and fish.
+Completions cover every command and config flag,
+and they fill in tileset names by querying your project,
+so they offer only the tilesets that make sense for each command
+(for example, only managed tilesets for <code class="docutils literal notranslate"><span class="pre">compile-tileset</span></code>).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>A future version of Porytiles will bundle these completion scripts with the Homebrew formula,
+so completions install automatically alongside the binary.
+Until then, set them up manually as described below.</p>
+</div>
+<p>Pick the section for your shell.</p>
+<section id="bash">
+<h3>bash<a class="headerlink" href="#bash" title="Link to this heading"></a></h3>
+<p>Add this line to your <code class="docutils literal notranslate"><span class="pre">~/.bashrc</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">eval</span><span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>porytiles<span class="w"> </span>completion<span class="w"> </span>bash<span class="k">)</span><span class="s2">&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="zsh">
+<h3>zsh<a class="headerlink" href="#zsh" title="Link to this heading"></a></h3>
+<p>Add this line to your <code class="docutils literal notranslate"><span class="pre">~/.zshrc</span></code>:</p>
+<div class="highlight-zsh notranslate"><div class="highlight"><pre><span></span><span class="nb">eval</span><span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>porytiles<span class="w"> </span>completion<span class="w"> </span>zsh<span class="k">)</span><span class="s2">&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="fish">
+<h3>fish<a class="headerlink" href="#fish" title="Link to this heading"></a></h3>
+<p>Fish does not handle <code class="docutils literal notranslate"><span class="pre">eval</span></code> of the script reliably,
+so write it to your completions directory instead:</p>
+<div class="highlight-fish notranslate"><div class="highlight"><pre><span></span>porytiles completion <span class="nb">fish</span> <span class="o">&gt;</span> ~/.config/fish/completions/porytiles.fish
+</pre></div>
+</div>
+<p>Then restart fish, or source the file in your current session:</p>
+<div class="highlight-fish notranslate"><div class="highlight"><pre><span></span><span class="nb">source</span> ~/.config/fish/completions/porytiles.fish
+</pre></div>
+</div>
+<p>Once completion is set up, press your shell’s completion key to fill in commands, flags, and tileset names:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>porytiles<span class="w"> </span>compile-tileset<span class="w"> </span>gTileset_&lt;TAB&gt;
+</pre></div>
+</div>
+</section>
+</section>
+<section id="next-steps">
+<h2>Next steps<a class="headerlink" href="#next-steps" title="Link to this heading"></a></h2>
+<p>With Porytiles installed, you are ready to build a tileset.
+Continue with <a class="reference internal" href="creating-your-first-tileset.html"><span class="doc">Creating Your First Tileset</span></a>.</p>
+</section>
 </section>
 
 
