@@ -73,7 +73,32 @@
 <p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="metatile-attributes.html">Metatile Attributes Reference</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Configuration Reference</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Configuration Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#how-configuration-is-resolved">How configuration is resolved</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#where-configuration-yaml-files-live">Where configuration YAML files live</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#file-format">File format</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#overriding-values-on-the-command-line">Overriding values on the command line</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#inspecting-the-resolved-configuration">Inspecting the resolved configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#configuration-value-reference">Configuration value reference</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#fieldmap-hardware-layout"><code class="docutils literal notranslate"><span class="pre">fieldmap</span></code> — hardware layout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tileset-paths-asset-directories"><code class="docutils literal notranslate"><span class="pre">tileset.paths</span></code> — asset directories</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tileset-transparency"><code class="docutils literal notranslate"><span class="pre">tileset</span></code> — transparency</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tileset-tiles-the-tiles-png-artifact"><code class="docutils literal notranslate"><span class="pre">tileset.tiles</span></code> — the <code class="docutils literal notranslate"><span class="pre">tiles.png</span></code> artifact</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tileset-palettes-palette-packing"><code class="docutils literal notranslate"><span class="pre">tileset.palettes</span></code> — palette packing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tileset-animations-animation-handling"><code class="docutils literal notranslate"><span class="pre">tileset.animations</span></code> — animation handling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tileset-primary-pairing-pairing-a-secondary-with-its-primary"><code class="docutils literal notranslate"><span class="pre">tileset.primary_pairing</span></code> — pairing a secondary with its primary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#diagnostics-warning-and-remark-filters"><code class="docutils literal notranslate"><span class="pre">diagnostics</span></code> — warning and remark filters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#top-level-keys">Top-level keys</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#validation-rules">Validation rules</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#not-yet-implemented">Not yet implemented</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#a-worked-example">A worked example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#see-also">See also</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="cli-reference.html">CLI Command Reference</a></li>
 </ul>
 
@@ -103,33 +128,666 @@
              
   <section id="configuration-reference">
 <h1>Configuration Reference<a class="headerlink" href="#configuration-reference" title="Link to this heading"></a></h1>
-<div class="warning admonition">
-<p class="admonition-title">Page Status</p>
-<p>This page is a placeholder. Content coming soon.</p>
-</div>
-<p>The exhaustive config reference:</p>
+<p>Porytiles works out of the box with no configuration at all.
+Every value described here has a sensible default,
+and the basic fieldmap configuration values are read from your decomp project’s source files,
+so you can theoretically compile new tilesets without a single line of YAML.</p>
+<p>Configuration allows you to change advanced settings like:</p>
 <ul class="simple">
-<li><p>The layered provider system (5 layers in priority order): CLI &gt; YAML per-tileset local &gt; YAML per-tileset &gt; YAML project local &gt; YAML project &gt; Header defines &gt; Defaults</p></li>
-<li><p>YAML file locations and precedence</p></li>
-<li><p>How to use <code class="docutils literal notranslate"><span class="pre">dump-tileset-config</span></code> to inspect provenance</p></li>
-<li><p>Which values are YAML-only (palette hints, strategy params, per-animation overrides)</p></li>
-<li><p><strong>Full config value listing</strong>, organized by YAML path group:</p>
-<ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">fieldmap.*</span></code> (9 values)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">tileset.extrinsic_transparency</span></code>, <code class="docutils literal notranslate"><span class="pre">tileset.import_transparency</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">tileset.tiles.*</span></code> (edit_mode, palette_mode, sharing.packing, sharing.alignment)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">tileset.palettes.*</span></code> (edit_mode, packing.strategy, packing.strategy_params, packing.hints_enabled, packing.hints)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">tileset.animations.*</span></code> (all animation config + per_animation_overrides)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">tileset.paths.*</span></code> (primary/secondary src/bin)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">diagnostics.*</span></code> (warning/remark filters)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">verify_checksums</span></code></p></li>
+<li><p>lock tiles or palettes so you can edit vanilla tilesets without breaking dependent tilesets,</p></li>
+<li><p>pick a different palette-packing algorithm,</p></li>
+<li><p>silence a class of annoying warnings,</p></li>
+<li><p>point Porytiles at non-standard asset directories.</p></li>
 </ul>
-</li>
-<li><p>For each value: canonical name, YAML path, CLI flag (or “YAML-only”), type, default, description, link to relevant guide</p></li>
-<li><p>Cross-field validation rules</p></li>
-<li><p>The example YAML file (reproduce or reference <code class="docutils literal notranslate"><span class="pre">porytiles.example.yaml</span></code>)</p></li>
+<p>This page is an exhaustive reference.
+If you just want a simple introduction, the <a class="reference internal" href="quickstart.html"><span class="doc">Quick Start</span></a> doc has a shorter overview.</p>
+<section id="how-configuration-is-resolved">
+<h2>How configuration is resolved<a class="headerlink" href="#how-configuration-is-resolved" title="Link to this heading"></a></h2>
+<p>Porytiles builds each tileset’s configuration from eight sources.
+For <strong>every individual key</strong>, it walks the list below from top to bottom and uses the first source that provides a value.
+Resolution is per-key, not per-file:
+a command-line option can override one key while the rest still come from your YAML or the built-in defaults.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head text-right"><p>Priority</p></th>
+<th class="head"><p>Source</p></th>
+<th class="head"><p>Where the value comes from</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td class="text-right"><p>1 (highest)</p></td>
+<td><p>Command-line option</p></td>
+<td><p>A <code class="docutils literal notranslate"><span class="pre">--key</span> <span class="pre">value</span></code> flag any of the relevant commands</p></td>
+</tr>
+<tr class="row-odd"><td class="text-right"><p>2</p></td>
+<td><p>Per-tileset local YAML</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">porytiles/tilesets/&lt;tileset_name&gt;/config.local.yaml</span></code></p></td>
+</tr>
+<tr class="row-even"><td class="text-right"><p>3</p></td>
+<td><p>Per-tileset YAML</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">porytiles/tilesets/&lt;tileset_name&gt;/config.yaml</span></code></p></td>
+</tr>
+<tr class="row-odd"><td class="text-right"><p>4</p></td>
+<td><p>Project local YAML</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">porytiles/config.local.yaml</span></code></p></td>
+</tr>
+<tr class="row-even"><td class="text-right"><p>5</p></td>
+<td><p>Project YAML</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">porytiles/config.yaml</span></code></p></td>
+</tr>
+<tr class="row-odd"><td class="text-right"><p>6</p></td>
+<td><p>Fieldmap header</p></td>
+<td><p>The <code class="docutils literal notranslate"><span class="pre">#define</span></code>s in <code class="docutils literal notranslate"><span class="pre">include/fieldmap.h</span></code></p></td>
+</tr>
+<tr class="row-even"><td class="text-right"><p>7</p></td>
+<td><p>Metatiles header</p></td>
+<td><p>Inferred from <code class="docutils literal notranslate"><span class="pre">src/data/tilesets/metatiles.h</span></code></p></td>
+</tr>
+<tr class="row-odd"><td class="text-right"><p>8 (lowest)</p></td>
+<td><p>Built-in default</p></td>
+<td><p>The default baked into Porytiles</p></td>
+</tr>
+</tbody>
+</table>
+<p>Two critical consequences worth reiterating:</p>
+<ul class="simple">
+<li><p><strong>Per-tileset beats project-wide, and local beats committed.</strong> A key set in a tileset’s <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code> overrides the same key in the project-wide <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code>, and either <code class="docutils literal notranslate"><span class="pre">config.local.yaml</span></code> overrides its committed sibling at the same scope.</p></li>
+<li><p><strong>The <code class="docutils literal notranslate"><span class="pre">fieldmap.*</span></code> values come from your project for free.</strong> Sources 6 and 7 read your decomp project’s own headers, so the tile, metatile, and palette limits already match your build. You only set them by hand when your project diverges from those headers.</p></li>
 </ul>
-<p><strong>Cross-references:</strong> Every config value links to its conceptual guide page</p>
+</section>
+<section id="where-configuration-yaml-files-live">
+<h2>Where configuration YAML files live<a class="headerlink" href="#where-configuration-yaml-files-live" title="Link to this heading"></a></h2>
+<p>All configuration YAML files live under the <code class="docutils literal notranslate"><span class="pre">porytiles/</span></code> management directory at your project root:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>porytiles/
+├── config.yaml              # project-wide, committed
+├── config.local.yaml        # project-wide, machine-local (gitignore-friendly)
+└── tilesets/
+    └── gTileset_Example/
+        ├── config.yaml        # per-tileset, committed
+        └── config.local.yaml  # per-tileset, machine-local
+</pre></div>
+</div>
+<p>Every one of these files is optional.
+Create only the ones you need.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">config.local.yaml</span></code> files are meant for overrides you don’t want to commit:
+a temporary path tweak, or a noisier diagnostic filter while you debug, etc.
+Add <code class="docutils literal notranslate"><span class="pre">config.local.yaml</span></code> to your <code class="docutils literal notranslate"><span class="pre">.gitignore</span></code> and your committed <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code> stays clean for the rest of the team.</p>
+<section id="file-format">
+<h3>File format<a class="headerlink" href="#file-format" title="Link to this heading"></a></h3>
+<p>Each file is YAML, organized under a few top-level keys that mirror the <a class="reference internal" href="#value-reference"><span class="std std-ref">value reference</span></a> below:
+<code class="docutils literal notranslate"><span class="pre">fieldmap</span></code>, <code class="docutils literal notranslate"><span class="pre">tileset</span></code>, <code class="docutils literal notranslate"><span class="pre">diagnostics</span></code>, and the standalone <code class="docutils literal notranslate"><span class="pre">verify_checksums</span></code>.
+Nest keys to match the dotted paths in this document, so <code class="docutils literal notranslate"><span class="pre">tileset.tiles.edit_mode</span></code> becomes:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">tileset</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">tiles</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">edit_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">patch</span>
+</pre></div>
+</div>
+<div class="admonition caution">
+<p class="admonition-title">Caution</p>
+<p>Porytiles validates every key in your YAML against the set of known configuration paths.
+An unrecognized key is a hard error (<code class="docutils literal notranslate"><span class="pre">unknown-config-key</span></code>),
+so a typo like <code class="docutils literal notranslate"><span class="pre">tileset.tile.edit_mode</span></code> stops the compile instead of being ignored.</p>
+</div>
+</section>
+</section>
+<section id="overriding-values-on-the-command-line">
+<span id="cli-overrides"></span><h2>Overriding values on the command line<a class="headerlink" href="#overriding-values-on-the-command-line" title="Link to this heading"></a></h2>
+<p>Nearly every value can be set with a command-line option, which is handy for one-off compiles where you don’t want to touch any YAML.
+The command-line is the highest-priority source, so for that one run it overrides every file and the built-in default:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>porytiles<span class="w"> </span>compile-tileset<span class="w"> </span>gTileset_Example<span class="w"> </span>--tiles-edit-mode<span class="w"> </span>optimize<span class="w"> </span>--packing-strategy<span class="w"> </span>best-fusion
+</pre></div>
+</div>
+<p>The flag names are listed alongside each value in the reference below, and <code class="docutils literal notranslate"><span class="pre">porytiles</span> <span class="pre">compile-tileset</span> <span class="pre">--help</span></code> prints the authoritative set.
+A few conventions:</p>
+<ul class="simple">
+<li><p><strong>Boolean values</strong> also get a <code class="docutils literal notranslate"><span class="pre">--no-</span></code> form to turn them off, for example <code class="docutils literal notranslate"><span class="pre">--no-verify-checksums</span></code> or <code class="docutils literal notranslate"><span class="pre">--no-pal-hints-enabled</span></code>.</p></li>
+<li><p><strong>List values</strong> (such as <code class="docutils literal notranslate"><span class="pre">--primary-pairing-partners</span></code> or <code class="docutils literal notranslate"><span class="pre">--diagnostic-warnings-exclude</span></code>) accept multiple arguments.</p></li>
+<li><p><strong>Three values are YAML-only.</strong> Palette hints, packing strategy parameters, and per-animation overrides are too structured to express as a flag, so they can only be set in a config file. They’re marked <em>YAML-only</em> in the reference.</p></li>
+</ul>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Option names don’t always match the YAML path one-to-one.
+A few are abbreviated (<code class="docutils literal notranslate"><span class="pre">tileset.palettes.edit_mode</span></code> is <code class="docutils literal notranslate"><span class="pre">--pals-edit-mode</span></code>,
+<code class="docutils literal notranslate"><span class="pre">fieldmap.metatile_attribute_size</span></code> is <code class="docutils literal notranslate"><span class="pre">--metatile-attr-size</span></code>).
+When in doubt, trust the reference tables below or <code class="docutils literal notranslate"><span class="pre">--help</span></code> rather than guessing from the path.
+You can also set up shell completion to make it even easier, see <a class="reference internal" href="installation.html"><span class="doc">Installation</span></a>.</p>
+</div>
+</section>
+<section id="inspecting-the-resolved-configuration">
+<span id="dump-config"></span><h2>Inspecting the resolved configuration<a class="headerlink" href="#inspecting-the-resolved-configuration" title="Link to this heading"></a></h2>
+<p>Because values come from up to eight places, “what is this key actually set to, and why?” is a real question.
+<code class="docutils literal notranslate"><span class="pre">dump-tileset-config</span></code> provides the answer for a specific tileset:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>porytiles<span class="w"> </span>dump-tileset-config<span class="w"> </span>gTileset_Example
+</pre></div>
+</div>
+<p>For each key it prints the resolved value, the exact source it came from, and the full provider chain:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Number Of Tiles In Primary
+--------------------------
+  &#39;Number Of Tiles In Primary&#39; is &#39;512&#39; due to configuration:
+
+  NUM_TILES_IN_PRIMARY = 512
+  Source: ./include/fieldmap.h:8
+
+      7:
+  ➞   8:   #define NUM_TILES_IN_PRIMARY 512
+      9:   #define NUM_METATILES_IN_PRIMARY 512
+
+  Provider Chain:
+    ○ CliOptionProvider (not provided)
+    ○ YamlFileProvider (not provided)
+    ✓ HeaderDefineProvider = 512
+    ○ MetatilesHeaderProvider (not provided)
+    ○ DefaultProvider = 512
+</pre></div>
+</div>
+<p>Read the <strong>Provider Chain</strong> from top to bottom:
+<code class="docutils literal notranslate"><span class="pre">✓</span></code> marks the source that won,
+<code class="docutils literal notranslate"><span class="pre">○</span></code> marks a source that either had nothing to offer for this key
+or had a value that wasn’t selected.
+You can see in the above example
+that some providers did not provide a value for the key at all,
+while others provided a value but were superseded by a provider with higher priority.
+For a value that fell through to its default, the source reads <code class="docutils literal notranslate"><span class="pre">default</span> <span class="pre">value</span></code> and only <code class="docutils literal notranslate"><span class="pre">DefaultProvider</span></code> is checked.</p>
+<p>This is the fastest way to debug a surprising result:
+dump the config, find the key, and the chain shows you which file (or flag) to change.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>The chain collapses all four YAML files into a single <code class="docutils literal notranslate"><span class="pre">YamlFileProvider</span></code> row,
+but the <strong>Source</strong> line above it always names the exact file and line a value came from,
+so you can tell project YAML from per-tileset YAML at a glance.</p>
+</div>
+</section>
+<section id="configuration-value-reference">
+<span id="value-reference"></span><h2>Configuration value reference<a class="headerlink" href="#configuration-value-reference" title="Link to this heading"></a></h2>
+<p>The rest of this page lists every configuration value, grouped by its top-level YAML key.
+For each value you get its YAML path, its CLI flag (or <em>YAML-only</em>), the default, and what it does.
+Each group links to the guide that explains the underlying subsystem in depth.</p>
+<section id="fieldmap-hardware-layout">
+<h3><code class="docutils literal notranslate"><span class="pre">fieldmap</span></code> — hardware layout<a class="headerlink" href="#fieldmap-hardware-layout" title="Link to this heading"></a></h3>
+<p>These describe your tile, metatile, and palette budget.
+Porytiles reads the first eight from <code class="docutils literal notranslate"><span class="pre">include/fieldmap.h</span></code> and the last from <code class="docutils literal notranslate"><span class="pre">src/data/tilesets/metatiles.h</span></code> automatically,
+so in a normal decomp project you never set them by hand.
+Override them only when you explicitly want a particular run’s values to differ from those headers.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>YAML key</p></th>
+<th class="head"><p>CLI flag</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fieldmap.num_tiles_in_primary</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--num-tiles-in-primary</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">512</span></code></p></td>
+<td><p>Tiles reserved for the primary tileset.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fieldmap.num_tiles_total</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--num-tiles-total</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1024</span></code></p></td>
+<td><p>Total tile capacity (primary plus secondary).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fieldmap.num_metatiles_in_primary</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--num-metatiles-in-primary</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">512</span></code></p></td>
+<td><p>Metatiles reserved for the primary tileset.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fieldmap.num_metatiles_total</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--num-metatiles-total</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1024</span></code></p></td>
+<td><p>Total metatile capacity.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fieldmap.num_pals_in_primary</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--num-pals-in-primary</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">6</span></code></p></td>
+<td><p>Hardware palettes reserved for the primary tileset.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fieldmap.num_pals_total</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--num-pals-total</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">13</span></code></p></td>
+<td><p>Total hardware palettes available.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fieldmap.max_map_data_size</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--max-map-data-size</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">10240</span></code></p></td>
+<td><p>The <code class="docutils literal notranslate"><span class="pre">MAX_MAP_DATA_SIZE</span></code> map-buffer limit.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fieldmap.num_tiles_per_metatile</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--num-tiles-per-metatile</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">8</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">8</span></code> for dual-layer tilesets, <code class="docutils literal notranslate"><span class="pre">12</span></code> for triple-layer.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fieldmap.metatile_attribute_size</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--metatile-attr-size</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">2</span></code></p></td>
+<td><p>Bytes per metatile attribute: <code class="docutils literal notranslate"><span class="pre">2</span></code> (Emerald/Ruby) or <code class="docutils literal notranslate"><span class="pre">4</span></code> (FireRed). Auto-detected from the C type used in <code class="docutils literal notranslate"><span class="pre">metatiles.h</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="tileset-paths-asset-directories">
+<h3><code class="docutils literal notranslate"><span class="pre">tileset.paths</span></code> — asset directories<a class="headerlink" href="#tileset-paths-asset-directories" title="Link to this heading"></a></h3>
+<p>Where each tileset’s source and binary assets live, relative to the project root.
+<code class="docutils literal notranslate"><span class="pre">src</span></code> holds the editable <code class="docutils literal notranslate"><span class="pre">porytiles_src/</span></code> assets; <code class="docutils literal notranslate"><span class="pre">bin</span></code> holds the generated <code class="docutils literal notranslate"><span class="pre">porytiles_bin/</span></code> files that Porymap reads.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>YAML key</p></th>
+<th class="head"><p>CLI flag</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tileset.paths.primary.src</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--tileset-paths-primary-src</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">data/tilesets/primary</span></code></p></td>
+<td><p>Source directory for primary tilesets.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tileset.paths.primary.bin</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--tileset-paths-primary-bin</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">data/tilesets/primary</span></code></p></td>
+<td><p>Binary directory for primary tilesets.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tileset.paths.secondary.src</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--tileset-paths-secondary-src</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">data/tilesets/secondary</span></code></p></td>
+<td><p>Source directory for secondary tilesets.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tileset.paths.secondary.bin</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--tileset-paths-secondary-bin</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">data/tilesets/secondary</span></code></p></td>
+<td><p>Binary directory for secondary tilesets.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="tileset-transparency">
+<h3><code class="docutils literal notranslate"><span class="pre">tileset</span></code> — transparency<a class="headerlink" href="#tileset-transparency" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>YAML key</p></th>
+<th class="head"><p>CLI flag</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tileset.extrinsic_transparency</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--extrinsic-transparency</span> <span class="pre">R,G,B</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[255,</span> <span class="pre">0,</span> <span class="pre">255]</span></code> (magenta)</p></td>
+<td><p>The RGB color treated as transparent during compilation. Must be fully opaque.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Pixels in this color (or with an alpha of 0) become transparent in the compiled tileset.
+The mental model for source layers is covered in the <a class="reference internal" href="quickstart.html"><span class="doc">Quick Start</span></a>.</p>
+</section>
+<section id="tileset-tiles-the-tiles-png-artifact">
+<h3><code class="docutils literal notranslate"><span class="pre">tileset.tiles</span></code> — the <code class="docutils literal notranslate"><span class="pre">tiles.png</span></code> artifact<a class="headerlink" href="#tileset-tiles-the-tiles-png-artifact" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>YAML key</p></th>
+<th class="head"><p>CLI flag</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tileset.tiles.edit_mode</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--tiles-edit-mode</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">optimize</span></code></p></td>
+<td><p>How much <code class="docutils literal notranslate"><span class="pre">tiles.png</span></code> may change during a compile.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tileset.tiles.palette_mode</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--tiles-pal-mode</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">true-color</span></code></p></td>
+<td><p>The color mode used when writing <code class="docutils literal notranslate"><span class="pre">tiles.png</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tileset.tiles.sharing.packing</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--tile-sharing-packing</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">off</span></code></p></td>
+<td><p>Whether the packer accounts for tile-sharing shape groups.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tileset.tiles.sharing.alignment</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--tile-sharing-alignment</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">off</span></code></p></td>
+<td><p>The palette-slot alignment strategy for tile sharing.</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong><code class="docutils literal notranslate"><span class="pre">edit_mode</span></code></strong> controls how freely a compile may rewrite the tiles artifact:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">locked</span></code> — the artifact can’t change; the compiler must reuse what’s already in the base tileset.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">patch</span></code> — the compiler may fill open (transparent) slots but won’t disturb existing tiles.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">optimize</span></code> <em>(default)</em> — the artifact is cleared and packed from scratch (the original Porytiles behavior).</p></li>
+</ul>
+<p><strong><code class="docutils literal notranslate"><span class="pre">palette_mode</span></code></strong>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">true-color</span></code> <em>(default)</em> — write an 8-bit indexed PNG that carries the real palette colors, handy for visually debugging tile layout. Porymap 5.2.0 and later fully supports this format, as does <code class="docutils literal notranslate"><span class="pre">gbagfx</span></code> (it only checks the bottom four bits when building <code class="docutils literal notranslate"><span class="pre">tiles.4bpp</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">greyscale</span></code> — map indices to greyscale, matching the vanilla game tileset convention</p></li>
+</ul>
+<p><strong><code class="docutils literal notranslate"><span class="pre">sharing.packing</span></code></strong> and <strong><code class="docutils literal notranslate"><span class="pre">sharing.alignment</span></code></strong> tune tile-sharing deduplication:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">sharing.packing</span></code>: <code class="docutils literal notranslate"><span class="pre">off</span></code> <em>(default)</em>, <code class="docutils literal notranslate"><span class="pre">biased</span></code> (a soft penalty steers shape-group siblings toward different palettes), or <code class="docutils literal notranslate"><span class="pre">optimal</span></code> <em>(planned)</em>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sharing.alignment</span></code>: <code class="docutils literal notranslate"><span class="pre">off</span></code> <em>(default)</em>, <code class="docutils literal notranslate"><span class="pre">greedy</span></code> (best-effort slot alignment via indirect link resolution), or <code class="docutils literal notranslate"><span class="pre">optimal</span></code> <em>(planned)</em>.</p></li>
+</ul>
+<p>The full mechanism is explained in <a class="reference internal" href="tile-sharing.html"><span class="doc">Tile Sharing</span></a>.</p>
+</section>
+<section id="tileset-palettes-palette-packing">
+<h3><code class="docutils literal notranslate"><span class="pre">tileset.palettes</span></code> — palette packing<a class="headerlink" href="#tileset-palettes-palette-packing" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>YAML key</p></th>
+<th class="head"><p>CLI flag</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tileset.palettes.edit_mode</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--pals-edit-mode</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">optimize</span></code></p></td>
+<td><p>How much the palette files may change during a compile.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tileset.palettes.packing.strategy</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--packing-strategy</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">backtracking</span></code></p></td>
+<td><p>The palette-packing algorithm.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tileset.palettes.packing.strategy_params</span></code></p></td>
+<td><p><em>YAML-only</em></p></td>
+<td><p>(preset)</p></td>
+<td><p>Per-strategy tuning parameters.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tileset.palettes.packing.hints_enabled</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--pal-hints-enabled</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">true</span></code></p></td>
+<td><p>Whether palette hints are fed to the packer.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tileset.palettes.packing.hints</span></code></p></td>
+<td><p><em>YAML-only</em></p></td>
+<td><p>(none)</p></td>
+<td><p>Named color groups the packer should keep together.</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong><code class="docutils literal notranslate"><span class="pre">edit_mode</span></code></strong> takes the same <code class="docutils literal notranslate"><span class="pre">locked</span></code> / <code class="docutils literal notranslate"><span class="pre">patch</span></code> / <code class="docutils literal notranslate"><span class="pre">optimize</span></code> values as <code class="docutils literal notranslate"><span class="pre">tiles.edit_mode</span></code> above, applied to the palette files.</p>
+<p><strong><code class="docutils literal notranslate"><span class="pre">packing.strategy</span></code></strong> selects the algorithm:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">backtracking</span></code> <em>(default)</em> — DFS/BFS backtracking search; handles the widest range of inputs.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">best-fusion</span></code> — fast greedy weighted-cost packing, no retries; may fail on hard inputs.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">overload-and-remove</span></code> — greedy with multi-start retries to escape local optima.</p></li>
+</ul>
+<p><strong><code class="docutils literal notranslate"><span class="pre">packing.strategy_params</span></code></strong> tunes the selected strategy.
+Only the block matching the active strategy is read; <code class="docutils literal notranslate"><span class="pre">best-fusion</span></code> takes no parameters.
+When omitted, each strategy uses a built-in preset:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">tileset</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">palettes</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">packing</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">strategy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">backtracking</span>
+<span class="w">      </span><span class="nt">strategy_params</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">backtracking</span><span class="p">:</span>
+<span class="w">          </span><span class="nt">search_algorithm</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bfs</span><span class="w">       </span><span class="c1"># dfs or bfs</span>
+<span class="w">          </span><span class="nt">node_cutoff</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5000</span><span class="w">           </span><span class="c1"># max nodes to explore before giving up</span>
+<span class="w">          </span><span class="nt">best_branches</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span><span class="w">            </span><span class="c1"># keep the top-N branches at each level</span>
+<span class="w">          </span><span class="nt">smart_prune</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w">           </span><span class="c1"># enable heuristic pruning</span>
+<span class="w">        </span><span class="nt">overload_and_remove</span><span class="p">:</span>
+<span class="w">          </span><span class="nt">max_attempts</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span><span class="w">           </span><span class="c1"># number of multi-start retries</span>
+<span class="w">          </span><span class="nt">seed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">42</span><span class="w">                    </span><span class="c1"># RNG seed, for reproducibility</span>
+<span class="w">          </span><span class="nt">shuffle_strategy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">noisy-ffd</span><span class="w"> </span><span class="c1"># single-ffd, noisy-ffd, or random</span>
+</pre></div>
+</div>
+<p><strong><code class="docutils literal notranslate"><span class="pre">packing.hints</span></code></strong> tells the packer that certain colors should land in the same hardware palette.
+Each hint is a named group of RGB colors; the packer injects them as synthetic tiles to bias color grouping.
+This is useful when you know certain colors co-occur within a tile and want to guarantee they share a palette:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">tileset</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">palettes</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">packing</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">hints_enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">      </span><span class="nt">hints</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">foliage</span>
+<span class="w">          </span><span class="nt">colors</span><span class="p">:</span>
+<span class="w">            </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">12</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">190</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">20</span><span class="p p-Indicator">]</span>
+<span class="w">            </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">40</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">210</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">10</span><span class="p p-Indicator">]</span>
+</pre></div>
+</div>
+<p>The packing algorithms and when to tune them are covered in <a class="reference internal" href="palette-packing.html"><span class="doc">Palette Packing</span></a>.</p>
+</section>
+<section id="tileset-animations-animation-handling">
+<h3><code class="docutils literal notranslate"><span class="pre">tileset.animations</span></code> — animation handling<a class="headerlink" href="#tileset-animations-animation-handling" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>YAML key</p></th>
+<th class="head"><p>CLI flag</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tileset.animations.frame_linking</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--frame-linking</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">automatic</span></code></p></td>
+<td><p>How animation frames link to metatile entries.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tileset.animations.wire_anim_code</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--tileset-animations-wire-anim-code</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">true</span></code></p></td>
+<td><p>Whether Porytiles wires generated animation code into <code class="docutils literal notranslate"><span class="pre">tileset_anims.c/h</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tileset.animations.cross_tileset_linking</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--cross-tileset-anim-linking</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">true</span></code></p></td>
+<td><p>Match secondary tiles against a primary’s animation key frames.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tileset.animations.palette_resolution_strategy</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--anim-pal-resolution-strategy</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">scan-local-metatiles</span></code></p></td>
+<td><p>Which palette to use for animation tiles when decompiling.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tileset.animations.key_frame_resolution_strategy</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--anim-key-frame-resolution-strategy</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">error</span></code></p></td>
+<td><p>How to handle duplicate key-frame tiles when decompiling.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tileset.animations.multi_palette_subtile_resolution_strategy</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--anim-multi-pal-subtile-resolution-strategy</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">error</span></code></p></td>
+<td><p>How to handle subtiles referenced with multiple palettes when decompiling.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tileset.animations.per_animation_overrides</span></code></p></td>
+<td><p><em>YAML-only</em></p></td>
+<td><p>(none)</p></td>
+<td><p>Per-animation settings, keyed by animation name.</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong><code class="docutils literal notranslate"><span class="pre">frame_linking</span></code></strong>: <code class="docutils literal notranslate"><span class="pre">automatic</span></code> <em>(default,</em> uses <code class="docutils literal notranslate"><span class="pre">key.png</span></code><em>)</em>, <code class="docutils literal notranslate"><span class="pre">manual</span></code> (uses explicit overrides in <code class="docutils literal notranslate"><span class="pre">anim.json</span></code>), or <code class="docutils literal notranslate"><span class="pre">hybrid</span></code> <em>(planned)</em>.</p>
+<p>The three <code class="docutils literal notranslate"><span class="pre">*_resolution_strategy</span></code> values only matter when <strong>decompiling</strong> animations:</p>
+<ul class="simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">palette_resolution_strategy</span></code></strong>: <code class="docutils literal notranslate"><span class="pre">scan-local-metatiles</span></code> <em>(default)</em>, <code class="docutils literal notranslate"><span class="pre">palette-00</span></code> through <code class="docutils literal notranslate"><span class="pre">palette-15</span></code> (use that index directly), <code class="docutils literal notranslate"><span class="pre">internal-png-palette</span></code>, or <code class="docutils literal notranslate"><span class="pre">scan-all-tilesets</span></code> <em>(planned)</em>.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">key_frame_resolution_strategy</span></code></strong>: <code class="docutils literal notranslate"><span class="pre">error</span></code> <em>(default)</em>, <code class="docutils literal notranslate"><span class="pre">warning</span></code>, or <code class="docutils literal notranslate"><span class="pre">mangle</span></code> (de-duplicate identical key-frame tiles).</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">multi_palette_subtile_resolution_strategy</span></code></strong>: <code class="docutils literal notranslate"><span class="pre">error</span></code> <em>(default)</em>, <code class="docutils literal notranslate"><span class="pre">warning</span></code> (continue using the lowest palette index), or <code class="docutils literal notranslate"><span class="pre">split</span></code> <em>(planned)</em>.</p></li>
+</ul>
+<p><strong><code class="docutils literal notranslate"><span class="pre">per_animation_overrides</span></code></strong> lets a single animation depart from the global settings above.
+Each key is an animation name; animations not listed fall back to the global values:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">tileset</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">animations</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">per_animation_overrides</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">flower</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">frame_linking</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">automatic</span>
+<span class="w">        </span><span class="nt">key_frame_resolution_strategy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mangle</span>
+<span class="w">        </span><span class="nt">multi_palette_subtile_resolution_strategy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">warning</span>
+<span class="w">        </span><span class="nt">palette_resolution_strategy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">palette-00</span>
+<span class="w">        </span><span class="c1"># One entry per subtile; &quot;_&quot; falls back to the strategy above</span>
+<span class="w">        </span><span class="nt">per_tile_palette_resolution_strategies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="w"> </span><span class="nv">_</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">scan-local-metatiles</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">_</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">_</span><span class="w"> </span><span class="p p-Indicator">]</span>
+</pre></div>
+</div>
+<p>The animation pipeline is documented in <a class="reference internal" href="animations.html"><span class="doc">Animations</span></a>.</p>
+</section>
+<section id="tileset-primary-pairing-pairing-a-secondary-with-its-primary">
+<h3><code class="docutils literal notranslate"><span class="pre">tileset.primary_pairing</span></code> — pairing a secondary with its primary<a class="headerlink" href="#tileset-primary-pairing-pairing-a-secondary-with-its-primary" title="Link to this heading"></a></h3>
+<p>When you compile a secondary tileset, Porytiles needs the compiled primary to produce correct global tile indices and palette references.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>YAML key</p></th>
+<th class="head"><p>CLI flag</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tileset.primary_pairing.mode</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--primary-pairing-mode</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">automatic</span></code></p></td>
+<td><p>How the partner primary is resolved.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tileset.primary_pairing.partners</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--primary-pairing-partners</span></code></p></td>
+<td><p>(none)</p></td>
+<td><p>Partner primary tileset names, used in <code class="docutils literal notranslate"><span class="pre">manual</span></code> mode.</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong><code class="docutils literal notranslate"><span class="pre">mode</span></code></strong>: <code class="docutils literal notranslate"><span class="pre">automatic</span></code> <em>(default,</em> scans layout metadata to find the partner primary*)*, <code class="docutils literal notranslate"><span class="pre">manual</span></code> (use the names in <code class="docutils literal notranslate"><span class="pre">partners</span></code>), or <code class="docutils literal notranslate"><span class="pre">off</span></code> (compile as a standalone secondary).
+<code class="docutils literal notranslate"><span class="pre">partners</span></code> is only consulted when <code class="docutils literal notranslate"><span class="pre">mode</span></code> is <code class="docutils literal notranslate"><span class="pre">manual</span></code>.
+Primary pairing is introduced in <a class="reference internal" href="creating-your-first-tileset.html"><span class="doc">Creating Your First Tileset</span></a>.</p>
+</section>
+<section id="diagnostics-warning-and-remark-filters">
+<h3><code class="docutils literal notranslate"><span class="pre">diagnostics</span></code> — warning and remark filters<a class="headerlink" href="#diagnostics-warning-and-remark-filters" title="Link to this heading"></a></h3>
+<p>Filter Porytiles’ warnings and remarks by tag.
+Each value is a list of regex patterns matched against diagnostic tags.
+Within a category, <code class="docutils literal notranslate"><span class="pre">include</span></code> is applied <strong>after</strong> <code class="docutils literal notranslate"><span class="pre">exclude</span></code>, so you can silence everything and then re-enable a few specific tags.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>YAML key</p></th>
+<th class="head"><p>CLI flag</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">diagnostics.warnings.exclude</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--diagnostic-warnings-exclude</span></code></p></td>
+<td><p>(none)</p></td>
+<td><p>Regex patterns for warning tags to suppress.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">diagnostics.warnings.include</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--diagnostic-warnings-include</span></code></p></td>
+<td><p>(none)</p></td>
+<td><p>Regex patterns for warning tags to keep (applied after exclude).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">diagnostics.remarks.exclude</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--diagnostic-remarks-exclude</span></code></p></td>
+<td><p>(none)</p></td>
+<td><p>Regex patterns for remark tags to suppress.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">diagnostics.remarks.include</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--diagnostic-remarks-include</span></code></p></td>
+<td><p>(none)</p></td>
+<td><p>Regex patterns for remark tags to keep (applied after exclude).</p></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">diagnostics</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">warnings</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">exclude</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="w"> </span><span class="s">&quot;.*&quot;</span><span class="w"> </span><span class="p p-Indicator">]</span><span class="w">          </span><span class="c1"># silence every warning...</span>
+<span class="w">    </span><span class="nt">include</span><span class="p">:</span><span class="w">                   </span><span class="c1"># ...then re-enable just these two</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">layer-mode-warning</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tile-color-count-warning</span>
+<span class="w">  </span><span class="nt">remarks</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">exclude</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="w"> </span><span class="s">&quot;.*&quot;</span><span class="w"> </span><span class="p p-Indicator">]</span><span class="w">          </span><span class="c1"># silence all remarks</span>
+</pre></div>
+</div>
+<p>The catalog of diagnostic tags and what each one means is in <a class="reference internal" href="diagnostics.html"><span class="doc">Understanding Diagnostics</span></a>.</p>
+</section>
+<section id="top-level-keys">
+<h3>Top-level keys<a class="headerlink" href="#top-level-keys" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>YAML key</p></th>
+<th class="head"><p>CLI flag</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">verify_checksums</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--verify-checksums</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">true</span></code></p></td>
+<td><p>Verify artifact checksums during compilation.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="validation-rules">
+<h3>Validation rules<a class="headerlink" href="#validation-rules" title="Link to this heading"></a></h3>
+<p>Some values are checked individually, and a few are checked against each other.
+A violation stops the compile with an explanatory error:</p>
+<ul class="simple">
+<li><p>Every <code class="docutils literal notranslate"><span class="pre">fieldmap.*</span></code> count must be greater than zero.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fieldmap.num_tiles_in_primary</span></code> ≤ <code class="docutils literal notranslate"><span class="pre">fieldmap.num_tiles_total</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fieldmap.num_metatiles_in_primary</span></code> ≤ <code class="docutils literal notranslate"><span class="pre">fieldmap.num_metatiles_total</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fieldmap.num_pals_in_primary</span></code> ≤ <code class="docutils literal notranslate"><span class="pre">fieldmap.num_pals_total</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fieldmap.num_tiles_per_metatile</span></code> must be <code class="docutils literal notranslate"><span class="pre">8</span></code> or <code class="docutils literal notranslate"><span class="pre">12</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fieldmap.metatile_attribute_size</span></code> must be <code class="docutils literal notranslate"><span class="pre">2</span></code> or <code class="docutils literal notranslate"><span class="pre">4</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tileset.extrinsic_transparency</span></code> must be fully opaque (alpha <code class="docutils literal notranslate"><span class="pre">255</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tileset.tiles.sharing.packing</span></code> requires <code class="docutils literal notranslate"><span class="pre">tileset.palettes.packing.strategy</span></code> to be <code class="docutils literal notranslate"><span class="pre">backtracking</span></code>.</p></li>
+</ul>
+</section>
+</section>
+<section id="not-yet-implemented">
+<span id="id1"></span><h2>Not yet implemented<a class="headerlink" href="#not-yet-implemented" title="Link to this heading"></a></h2>
+<p>The <a class="reference external" href="https://github.com/grunt-lucas/porytiles/blob/develop/porytiles/config_templates/porytiles.example.yaml">annotated example file</a>
+previews two keys that aren’t wired up yet:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">tileset.import_transparency</span></code> — transparency handling for import.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tileset.palettes.match_candidate_top_n</span></code> — how many near-miss palettes to show when a <code class="docutils literal notranslate"><span class="pre">locked</span></code> palette compile fails to find a match.</p></li>
+</ul>
+<p>A handful of enum values are also reserved for future work and listed above as <em>(planned)</em>:
+<code class="docutils literal notranslate"><span class="pre">tile-sharing</span></code> <code class="docutils literal notranslate"><span class="pre">optimal</span></code> (both packing and alignment),
+<code class="docutils literal notranslate"><span class="pre">frame_linking</span></code> <code class="docutils literal notranslate"><span class="pre">hybrid</span></code>,
+<code class="docutils literal notranslate"><span class="pre">palette_resolution_strategy</span></code> <code class="docutils literal notranslate"><span class="pre">scan-all-tilesets</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">multi_palette_subtile_resolution_strategy</span></code> <code class="docutils literal notranslate"><span class="pre">split</span></code>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>These keys exist only in the annotated example, which is a documentation template Porytiles never loads.
+Don’t copy them into a real <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code> yet:
+because they aren’t recognized configuration paths, the validator rejects them as <code class="docutils literal notranslate"><span class="pre">unknown-config-key</span></code>
+and the compile fails. Use the example as a reading reference, not a starter file.</p>
+</div>
+</section>
+<section id="a-worked-example">
+<h2>A worked example<a class="headerlink" href="#a-worked-example" title="Link to this heading"></a></h2>
+<p>A minimal project-wide config that locks palettes and lets tile compiles patch open slots:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># porytiles/config.yaml — applies to every tileset in the project</span>
+<span class="nt">tileset</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">extrinsic_transparency</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">255</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">255</span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="nt">palettes</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">edit_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">locked</span>
+<span class="w">  </span><span class="nt">tiles</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">edit_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">patch</span>
+</pre></div>
+</div>
+<p>To change just one value for a single tileset, add a per-tileset file and leave the rest to fall back to the project config:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># porytiles/tilesets/gTileset_Example/config.yaml</span>
+<span class="nt">tileset</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">tiles</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">edit_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">optimize</span><span class="w">   </span><span class="c1"># this one tileset re-packs from scratch</span>
+</pre></div>
+</div>
+<p>For a single file that exercises every key with inline comments, see the
+<a class="reference external" href="https://github.com/grunt-lucas/porytiles/blob/develop/porytiles/config_templates/porytiles.example.yaml">fully annotated example</a>
+in the source repository, and remember the <a class="reference internal" href="#not-yet-implemented"><span class="std std-ref">not-yet-implemented</span></a> caveat above.</p>
+</section>
+<section id="see-also">
+<h2>See also<a class="headerlink" href="#see-also" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="quickstart.html"><span class="doc">Quick Start</span></a> — the short tour of the configuration system.</p></li>
+<li><p><a class="reference internal" href="cli-reference.html"><span class="doc">CLI Command Reference</span></a> — the complete command and flag listing.</p></li>
+<li><p><a class="reference internal" href="palette-packing.html"><span class="doc">Palette Packing</span></a>, <a class="reference internal" href="tile-sharing.html"><span class="doc">Tile Sharing</span></a>, <a class="reference internal" href="animations.html"><span class="doc">Animations</span></a>, <a class="reference internal" href="diagnostics.html"><span class="doc">Understanding Diagnostics</span></a> — the subsystems behind the values above.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">porytiles</span> <span class="pre">dump-tileset-config</span> <span class="pre">&lt;name&gt;</span></code> — confirm what’s actually in effect for a tileset.</p></li>
+</ul>
+</section>
 </section>
 
 
