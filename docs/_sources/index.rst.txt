@@ -10,6 +10,10 @@ Porytiles is a command-line tool for creating and editing overworld tilesets for
    checkout the corresponding `git tag <https://github.com/grunt-lucas/porytiles-user-docs/tags>`_
    and build locally with ``cd docsrc && uv run make html``.
 
+Looking for documentation on the ``porytiles-legacy`` tool instead?
+They can be found `on the GitHub wiki, <https://github.com/grunt-lucas/porytiles/wiki>`_
+and they will eventually move here.
+
 About This Documentation
 ------------------------
 
