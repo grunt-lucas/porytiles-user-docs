@@ -1,0 +1,11 @@
+/* Custom CSS for Porytiles documentation */
+
+/* Wider content area for readability */
+.wy-nav-content {
+    max-width: 900px;
+}
+
+/* Code block styling */
+.highlight {
+    background: #f8f8f8;
+}
