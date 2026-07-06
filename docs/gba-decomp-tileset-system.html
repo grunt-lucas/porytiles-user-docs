@@ -49,7 +49,32 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Background</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">How the GBA + Gen III Decomp Tileset System Works</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">How the GBA + Gen III Decomp Tileset System Works</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#start-with-the-hardware">Start with the hardware</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tiles-and-palettes-indexed-color">Tiles and palettes: indexed color</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tilemap-entries-how-tiles-reach-the-screen">Tilemap entries: how tiles reach the screen</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#metatiles-the-map-building-unit">Metatiles: the map-building unit</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#three-screen-layers-two-metatile-layers">Three screen layers, two metatile layers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dual-layer-vs-triple-layer">Dual-layer vs. triple-layer</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#primary-and-secondary-tilesets">Primary and secondary tilesets</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#secondaries-borrow-from-their-primary">Secondaries borrow from their primary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#why-the-split-exists">Why the split exists</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#the-fieldmap-h-header-file">The <code class="docutils literal notranslate"><span class="pre">fieldmap.h</span></code> header file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-files-on-disk">The files on disk</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#tiles-png"><code class="docutils literal notranslate"><span class="pre">tiles.png</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#palettes-00-pal-through-15-pal"><code class="docutils literal notranslate"><span class="pre">palettes/00.pal</span></code> through <code class="docutils literal notranslate"><span class="pre">15.pal</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#metatiles-bin"><code class="docutils literal notranslate"><span class="pre">metatiles.bin</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#metatile-attributes-bin"><code class="docutils literal notranslate"><span class="pre">metatile_attributes.bin</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#where-porymap-and-porytiles-fit">Where Porymap and Porytiles fit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#quick-glossary">Quick glossary</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="manual-tileset-insertion.html">Inserting a Tileset Manually</a></li>
 <li class="toctree-l1"><a class="reference internal" href="porytiles-concepts.html">Porytiles Concepts and Terminology</a></li>
 </ul>
@@ -103,21 +128,540 @@
              
   <section id="how-the-gba-gen-iii-decomp-tileset-system-works">
 <h1>How the GBA + Gen III Decomp Tileset System Works<a class="headerlink" href="#how-the-gba-gen-iii-decomp-tileset-system-works" title="Link to this heading"></a></h1>
-<div class="warning admonition">
-<p class="admonition-title">Page Status</p>
-<p>This page is a placeholder. Content coming soon.</p>
+<p>Porytiles exists so you don’t have to hand-manage most of what this page describes.
+You should still read it. The tile limits, palette slots, file names, and error messages you will
+run into all trace back to how the Game Boy Advance draws the overworld. Once you know
+the hardware underneath, a diagnostic with GBA jargon like like “ran out of palette slots”
+will feel a lot less frustrating.</p>
+<p>This page uses <code class="docutils literal notranslate"><span class="pre">pokeemerald</span></code> as its reference.
+FireRed/LeafGreen (<code class="docutils literal notranslate"><span class="pre">pokefirered</span></code>) differences are called out where they matter,
+and everything here applies to <code class="docutils literal notranslate"><span class="pre">pokeemerald-expansion</span></code> as well.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>You do not need to memorize this page before using Porytiles.
+Skim it once to understand the basics, then come back
+when a diagnostic mentions palettes, tile limits, layer types, etc.</p>
 </div>
-<p>This page covers GBA hardware and Gen III decomp fundamentals for users new to tilesets:</p>
+<section id="start-with-the-hardware">
+<h2>Start with the hardware<a class="headerlink" href="#start-with-the-hardware" title="Link to this heading"></a></h2>
+<p>The GBA has a 240x160 pixel screen, and the Gen III games draw the overworld with the
+console’s <strong>tiled background</strong> hardware. Instead of storing a full-screen image, the game
+hands the Advanced Picture Processing Unit (PPU) a collection of small tile images plus a grid that says which tile
+goes where. The PPU assembles the picture live, every frame.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>TODO: insert cool pic of GBA screen</p>
+</div>
+<p>There are three key facts about the hardware setup.
+If you understand these, everything else will start to make sense.</p>
+<ol class="arabic simple">
+<li><p>Tiles are 8x8 pixels and use indexed color.</p></li>
+<li><p>Each cell of the background grid is a 16-bit value with only 10 bits to name a tile
+and 4 bits to name a palette.</p></li>
+<li><p>There are four background layers, and the games use three of them for the map.</p></li>
+</ol>
+<p>The rest of this page walks you all the way up from the hardware to the decomp system:
+tiles, then the tilemap entries that place them, then metatiles,
+then the primary/secondary tileset split, and finally the files on disk
+where all of this actually lives in your decomp project.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For exhausting details, the classic reference is the
+<a class="reference external" href="https://gbadev.net/tonc/">Tonc tutorial</a>, especially its chapter on regular (tiled)
+backgrounds. This page summarizes just the parts that matter for decomp tilesets.</p>
+</div>
+</section>
+<section id="tiles-and-palettes-indexed-color">
+<h2>Tiles and palettes: indexed color<a class="headerlink" href="#tiles-and-palettes-indexed-color" title="Link to this heading"></a></h2>
+<p>A <strong>tile</strong> is an 8x8 pixel image.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>TODO: insert screencap of a tile</p>
+</div>
+<p>Important: each pixel is not actually a color. It is a number from 0 to 15
+that points into a <strong>palette</strong> of 16 colors. When the hardware draws the tile, it looks
+up each pixel’s number in whichever palette the tile was assigned and paints the color it
+finds there. At 4 bits per pixel, a tile occupies just 32 bytes of video memory.</p>
+<p>The GBA provides 16 of these background palettes. Each color slot is a 15-bit value
+(5 bits each for red, green, and blue), which gives two important takeaways:</p>
 <ul class="simple">
-<li><p>8x8 tiles, 4bpp indexed color, palette slots 0–15 with slot 0 as transparency</p></li>
-<li><p>Metatiles: 16x16 composites of 8x8 subtiles (2x2 tiles); tilemap entries (tile index + palette index + flip flags)</p></li>
-<li><p>Metatile dual vs triple layer concept</p></li>
-<li><p>Primary vs secondary tilesets: tile count limits, palette allocation (primary gets palettes 0–5, secondary gets 6–12 in default emerald)</p></li>
-<li><p>The <code class="docutils literal notranslate"><span class="pre">fieldmap.h</span></code> constants and what they control at a high level</p></li>
-<li><p>Artifact files: <code class="docutils literal notranslate"><span class="pre">tiles.png</span></code>, <code class="docutils literal notranslate"><span class="pre">palettes/*.pal</span></code>, <code class="docutils literal notranslate"><span class="pre">metatiles.bin</span></code>, <code class="docutils literal notranslate"><span class="pre">metatile_attributes.bin</span></code></p></li>
-<li><p>How Porymap fits in as the visual editor — Porytiles + Porymap together are a complementary “super suite” of tools, and Porytiles is designed with this in mind</p></li>
+<li><p>There are only 32,768 distinct colors. When your source art uses ordinary 8-bit RGB
+channels, each channel gets quantized down to 5 bits, so two RGBA colors that differ
+only slightly can collapse into the same hardware color.</p></li>
+<li><p><strong>Slot 0 of every palette means transparent.</strong> A pixel with value 0 shows whatever is
+behind it (a lower background layer, or the backdrop). This is why a 16-color palette
+really gives you 15 usable colors.</p></li>
 </ul>
-<p><strong>Cross-references:</strong> <a class="reference internal" href="configuration.html"><span class="doc">Configuration Reference</span></a> for fieldmap constants, <a class="reference internal" href="metatile-attributes.html"><span class="doc">Metatile Attributes Reference</span></a> for attribute details</p>
+<p>Indexed color has a neat consequence of which the whole system makes use: the same tile image rendered
+with two different palettes produces two differently colored results for free. A red roof
+and a blue roof can be one tile. Porytiles allows you to automatically exploit this in some cases;
+see <a class="reference internal" href="tile-sharing.html"><span class="doc">Tile Sharing</span></a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>TODO: insert screencap of tile shared roof tiles</p>
+</div>
+</section>
+<section id="tilemap-entries-how-tiles-reach-the-screen">
+<h2>Tilemap entries: how tiles reach the screen<a class="headerlink" href="#tilemap-entries-how-tiles-reach-the-screen" title="Link to this heading"></a></h2>
+<p>A background layer is a grid of 16-bit <strong>tilemap entries</strong>, one per 8x8 screen cell.
+Every entry has the same bit layout:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Bits</p></th>
+<th class="head"><p>Field</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>0-9</p></td>
+<td><p>Tile index</p></td>
+<td><p>Which tile image to draw (0 through 1023)</p></td>
+</tr>
+<tr class="row-odd"><td><p>10</p></td>
+<td><p>Horizontal flip</p></td>
+<td><p>Mirror the tile left-to-right</p></td>
+</tr>
+<tr class="row-even"><td><p>11</p></td>
+<td><p>Vertical flip</p></td>
+<td><p>Mirror the tile top-to-bottom</p></td>
+</tr>
+<tr class="row-odd"><td><p>12-15</p></td>
+<td><p>Palette</p></td>
+<td><p>Which of the 16 palettes colors this tile</p></td>
+</tr>
+</tbody>
+</table>
+<p>This one value is the most important piece of the entire tileset system, and its bit
+widths are where the famous limits come from:</p>
+<ul class="simple">
+<li><p>10 bits of tile index means <strong>at most 1024 tiles</strong> can be available for the map at any
+moment. That is the ceiling the primary/secondary split (below) divides up.</p></li>
+<li><p>4 bits of palette means at most 16 palettes, and the games reserve some of those for
+UI drawn over the map.</p></li>
+<li><p>The flip bits enable free mirroring. A staircase that climbs left and one that climbs right
+can share a single tile image. Porytiles checks flips automatically when deduplicating
+tiles.</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>TODO: insert screencap of flipped tiles</p>
+</div>
+</section>
+<section id="metatiles-the-map-building-unit">
+<h2>Metatiles: the map-building unit<a class="headerlink" href="#metatiles-the-map-building-unit" title="Link to this heading"></a></h2>
+<p>Nobody lays out an overworld map one 8x8 tile at a time. The games group tiles into
+<strong>metatiles</strong>: 16x16 pixel blocks, each a 2x2 arrangement of tiles. Map layouts are grids
+of metatile IDs, and metatiles are what you paint with in Porymap.</p>
+<p>A metatile is defined by a list of tilemap entries, in row-major order per layer:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>   subtile order            a dual-layer metatile = 8 entries
+   +---+---+
+   | 0 | 1 |                entries 0-3: the metatile&#39;s first layer
+   +---+---+                entries 4-7: the metatile&#39;s second layer
+   | 2 | 3 |
+   +---+---+
+</pre></div>
+</div>
+<p>Note that each metatile carries <strong>two</strong> layers of tile entries. What those layers mean is
+the next piece of the puzzle.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>TODO: insert screencap of a few metatiles, show layer breakdown</p>
+</div>
+<section id="three-screen-layers-two-metatile-layers">
+<h3>Three screen layers, two metatile layers<a class="headerlink" href="#three-screen-layers-two-metatile-layers" title="Link to this heading"></a></h3>
+<p>The overworld reserves background layer 0 for text boxes and menus, then draws the map
+with the other three:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Screen layer</p></th>
+<th class="head"><p>GBA background</p></th>
+<th class="head"><p>Draw order</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Top</p></td>
+<td><p>BG1</p></td>
+<td><p>In front of the player and other sprites</p></td>
+</tr>
+<tr class="row-odd"><td><p>Middle</p></td>
+<td><p>BG2</p></td>
+<td><p>Behind sprites</p></td>
+</tr>
+<tr class="row-even"><td><p>Bottom</p></td>
+<td><p>BG3</p></td>
+<td><p>Behind everything</p></td>
+</tr>
+</tbody>
+</table>
+<p>Player and NPC sprites render above the middle layer but below the top layer. That is the
+trick that allows “3D” perspective. It’s why the player sprites walks <em>behind</em> a tree canopy or under an archway:
+the tree canopy art lives on the top layer.</p>
+<p>A dual-layer metatile only has content for two of these three screen layers. Which two is
+decided by the metatile’s <strong>layer type</strong>, a value stored in its attributes:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Layer type</p></th>
+<th class="head"><p>First layer (entries 0-3) shows on</p></th>
+<th class="head"><p>Second layer (entries 4-7) shows on</p></th>
+<th class="head"><p>Unused screen layer</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">NORMAL</span></code> (value 0)</p></td>
+<td><p>Middle</p></td>
+<td><p>Top</p></td>
+<td><p>Bottom</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">COVERED</span></code> (value 1)</p></td>
+<td><p>Bottom</p></td>
+<td><p>Middle</p></td>
+<td><p>Top</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SPLIT</span></code> (value 2)</p></td>
+<td><p>Bottom</p></td>
+<td><p>Top</p></td>
+<td><p>Middle</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>You can easily see the layer type for any given metatile by inspecting it in Porymap’s metatile picker.</p>
+<p>TODO: include a screencap</p>
+</div>
+<p>So a patch of flowers is typically <code class="docutils literal notranslate"><span class="pre">COVERED</span></code> (ground plus flowers, nothing drawn
+over the player), while a tree canopy is typically <code class="docutils literal notranslate"><span class="pre">SPLIT</span></code> (background grass below the player, canopy above).</p>
+<div class="admonition caution">
+<p class="admonition-title">Caution</p>
+<p>In vanilla Emerald, the unused screen layer of a <code class="docutils literal notranslate"><span class="pre">NORMAL</span></code> metatile is filled with a
+garbage tile rather than a transparent one. You normally never see it, but if a <code class="docutils literal notranslate"><span class="pre">NORMAL</span></code>
+metatile’s first layer has transparent pixels, the garbage can peek through. This is a
+quirk of the game engine, not of your tileset.</p>
+<p>You can see it for yourself in <code class="docutils literal notranslate"><span class="pre">pokeemerald</span></code>: look at the <code class="docutils literal notranslate"><span class="pre">DrawMetatile</span></code> function in
+<code class="docutils literal notranslate"><span class="pre">src/field_camera.c</span></code>, in the <code class="docutils literal notranslate"><span class="pre">METATILE_LAYER_TYPE_NORMAL</span></code> case. It writes the tilemap
+entry <code class="docutils literal notranslate"><span class="pre">0x3014</span></code> to the bottom background layer. Decoded with the bit layout from earlier,
+<code class="docutils literal notranslate"><span class="pre">0x3014</span></code> means tile <code class="docutils literal notranslate"><span class="pre">0x14</span></code> with palette 3:
+an arbitrary tile from the primary tileset, not transparency.</p>
+</div>
+</section>
+<section id="dual-layer-vs-triple-layer">
+<h3>Dual-layer vs. triple-layer<a class="headerlink" href="#dual-layer-vs-triple-layer" title="Link to this heading"></a></h3>
+<p>Some projects modify the game engine so that every metatile carries all three layers: 12
+tilemap entries instead of 8, no layer type needed, content allowed everywhere. This is
+the <strong>triple-layer metatiles</strong> modification, and both Porymap and Porytiles support it
+(<code class="docutils literal notranslate"><span class="pre">fieldmap.num_tiles_per_metatile</span></code> set to <code class="docutils literal notranslate"><span class="pre">12</span></code>; see <a class="reference internal" href="configuration.html"><span class="doc">Configuration Reference</span></a>).</p>
+<p>If you want to enable triple-layer metatiles in your own project, the
+<a class="reference external" href="https://github.com/pret/pokeemerald/wiki/Triple-layer-metatiles">pret wiki guide</a>
+walks through the required engine changes, and Porymap’s
+<a class="reference external" href="https://huderlem.github.io/porymap/manual/settings-and-options.html">settings and options page</a>
+covers the corresponding “Enable Triple Layer Metatiles” project setting.</p>
+<p>Porytiles always presents your tileset source as three full-size layer images
+(<code class="docutils literal notranslate"><span class="pre">bottom.png</span></code>, <code class="docutils literal notranslate"><span class="pre">middle.png</span></code>, <code class="docutils literal notranslate"><span class="pre">top.png</span></code>), which correspond exactly to the three screen
+layers. On a stock dual-layer game, each individual metatile may only have art in two of
+the three, and Porytiles infers the correct layer type from which two you used. On a
+triple-layer game there is no restriction. Details live in <a class="reference internal" href="metatile-attributes.html"><span class="doc">Metatile Attributes Reference</span></a>.</p>
+</section>
+</section>
+<section id="primary-and-secondary-tilesets">
+<h2>Primary and secondary tilesets<a class="headerlink" href="#primary-and-secondary-tilesets" title="Link to this heading"></a></h2>
+<p>Every map layout names exactly two tilesets: a <strong>primary</strong> and a <strong>secondary</strong>. In the
+game source, a tileset is a small struct
+(<code class="docutils literal notranslate"><span class="pre">include/global.fieldmap.h</span></code>) tying together everything covered so far:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">Tileset</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">bool8</span><span class="w"> </span><span class="n">isCompressed</span><span class="p">;</span>
+<span class="w">    </span><span class="n">bool8</span><span class="w"> </span><span class="n">isSecondary</span><span class="p">;</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">u32</span><span class="w"> </span><span class="o">*</span><span class="n">tiles</span><span class="p">;</span><span class="w">              </span><span class="c1">// the tile images       (from tiles.png)</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">u16</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">palettes</span><span class="p">)[</span><span class="mi">16</span><span class="p">];</span><span class="w">     </span><span class="c1">// 16 palettes, 16 colors (from palettes/*.pal)</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">u16</span><span class="w"> </span><span class="o">*</span><span class="n">metatiles</span><span class="p">;</span><span class="w">          </span><span class="c1">// tilemap entries        (from metatiles.bin)</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">u16</span><span class="w"> </span><span class="o">*</span><span class="n">metatileAttributes</span><span class="p">;</span><span class="w"> </span><span class="c1">// behavior + layer type  (from metatile_attributes.bin)</span>
+<span class="w">    </span><span class="n">TilesetCB</span><span class="w"> </span><span class="n">callback</span><span class="p">;</span><span class="w">            </span><span class="c1">// per-frame hook, used for tile animations</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>(The <code class="docutils literal notranslate"><span class="pre">callback</span></code> is for animations: water ripples, flower breeze movement, etc. It’s a function that copies new tile
+frames into video memory on a schedule. See <a class="reference internal" href="animations.html"><span class="doc">Animations</span></a>.)</p>
+<p>When a map loads, the game copies <em>both</em> tilesets into video memory and palette memory at
+fixed positions. The hardware budgets are split between the pair. In Emerald:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Resource</p></th>
+<th class="head"><p>Total</p></th>
+<th class="head"><p>Primary share</p></th>
+<th class="head"><p>Secondary share</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Tiles</p></td>
+<td><p>1024</p></td>
+<td><p>512 (indices 0-511)</p></td>
+<td><p>512 (indices 512-1023)</p></td>
+</tr>
+<tr class="row-odd"><td><p>Metatiles</p></td>
+<td><p>1024</p></td>
+<td><p>512 (IDs 0-511)</p></td>
+<td><p>512 (IDs 512-1023)</p></td>
+</tr>
+<tr class="row-even"><td><p>Palettes</p></td>
+<td><p>16 (13 usable)</p></td>
+<td><p>6 (slots 0-5)</p></td>
+<td><p>7 (slots 6-12)</p></td>
+</tr>
+</tbody>
+</table>
+<p>Palette slots 13-15 are off limits: the game engine keeps them for things it draws over
+the map, such as message box frames and battle transition effects.</p>
+<p>FireRed/LeafGreen splits the same totals differently: the primary gets 640 tiles, 640
+metatiles, and 7 palettes (slots 0-6), leaving 384 tiles, 384 metatiles, and 6 palettes
+(slots 7-12) for the secondary.</p>
+<section id="secondaries-borrow-from-their-primary">
+<h3>Secondaries borrow from their primary<a class="headerlink" href="#secondaries-borrow-from-their-primary" title="Link to this heading"></a></h3>
+<p>Because both tilesets sit in video memory at the same time, and tilemap entries use
+absolute indices, nothing stops a secondary metatile from referencing the primary’s tiles
+and palettes. This is not just allowed, it is the normal case. A town’s building
+metatiles sit on the primary’s grass and path tiles, and secondary tiles routinely color
+themselves with primary palettes instead of spending one of the secondary’s own slots.</p>
+<p>The relationship only goes one way, though. A primary is shared by many maps, and each
+map pairs it with a different secondary. If a primary metatile referenced tile 700, it
+would draw whatever the <em>current</em> map’s secondary keeps at index 700: a rock wall on one
+map, a building window on the next. So in practice, primary metatiles stick to primary
+tiles and palettes. (Projects occasionally break this rule on purpose, but that only
+works if every secondary paired with that primary keeps identical content at the
+borrowed indices. It’s a very deliberate, carefully maintained setup.)</p>
+<p>Porytiles understands this pairing. When you compile a secondary tileset, it resolves
+the partner primary and reuses primary tiles and palettes automatically where it can.
+See <a class="reference internal" href="configuration.html"><span class="doc">Configuration Reference</span></a> for how the partner primary is resolved (<code class="docutils literal notranslate"><span class="pre">tileset.primary_pairing</span></code>).</p>
+</section>
+<section id="why-the-split-exists">
+<h3>Why the split exists<a class="headerlink" href="#why-the-split-exists" title="Link to this heading"></a></h3>
+<p>The primary tileset holds the shared basics for a whole region: paths, grass, water,
+ledges. Nearly every outdoor Hoenn map uses <code class="docutils literal notranslate"><span class="pre">gTileset_General</span></code> as its primary. The
+secondary holds what makes an area distinct: a town’s buildings, a cave’s rock walls, etc.</p>
+<p>This division is what makes connected maps work. As you walk from route to town, both
+maps usually share the same primary, so all the common ground renders identically on both
+sides of the border while the game loads in the new secondary. It’s also ROM space optimization:
+hundreds of maps reuse one copy of the general tiles instead of each carrying their own.</p>
+<p>For your own project the takeaway is: <strong>primary tilesets are shared infrastructure,
+secondary tilesets are where per-area special decoration goes.</strong> A primary edit touches every map
+that uses it; a secondary edit is usually local to a handful of maps.</p>
+</section>
+</section>
+<section id="the-fieldmap-h-header-file">
+<h2>The <code class="docutils literal notranslate"><span class="pre">fieldmap.h</span></code> header file<a class="headerlink" href="#the-fieldmap-h-header-file" title="Link to this heading"></a></h2>
+<p>The split described above is defined by a set of macros in your project’s <code class="docutils literal notranslate"><span class="pre">include/fieldmap.h</span></code>.
+Both the game code and your tools must agree on them:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Constant</p></th>
+<th class="head"><p>Emerald</p></th>
+<th class="head"><p>FRLG</p></th>
+<th class="head"><p>What it controls</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">NUM_TILES_IN_PRIMARY</span></code></p></td>
+<td><p>512</p></td>
+<td><p>640</p></td>
+<td><p>Tiles reserved for the primary</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">NUM_TILES_TOTAL</span></code></p></td>
+<td><p>1024</p></td>
+<td><p>1024</p></td>
+<td><p>Total tile capacity (fixed by the 10-bit tile index)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">NUM_METATILES_IN_PRIMARY</span></code></p></td>
+<td><p>512</p></td>
+<td><p>640</p></td>
+<td><p>Metatiles reserved for the primary</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">NUM_METATILES_TOTAL</span></code></p></td>
+<td><p>1024</p></td>
+<td><p>1024</p></td>
+<td><p>Total metatile capacity</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">NUM_PALS_IN_PRIMARY</span></code></p></td>
+<td><p>6</p></td>
+<td><p>7</p></td>
+<td><p>Palette slots reserved for the primary</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">NUM_PALS_TOTAL</span></code></p></td>
+<td><p>13</p></td>
+<td><p>13</p></td>
+<td><p>Palette slots available to tilesets (rest are engine’s)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">NUM_TILES_PER_METATILE</span></code></p></td>
+<td><p>8</p></td>
+<td><p>8</p></td>
+<td><p>8 for dual-layer metatiles, 12 for triple-layer</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MAX_MAP_DATA_SIZE</span></code></p></td>
+<td><p>10240</p></td>
+<td><p>10240</p></td>
+<td><p>Size of the map layout buffer (not tileset related)</p></td>
+</tr>
+</tbody>
+</table>
+<p>Don’t treat this as a simple config file. Raising some of the limits here without corresponding
+game-engine changes will not necessarily work. Established engine modifications (like triple-layer metatiles)
+come with instructions for which constants to change.</p>
+<p>Porytiles and Porymap read all of these from your project automatically, so the limits will always match
+your build. You can override them for specific use cases.
+Don’t worry about that now, it will make more sense later as you play with the tool.
+See <a class="reference internal" href="configuration.html"><span class="doc">Configuration Reference</span></a> for how overriding works.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">pokeemerald-expansion</span></code>’s <code class="docutils literal notranslate"><span class="pre">include/fieldmap.h</span></code> now contains both the Emerald and FRLG specific constants
+and adds an <code class="docutils literal notranslate"><span class="pre">isFrlg</span></code> flag on each map layout, so a single project can host Emerald-split and FRLG-split maps
+side by side.</p>
+</div>
+</section>
+<section id="the-files-on-disk">
+<h2>The files on disk<a class="headerlink" href="#the-files-on-disk" title="Link to this heading"></a></h2>
+<p>Each tileset lives in its own directory under <code class="docutils literal notranslate"><span class="pre">data/tilesets/primary/</span></code> or
+<code class="docutils literal notranslate"><span class="pre">data/tilesets/secondary/</span></code>. Using Emerald’s general tileset as the example:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>data/tilesets/primary/general/
+├── tiles.png                  # the tile sheet (indexed PNG)
+├── palettes/
+│   ├── 00.pal ... 15.pal      # one JASC palette file per hardware slot
+├── metatiles.bin              # tilemap entries for every metatile
+├── metatile_attributes.bin    # behavior + layer type for every metatile
+└── anim/                      # (some tilesets) frames for tile animations
+</pre></div>
+</div>
+<p>These four artifacts map onto the <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">Tileset</span></code> fields shown earlier.
+The project’s build system converts them into raw GBA formats (and LZ77-compresses the tiles
+when <code class="docutils literal notranslate"><span class="pre">isCompressed</span></code> is set) as part of compiling the ROM.</p>
+<section id="tiles-png">
+<h3><code class="docutils literal notranslate"><span class="pre">tiles.png</span></code><a class="headerlink" href="#tiles-png" title="Link to this heading"></a></h3>
+<p>The main tile sheet: every unique 8x8 tile for the tileset.
+The tiles are laid out 16 tiles per row, for 128 pixels wide.
+It is a 4-bit indexed PNG, and its pixel values are the palette slot
+numbers described above, not colors.</p>
+<p>If you open <code class="docutils literal notranslate"><span class="pre">tiles.png</span></code> in an image viewer it usually looks like a greyscale jumble.
+That is expected. A PNG can only embed one palette, but these tiles will be rendered with
+up to 13 different palettes in game, so the embedded palette is a meaningless
+placeholder. Only the index values matter.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>By default, the Porytiles-generated <code class="docutils literal notranslate"><span class="pre">tiles.png</span></code> avoids the greyscale jumble. Porytiles
+writes the file in <strong>true-color mode</strong>: an 8-bit indexed PNG whose embedded palette holds
+the tileset’s real palettes, back to back. Each pixel’s upper four bits select a palette
+and its lower four bits are the usual color index, so the sheet opens in any ordinary
+image viewer in its actual colors. (Porytiles picks each tile’s display palette from the
+first metatile that uses it; a tile reused under several palettes displays with the first
+one found.)</p>
+<p>Nothing downstream changes, because the lower four bits still hold the same index values
+as a vanilla <code class="docutils literal notranslate"><span class="pre">tiles.png</span></code>. The decomp’s <code class="docutils literal notranslate"><span class="pre">gbagfx</span></code> tool reads only those four bits when
+building the ROM, and Porymap (5.2.0 and later) understands the format natively. If you
+want the vanilla greyscale look instead, set <code class="docutils literal notranslate"><span class="pre">tileset.tiles.palette_mode</span></code> to <code class="docutils literal notranslate"><span class="pre">greyscale</span></code>
+(see <a class="reference internal" href="configuration.html"><span class="doc">Configuration Reference</span></a>).</p>
+<p>TODO: show a “before and after” pic</p>
+</div>
+</section>
+<section id="palettes-00-pal-through-15-pal">
+<h3><code class="docutils literal notranslate"><span class="pre">palettes/00.pal</span></code> through <code class="docutils literal notranslate"><span class="pre">15.pal</span></code><a class="headerlink" href="#palettes-00-pal-through-15-pal" title="Link to this heading"></a></h3>
+<p>One text file per hardware palette slot, in JASC format:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>JASC-PAL
+0100
+16
+24 41 82
+255 255 255
+...14 more lines, one R G B triple per slot
+</pre></div>
+</div>
+<p>All 16 files exist for every tileset, but the game engine only references the relevant ones for a given tileset.
+In other words, a primary tileset’s <code class="docutils literal notranslate"><span class="pre">00.pal</span></code> through <code class="docutils literal notranslate"><span class="pre">05.pal</span></code> and a secondary’s <code class="docutils literal notranslate"><span class="pre">06.pal</span></code> through <code class="docutils literal notranslate"><span class="pre">12.pal</span></code> (Emerald numbers).
+The rest are placeholders that the game never reads.
+Colors are written as 0-255 RGB but get downsampled to the GBA’s 5-bit channels at build time.</p>
+</section>
+<section id="metatiles-bin">
+<h3><code class="docutils literal notranslate"><span class="pre">metatiles.bin</span></code><a class="headerlink" href="#metatiles-bin" title="Link to this heading"></a></h3>
+<p>The metatile definitions: a flat array of little-endian 16-bit tilemap entries, 8 per
+metatile (12 on triple-layer projects), in the subtile order diagrammed earlier. A
+dual-layer metatile is exactly 16 bytes, so Emerald’s 512-metatile general tileset
+produces an 8192-byte file.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>TODO: include a diagram of the binary layout</p>
+</div>
+</section>
+<section id="metatile-attributes-bin">
+<h3><code class="docutils literal notranslate"><span class="pre">metatile_attributes.bin</span></code><a class="headerlink" href="#metatile-attributes-bin" title="Link to this heading"></a></h3>
+<p>One attribute value per metatile, in the same order as <code class="docutils literal notranslate"><span class="pre">metatiles.bin</span></code>. In Emerald and
+Ruby this is 2 bytes per metatile: bits 0-7 hold the <strong>behavior</strong> (the gameplay meaning
+of the metatile, like <code class="docutils literal notranslate"><span class="pre">MB_TALL_GRASS</span></code> or <code class="docutils literal notranslate"><span class="pre">MB_PUDDLE</span></code>) and bits 12-15 hold the layer type.
+FireRed/LeafGreen uses 4 bytes per metatile and packs in two extra fields, terrain type
+and encounter type. Porytiles and Porymap both support robust customizations.
+All the details (for Porytiles at least) are documented in <a class="reference internal" href="metatile-attributes.html"><span class="doc">Metatile Attributes Reference</span></a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>TODO: include a diagram of the binary layout</p>
+</div>
+</section>
+</section>
+<section id="where-porymap-and-porytiles-fit">
+<h2>Where Porymap and Porytiles fit<a class="headerlink" href="#where-porymap-and-porytiles-fit" title="Link to this heading"></a></h2>
+<p><a class="reference external" href="https://github.com/huderlem/porymap">Porymap</a> is the visual editor for this system. It
+reads the four artifacts, renders metatiles with their real palettes, lets you paint them
+onto map layouts, and its Tileset Editor allows you to edits <code class="docutils literal notranslate"><span class="pre">metatiles.bin</span></code>
+<code class="docutils literal notranslate"><span class="pre">metatile_attributes.bin</span></code> directly, so you never need to touch those binaries by hand.</p>
+<p>What Porymap does not do is create the artifacts from your artwork. Getting from an RGBA
+mockup to a valid indexed <code class="docutils literal notranslate"><span class="pre">tiles.png</span></code> plus <code class="docutils literal notranslate"><span class="pre">.pal</span></code> files means choosing at most 15 colors
+per palette, deciding which palette each tile uses, hand-indexing every pixel, and
+deduplicating tiles across flips. Done manually, this is the most tedious and
+error-prone part of creating a tileset (described in <a class="reference internal" href="manual-tileset-insertion.html"><span class="doc">Inserting a Tileset Manually</span></a>).
+Tools like TileMapStudio certainly can speed things up, but the process is still quite tedious
+when multiplied across the dozens of custom tilesets you might need for your decomp project.</p>
+<p>That gap is exactly what Porytiles fills. You draw the three background layers as ordinary
+RGBA images, and <code class="docutils literal notranslate"><span class="pre">compile-tileset</span></code> produces all four artifacts: it quantizes and packs
+your colors into palettes (<a class="reference internal" href="palette-packing.html"><span class="doc">Palette Packing</span></a>), indexes and deduplicates the tiles,
+builds the metatile entries, and assembles attributes from your
+<code class="docutils literal notranslate"><span class="pre">attributes.csv</span></code>. Porymap then consumes the result as if you had made it by hand.</p>
+<p>The two tools are designed to be complementary: Porytiles turns art into tilesets,
+Porymap turns tilesets into maps. A comfortable workflow uses both side by side, and
+Porytiles’ <code class="docutils literal notranslate"><span class="pre">decompile-tileset</span></code> command keeps edits made through Porymap in sync with your
+source images (see <a class="reference internal" href="compile-decompile-workflow.html"><span class="doc">The Compile/Decompile Workflow</span></a>). Sometimes it’s easier to make a quick edit
+on the Porymap side, Porytiles lets you easily sync those edits back so you can continue working uninterrupted.</p>
+</section>
+<section id="quick-glossary">
+<h2>Quick glossary<a class="headerlink" href="#quick-glossary" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Term</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Tile</p></td>
+<td><p>8x8 pixel image; each pixel is a 4-bit index into a palette</p></td>
+</tr>
+<tr class="row-odd"><td><p>Palette</p></td>
+<td><p>16 colors (slot 0 = transparent); the GBA has 16 background palettes</p></td>
+</tr>
+<tr class="row-even"><td><p>Tilemap entry</p></td>
+<td><p>16-bit value: tile index, horizontal/vertical flip, palette number</p></td>
+</tr>
+<tr class="row-odd"><td><p>Metatile</p></td>
+<td><p>16x16 map-building block: 2x2 tiles across two (or three) layers</p></td>
+</tr>
+<tr class="row-even"><td><p>Layer type</p></td>
+<td><p>Per-metatile attribute choosing which two screen layers a dual-layer metatile uses</p></td>
+</tr>
+<tr class="row-odd"><td><p>Behavior</p></td>
+<td><p>Per-metatile attribute giving its gameplay meaning (grass, water, door, …)</p></td>
+</tr>
+<tr class="row-even"><td><p>Primary tileset</p></td>
+<td><p>The shared half of a map’s tileset pair (region-wide basics)</p></td>
+</tr>
+<tr class="row-odd"><td><p>Secondary tileset</p></td>
+<td><p>The area-specific half of a map’s tileset pair</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fieldmap.h</span></code></p></td>
+<td><p>Header defining how the tile/metatile/palette budgets are split</p></td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 
 
