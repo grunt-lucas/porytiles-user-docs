@@ -50,7 +50,26 @@
 <p class="caption" role="heading"><span class="caption-text">Background</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="gba-decomp-tileset-system.html">How the GBA + Gen III Decomp Tileset System Works</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Inserting a Tileset Manually</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Inserting a Tileset Manually</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#what-you-have-to-to-produce">What you have to to produce</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#your-tools">Your tools</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#porymap">Porymap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tilemap-studio">Tilemap Studio</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#an-image-editor-with-indexed-color-support">An image editor with indexed-color support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#text-editor">Text editor</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#step-1-create-the-tileset-skeleton">Step 1: create the tileset skeleton</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#step-2-plan-your-palettes">Step 2: plan your palettes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#step-3-index-the-art-and-build-tiles-png">Step 3: index the art and build <code class="docutils literal notranslate"><span class="pre">tiles.png</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#step-4-write-the-palette-files">Step 4: write the palette files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#step-5-paint-metatiles-in-porymap">Step 5: paint metatiles in Porymap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#step-6-set-the-attributes">Step 6: set the attributes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#step-7-animations-the-hard-part">Step 7: animations, the hard part</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#why-people-automate-this">Why people automate this</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#when-manual-is-still-the-right-choice">When manual is still the right choice</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="porytiles-concepts.html">Porytiles Concepts and Terminology</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
@@ -103,23 +122,429 @@
              
   <section id="inserting-a-tileset-manually">
 <h1>Inserting a Tileset Manually<a class="headerlink" href="#inserting-a-tileset-manually" title="Link to this heading"></a></h1>
-<div class="warning admonition">
-<p class="admonition-title">Page Status</p>
-<p>This page is a placeholder. Content coming soon.</p>
+<p>Before Porytiles, decomp developers inserted every custom tileset into their project by hand.
+This page walks through that manual process from start to finish:
+preparing the art, indexing it, creating palette files, painting metatiles in Porymap,
+and wiring up animations in the C code.</p>
+<p>Why document the manual way in a Porytiles guidebook? A few reasons:</p>
+<ol class="arabic simple">
+<li><p><strong>This is the process that Porytiles automates.</strong> Once you have seen the manual steps, the tool’s behavior and its diagnostics stop being mysterious.</p></li>
+<li><p><strong>Manual work is still occasionally the right choice.</strong> A couple of edge cases remain where a human beats the compiler. They are covered at the end of this page.</p></li>
+<li><p><strong>Most older community tutorials teach this process.</strong> If you learned tileset insertion years ago, this page maps that knowledge onto the terms used throughout these docs.</p></li>
+<li><p><strong>You might actually enjoy manual insertion.</strong> It’s still important to know how this process actually works, and some folks find manual insertion relaxing and fun. If that’s you, this tutorial will help you get started, and you can come back to Porytiles later if you ever need help speeding things along.</p></li>
+</ol>
+<p>This page assumes you know the material in <a class="reference internal" href="gba-decomp-tileset-system.html"><span class="doc">How the GBA + Gen III Decomp Tileset System Works</span></a>:
+tiles, palettes, tilemap entries, metatiles, the primary/secondary split,
+and the four files each tileset keeps on disk.
+Read that page first if you have not.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The classic community reference for this workflow is the
+<a class="reference external" href="https://www.pokecommunity.com/threads/tile-inserting-animating-tutorial.422362/">tile inserting &amp; animating tutorial</a>
+on PokéCommunity. This page covers the same topic
+but updated to match the current decomp file layouts.
+Some details in older tutorials have changed as the decomps evolved.</p>
 </div>
-<p>This page covers the manual (non-Porytiles) tileset creation process. Manual insertion is not just historical — it is still needed for certain edge-case optimizations that Porytiles cannot handle.</p>
+<section id="what-you-have-to-to-produce">
+<h2>What you have to to produce<a class="headerlink" href="#what-you-have-to-to-produce" title="Link to this heading"></a></h2>
+<p>Manual insertion means manually producing, with a varied set of tools, everything Porytiles would automatically generate:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Artifact</p></th>
+<th class="head"><p>What produces it manually</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tiles.png</span></code></p></td>
+<td><p>You, in an image editor, possibly with help from TileMapStudio</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">palettes/00.pal</span></code> - <code class="docutils literal notranslate"><span class="pre">15.pal</span></code></p></td>
+<td><p>You, exported from your image editor or typed by hand</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">metatiles.bin</span></code></p></td>
+<td><p>Porymap’s Tileset Editor</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">metatile_attributes.bin</span></code></p></td>
+<td><p>Porymap’s Tileset Editor</p></td>
+</tr>
+<tr class="row-even"><td><p>C registration (<code class="docutils literal notranslate"><span class="pre">headers.h</span></code>, <code class="docutils literal notranslate"><span class="pre">graphics.h</span></code>, <code class="docutils literal notranslate"><span class="pre">metatiles.h</span></code>)</p></td>
+<td><p>Porymap and a text editor</p></td>
+</tr>
+<tr class="row-odd"><td><p>Animation code</p></td>
+<td><p>You, in <code class="docutils literal notranslate"><span class="pre">src/tileset_anims.c</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>The steps below go in dependency order.
+In practice you will loop through them many times,
+which is most of the reason this process is so tedious.</p>
+</section>
+<section id="your-tools">
+<h2>Your tools<a class="headerlink" href="#your-tools" title="Link to this heading"></a></h2>
+<section id="porymap">
+<h3><a class="reference external" href="https://github.com/huderlem/porymap">Porymap</a><a class="headerlink" href="#porymap" title="Link to this heading"></a></h3>
+<p>You’ll use this to create the tileset skeleton, paint metatiles, and edit attributes.</p>
+</section>
+<section id="tilemap-studio">
+<h3><a class="reference external" href="https://github.com/Rangi42/tilemap-studio">Tilemap Studio</a><a class="headerlink" href="#tilemap-studio" title="Link to this heading"></a></h3>
+<p>You’ll use this to deduplicate tiles from a mockup image, accounting for flips.</p>
+</section>
+<section id="an-image-editor-with-indexed-color-support">
+<h3>An image editor with indexed-color support<a class="headerlink" href="#an-image-editor-with-indexed-color-support" title="Link to this heading"></a></h3>
+<p>You’ll use this to draw the art, convert it to indexed color, assemble <code class="docutils literal notranslate"><span class="pre">tiles.png</span></code>, and possibly export palettes.</p>
+<p>The community typically recommends:</p>
+<ol class="arabic simple">
+<li><p><a class="reference external" href="https://www.aseprite.org/">Aseprite</a> - Highly recommended, but it does cost $20 USD. It’s free if you compile it yourself from source: <a class="reference external" href="https://github.com/aseprite/aseprite">GitHub Link.</a></p></li>
+<li><p><a class="reference external" href="https://libresprite.github.io/#!/">LibreSprite</a> - Forked from Aseprite at some point, it’s totally free.</p></li>
+<li><p><a class="reference external" href="https://www.gimp.org/">GIMP</a> - GIMP is completely free and cross platform.</p></li>
+<li><p><a class="reference external" href="https://graphicsgale.com/us/">GraphicsGale</a> - GraphicsGale is free, but Windows-only. It does work in Wine, but can be a bit buggy.</p></li>
+</ol>
+<p>Use whichever you prefer. The rest of this tutorial will show Aseprite, so you’ll need to translate functionality to your preferred tool.</p>
+</section>
+<section id="text-editor">
+<h3>Text editor<a class="headerlink" href="#text-editor" title="Link to this heading"></a></h3>
+<p>You’ll need one to edit the C registration and animation code. I recommend <a class="reference external" href="https://code.visualstudio.com/">VS Code</a>, but any editor will do.</p>
+</section>
+</section>
+<section id="step-1-create-the-tileset-skeleton">
+<h2>Step 1: create the tileset skeleton<a class="headerlink" href="#step-1-create-the-tileset-skeleton" title="Link to this heading"></a></h2>
+<p>Porymap can create a new empty tileset for you.
+In the main window, choose <strong>File &gt; New Tileset…</strong> (Ctrl+Shift+N),
+pick a name like <code class="docutils literal notranslate"><span class="pre">gTileset_MyTileset</span></code>, and choose primary or secondary.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>TODO: insert screencap</p>
+</div>
+<p>Porymap then does the boring part. It creates:</p>
 <ul class="simple">
-<li><p>Tools involved: TilemapStudio, Aseprite, Porymap, text editor</p></li>
-<li><p>Creating a new tileset via Porymap</p></li>
-<li><p>Creating indexed <code class="docutils literal notranslate"><span class="pre">tiles.png</span></code> manually: converting RGBA to 4bpp indexed, arranging 8x8 tiles</p></li>
-<li><p>Building JASC-format <code class="docutils literal notranslate"><span class="pre">.pal</span></code> files by hand</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">metatiles.bin</span></code>: how metatile entries encode tile index, palette, flip flags</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">metatile_attributes.bin</span></code> for behaviors</p></li>
-<li><p>How to edit <code class="docutils literal notranslate"><span class="pre">metatiles.bin</span></code> and <code class="docutils literal notranslate"><span class="pre">metatile_attributes.bin</span></code> via Porymap (binary editing is not necessary)</p></li>
-<li><p>Pain points: re-indexing when palettes change, manual palette slot assignment, tedious metatile painting</p></li>
-<li><p>When manual is still the right choice (specific optimizations, edge cases Porytiles does not cover)</p></li>
+<li><p>the <code class="docutils literal notranslate"><span class="pre">data/tilesets/{primary,secondary}/my_tileset/</span></code> directory</p></li>
+<li><p>a blank <code class="docutils literal notranslate"><span class="pre">tiles.png</span></code></p></li>
+<li><p>empty metatiles in <code class="docutils literal notranslate"><span class="pre">metatiles.bin</span></code></p></li>
+<li><p>default attributes in <code class="docutils literal notranslate"><span class="pre">metatile_attributes.bin</span></code></p></li>
+<li><p>16 all-black palette files</p></li>
 </ul>
-<p><strong>Cross-references:</strong> <a class="reference internal" href="gba-decomp-tileset-system.html"><span class="doc">How the GBA + Gen III Decomp Tileset System Works</span></a> for terminology, <a class="reference internal" href="creating-your-first-tileset.html"><span class="doc">Creating Your First Tileset</span></a> for the Porytiles alternative</p>
+<p>It also registers the tileset in <code class="docutils literal notranslate"><span class="pre">src/data/tilesets/headers.h</span></code>, <code class="docutils literal notranslate"><span class="pre">src/data/tilesets/graphics.h</span></code>, and <code class="docutils literal notranslate"><span class="pre">src/data/tilesets/metatiles.h</span></code>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">headers.h</span></code> entry is the <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">Tileset</span></code> described in
+<a class="reference internal" href="gba-decomp-tileset-system.html"><span class="doc">How the GBA + Gen III Decomp Tileset System Works</span></a>, and the other two files place the on-disk
+artifacts into the ROM. For Emerald’s General tileset they look like this:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="c1">// src/data/tilesets/headers.h</span>
+<span class="k">const</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">Tileset</span><span class="w"> </span><span class="n">gTileset_General</span><span class="w"> </span><span class="o">=</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="p">.</span><span class="n">isCompressed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">TRUE</span><span class="p">,</span>
+<span class="w">    </span><span class="p">.</span><span class="n">isSecondary</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">FALSE</span><span class="p">,</span>
+<span class="w">    </span><span class="p">.</span><span class="n">tiles</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">gTilesetTiles_General</span><span class="p">,</span>
+<span class="w">    </span><span class="p">.</span><span class="n">palettes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">gTilesetPalettes_General</span><span class="p">,</span>
+<span class="w">    </span><span class="p">.</span><span class="n">metatiles</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">gMetatiles_General</span><span class="p">,</span>
+<span class="w">    </span><span class="p">.</span><span class="n">metatileAttributes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">gMetatileAttributes_General</span><span class="p">,</span>
+<span class="w">    </span><span class="p">.</span><span class="n">callback</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">InitTilesetAnim_General</span><span class="p">,</span>
+<span class="p">};</span>
+
+<span class="c1">// src/data/tilesets/metatiles.h</span>
+<span class="k">const</span><span class="w"> </span><span class="n">u16</span><span class="w"> </span><span class="n">gMetatiles_General</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">INCBIN_U16</span><span class="p">(</span><span class="s">&quot;data/tilesets/primary/general/metatiles.bin&quot;</span><span class="p">);</span>
+<span class="k">const</span><span class="w"> </span><span class="n">u16</span><span class="w"> </span><span class="n">gMetatileAttributes_General</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">INCBIN_U16</span><span class="p">(</span><span class="s">&quot;data/tilesets/primary/general/metatile_attributes.bin&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>If you prefer, you can do all of this with a text editor instead:
+create the directory, copy placeholder files from an existing tileset,
+and add the three registration entries yourself.
+Porymap saves you the typing and prevents dumb mistakes, so it’s recommended you just let Porymap handle it.</p>
+<div class="admonition caution">
+<p class="admonition-title">Caution</p>
+<p>The include macros in <code class="docutils literal notranslate"><span class="pre">graphics.h</span></code> have changed over decomp history.
+Older trees use <code class="docutils literal notranslate"><span class="pre">INCBIN_U32(&quot;data/tilesets/.../tiles.4bpp.lz&quot;)</span></code> and list the
+conversion in a Makefile rule; current <code class="docutils literal notranslate"><span class="pre">pokeemerald</span></code> uses <code class="docutils literal notranslate"><span class="pre">INCGFX_U32</span></code> with the
+<code class="docutils literal notranslate"><span class="pre">.png</span></code> path and conversion arguments (including a <code class="docutils literal notranslate"><span class="pre">-num_tiles</span></code> count you may
+need to bump as your sheet grows) inline. Copy whatever pattern your tree
+already uses for the vanilla tilesets.</p>
+</div>
+<p>Porymap does not wire up animations.
+A fresh tileset has no animation callback.
+You have to add that later by hand in C.</p>
+</section>
+<section id="step-2-plan-your-palettes">
+<h2>Step 2: plan your palettes<a class="headerlink" href="#step-2-plan-your-palettes" title="Link to this heading"></a></h2>
+<p>This is probably the hardest part of manual insertion,
+and the step where mistakes are most tedious to fix,
+because everything after it depends on the palette layout.</p>
+<p>Recall the budget from <a class="reference internal" href="gba-decomp-tileset-system.html"><span class="doc">How the GBA + Gen III Decomp Tileset System Works</span></a>.
+In Emerald, a primary tileset owns palette slots 0-5 and a secondary owns
+slots 6-12; each palette holds 15 usable colors plus transparent slot 0.
+FireRed/LeafGreen splits the same 13 slots differently: 0-6 for primary and 7-12 for secondary.</p>
+<p>Now look at your artwork and partition it:</p>
+<ol class="arabic simple">
+<li><p>Group the art into regions that will share a palette.
+Every 8x8 tile must draw all of its colors from a single palette,
+so regions must be chosen along tile boundaries.</p></li>
+<li><p>Count unique colors per group, and keep each group at 15 or fewer.
+Remember that the GBA quantizes each channel to 5 bits,
+so two colors that differ only slightly may count as one in the end.</p></li>
+<li><p>If you are building a secondary tileset, check the paired primary first.
+Its palettes are available to you for free, and every slot you can borrow
+is a slot you keep for the art that really needs it.</p></li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>TODO: insert screencap</p>
+</div>
+<p>If you get this wrong or change your mind later, then the indexing work in the next
+step has to be redone for every affected tile.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>This planning problem is what Porytiles calls palette packing,
+and solving it automatically is one of the tool’s main jobs; see <a class="reference internal" href="palette-packing.html"><span class="doc">Palette Packing</span></a>.</p>
+<p>For the computer science technical nerds, palette packing is an NP-hard problem known as “bin packing”,
+specifically a variant of bin packing often called “VM packing” or the “pagination problem.”
+Check out <a class="reference external" href="https://arxiv.org/abs/1605.00558">this academic paper</a> for more information.
+The <a class="reference external" href="https://en.wikipedia.org/wiki/Bin_packing_problem">Wikipedia page</a> is also quite helpful.</p>
+</div>
+</section>
+<section id="step-3-index-the-art-and-build-tiles-png">
+<h2>Step 3: index the art and build <code class="docutils literal notranslate"><span class="pre">tiles.png</span></code><a class="headerlink" href="#step-3-index-the-art-and-build-tiles-png" title="Link to this heading"></a></h2>
+<p>Most people start out by creating art on an RGB PNG, or with an indexed PNG and a large palette.
+The tile sheet, though, must be an <strong>indexed</strong> PNG whose pixel values are
+palette slot numbers from 0 to 15.
+Getting from one to the other can be tricky,
+since you’ll have to ensure that each 8x8 tile on your sheet has the right pixel values (palette slot numbers)
+such that they correspond to the contents of your <code class="docutils literal notranslate"><span class="pre">.pal</span></code> files.</p>
+<p>For each palette group from Step 2:</p>
+<ol class="arabic simple">
+<li><p>Convert the region to indexed color mode in your editor
+(in GIMP: Image &gt; Mode &gt; Indexed; in Aseprite: Sprite &gt; Color Mode &gt; Indexed).</p></li>
+<li><p>Arrange the resulting 16-color palette in the <strong>exact slot order</strong> you will
+write into the <code class="docutils literal notranslate"><span class="pre">.pal</span></code> file, with transparency at slot 0.
+The PNG stores index values, so if your editor puts a color at index 3 but
+your palette file lists it at line 5, every pixel of that color renders wrong in game.</p></li>
+</ol>
+<p>Then assemble the sheet:</p>
+<ol class="arabic simple">
+<li><p>Cut the indexed art into 8x8 tiles and lay them out 16 tiles per row
+(128 pixels wide), matching the vanilla sheets.</p></li>
+<li><p>Deduplicate as you go. Two tiles that are identical, or that are mirror
+images of each other, should appear in the sheet once; the flip bits in the
+metatile entries recover the variants for free.</p></li>
+<li><p>By convention, leave tile 0 fully transparent so there is an obvious
+“empty” tile to paint with.</p></li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>TODO: insert screencap</p>
+</div>
+<p>Deduplication by eye is error-prone, and this is where
+<a class="reference external" href="https://github.com/Rangi42/tilemap-studio">Tilemap Studio</a> earns its place in
+the toolbox: its <strong>Image to Tiles</strong> function (Ctrl+X) converts a mockup image
+into a deduplicated tile sheet, taking X/Y flips into account, and can export
+a palette at the same time.
+You will still need to massage the output into your planned multi-palette
+layout, but it beats comparing tiles by hand.</p>
+<p>Two ways to get the finished sheet into the project:</p>
+<ul class="simple">
+<li><p>Save it directly as <code class="docutils literal notranslate"><span class="pre">data/tilesets/.../my_tileset/tiles.png</span></code>, or</p></li>
+<li><p>use Porymap’s Tileset Editor: <strong>Tools &gt; Import Tiles Image…</strong>,
+which accepts an indexed PNG of 8x8 tiles.</p></li>
+</ul>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Once metatiles reference the sheet, tile positions are load-bearing.
+Inserting a tile in the middle shifts the index of every tile after it and
+silently breaks every metatile that referenced those indices.
+Manual workflows always append new tiles at the end,
+which is why hand-built sheets tend to fragment over time.</p>
+</div>
+<p>Remember from <a class="reference internal" href="gba-decomp-tileset-system.html"><span class="doc">How the GBA + Gen III Decomp Tileset System Works</span></a> that a hand-built <code class="docutils literal notranslate"><span class="pre">tiles.png</span></code>
+usually looks like a greyscale jumble in an image viewer:
+the PNG can embed only one palette, but the game will render the tiles with
+up to 13 different ones.
+Only the index values matter.</p>
+</section>
+<section id="step-4-write-the-palette-files">
+<h2>Step 4: write the palette files<a class="headerlink" href="#step-4-write-the-palette-files" title="Link to this heading"></a></h2>
+<p>Each palette slot gets one JASC-format <code class="docutils literal notranslate"><span class="pre">.pal</span></code> file, named <code class="docutils literal notranslate"><span class="pre">00.pal</span></code> through <code class="docutils literal notranslate"><span class="pre">15.pal</span></code>
+(the exact format is shown in <a class="reference internal" href="gba-decomp-tileset-system.html"><span class="doc">How the GBA + Gen III Decomp Tileset System Works</span></a>).
+All sixteen files must exist even though the game only reads your half of the split;
+leave the rest as placeholders.</p>
+<p>You can produce these files three ways:</p>
+<ul class="simple">
+<li><p>export them from your image editor, if it speaks JASC,</p></li>
+<li><p>type them by hand (they are short text files), or</p></li>
+<li><p>edit them in Porymap’s Palette Editor, which offers sliders, hex input,
+an eyedropper, and imports from JASC <code class="docutils literal notranslate"><span class="pre">.pal</span></code>, Adobe <code class="docutils literal notranslate"><span class="pre">.act</span></code>,
+Tile Layer Pro <code class="docutils literal notranslate"><span class="pre">.tpl</span></code>, and Advance PE files.</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>TODO: insert screencap</p>
+</div>
+<p>Colors are written as 0-255 RGB and rounded down to the GBA’s 5-bit channels
+at build time, so what you see in your editor is not exactly what the game shows.
+Keep the slot order identical to the order you indexed against in Step 3.</p>
+</section>
+<section id="step-5-paint-metatiles-in-porymap">
+<h2>Step 5: paint metatiles in Porymap<a class="headerlink" href="#step-5-paint-metatiles-in-porymap" title="Link to this heading"></a></h2>
+<p>With tiles and palettes in place, open Porymap’s
+<a class="reference external" href="https://huderlem.github.io/porymap/manual/tileset-editor.html">Tileset Editor</a>
+and build the metatiles.
+For each one:</p>
+<ol class="arabic simple">
+<li><p>Select a tile from the sheet, choose which palette should color it,
+and set X/Y flip as needed.</p></li>
+<li><p>Paint it into the metatile’s 2x2 cells, once for each of the two layers.</p></li>
+<li><p>Set the metatile’s <strong>layer type</strong> (<code class="docutils literal notranslate"><span class="pre">NORMAL</span></code>, <code class="docutils literal notranslate"><span class="pre">COVERED</span></code>, or <code class="docutils literal notranslate"><span class="pre">SPLIT</span></code>)
+so the layers land on the right screen planes.</p></li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>TODO: insert screencap</p>
+</div>
+<p>Every click here writes a 16-bit tilemap entry into <code class="docutils literal notranslate"><span class="pre">metatiles.bin</span></code>
+using the encoding described in <a class="reference internal" href="gba-decomp-tileset-system.html"><span class="doc">How the GBA + Gen III Decomp Tileset System Works</span></a>.
+Porymap is the reason you never hex-edit that file:
+it <em>is</em> a <code class="docutils literal notranslate"><span class="pre">metatiles.bin</span></code> editor with a graphical front end.</p>
+<p>This step is not intellectually hard, just slow.
+You are hunting for tiles in a 128-pixel-wide sheet where related tiles may
+have been deduplicated apart from each other, and assigning a palette to
+every single placement.
+A full 512-metatile tileset means up to 4096 of these placements.</p>
+</section>
+<section id="step-6-set-the-attributes">
+<h2>Step 6: set the attributes<a class="headerlink" href="#step-6-set-the-attributes" title="Link to this heading"></a></h2>
+<p>Still in the Tileset Editor, give each metatile its <strong>behavior</strong>
+(<code class="docutils literal notranslate"><span class="pre">MB_TALL_GRASS</span></code>, <code class="docutils literal notranslate"><span class="pre">MB_PUDDLE</span></code>, and so on;
+FireRed/LeafGreen adds terrain and encounter types).
+Porymap writes these plus the layer type into <code class="docutils literal notranslate"><span class="pre">metatile_attributes.bin</span></code>.</p>
+<p>At this point the tileset is functional.
+Build the ROM, open a map that uses the tileset, and check your work in an
+emulator: wrong colors usually mean a palette slot or index-order mistake in
+Steps 3-4, and garbage pixels usually mean a tile was indexed against the
+wrong palette.</p>
+</section>
+<section id="step-7-animations-the-hard-part">
+<h2>Step 7: animations, the hard part<a class="headerlink" href="#step-7-animations-the-hard-part" title="Link to this heading"></a></h2>
+<p>Static tilesets end at Step 6.
+Animations are where manual insertion turns into real programming,
+because the decomps implement tile animation in C, per tileset, with
+hard-coded tile indices.</p>
+<p>The mechanism (described in <a class="reference internal" href="gba-decomp-tileset-system.html"><span class="doc">How the GBA + Gen III Decomp Tileset System Works</span></a>) is:
+the tileset’s <code class="docutils literal notranslate"><span class="pre">callback</span></code> runs every frame and, on a schedule, copies
+replacement tile graphics over a fixed range of tile slots in video memory.
+Metatiles never change; the tiles underneath them do.</p>
+<p>Manually wiring an animation means:</p>
+<ol class="arabic simple">
+<li><p><strong>Reserve tile slots.</strong> Decide which tile indices the animation owns,
+and put the first frame’s tiles there in <code class="docutils literal notranslate"><span class="pre">tiles.png</span></code>.
+Your animated metatiles reference these indices like any other tile.</p></li>
+<li><p><strong>Draw the frames.</strong> Each frame is a small indexed PNG containing just the
+animated tiles, indexed against the same palette as the static versions.
+They live in the tileset’s <code class="docutils literal notranslate"><span class="pre">anim/</span></code> directory,
+for example <code class="docutils literal notranslate"><span class="pre">data/tilesets/primary/general/anim/flower/0.png</span></code>
+(a 16x16 image: the four flower tiles).</p></li>
+<li><p><strong>Write the C code</strong> in <code class="docutils literal notranslate"><span class="pre">src/tileset_anims.c</span></code>, following the pattern of a
+vanilla tileset such as <code class="docutils literal notranslate"><span class="pre">gTileset_General</span></code>:</p></li>
+</ol>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="c1">// Include each frame&#39;s graphics.</span>
+<span class="k">const</span><span class="w"> </span><span class="n">u16</span><span class="w"> </span><span class="n">sTilesetAnims_MyTileset_Flower_Frame0</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">INCGFX_U16</span><span class="p">(</span><span class="s">&quot;data/tilesets/primary/my_tileset/anim/flower/0.png&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;.4bpp&quot;</span><span class="p">);</span>
+<span class="k">const</span><span class="w"> </span><span class="n">u16</span><span class="w"> </span><span class="n">sTilesetAnims_MyTileset_Flower_Frame1</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">INCGFX_U16</span><span class="p">(</span><span class="s">&quot;data/tilesets/primary/my_tileset/anim/flower/1.png&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;.4bpp&quot;</span><span class="p">);</span>
+<span class="k">const</span><span class="w"> </span><span class="n">u16</span><span class="w"> </span><span class="n">sTilesetAnims_MyTileset_Flower_Frame2</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">INCGFX_U16</span><span class="p">(</span><span class="s">&quot;data/tilesets/primary/my_tileset/anim/flower/2.png&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;.4bpp&quot;</span><span class="p">);</span>
+
+<span class="c1">// The frame sequence. Entries may repeat to shape the cycle:</span>
+<span class="c1">// vanilla&#39;s flower plays 0, 1, 0, 2.</span>
+<span class="k">const</span><span class="w"> </span><span class="n">u16</span><span class="w"> </span><span class="o">*</span><span class="k">const</span><span class="w"> </span><span class="n">sTilesetAnims_MyTileset_Flower</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">sTilesetAnims_MyTileset_Flower_Frame0</span><span class="p">,</span>
+<span class="w">    </span><span class="n">sTilesetAnims_MyTileset_Flower_Frame1</span><span class="p">,</span>
+<span class="w">    </span><span class="n">sTilesetAnims_MyTileset_Flower_Frame0</span><span class="p">,</span>
+<span class="w">    </span><span class="n">sTilesetAnims_MyTileset_Flower_Frame2</span><span class="p">,</span>
+<span class="p">};</span>
+
+<span class="c1">// Copy the current frame over the reserved tile slots.</span>
+<span class="c1">// 508 is the first reserved tile index; 4 tiles are overwritten.</span>
+<span class="k">static</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">QueueAnimTiles_MyTileset_Flower</span><span class="p">(</span><span class="n">u16</span><span class="w"> </span><span class="n">timer</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">u16</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">timer</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="n">ARRAY_COUNT</span><span class="p">(</span><span class="n">sTilesetAnims_MyTileset_Flower</span><span class="p">);</span>
+<span class="w">    </span><span class="n">AppendTilesetAnimToBuffer</span><span class="p">(</span><span class="n">sTilesetAnims_MyTileset_Flower</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+<span class="w">                              </span><span class="p">(</span><span class="n">u16</span><span class="w"> </span><span class="o">*</span><span class="p">)(</span><span class="n">BG_VRAM</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">TILE_OFFSET_4BPP</span><span class="p">(</span><span class="mi">508</span><span class="p">)),</span>
+<span class="w">                              </span><span class="mi">4</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">TILE_SIZE_4BPP</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1">// Runs every frame; the modulo sets the animation speed</span>
+<span class="c1">// (here: advance one frame step every 16 game frames).</span>
+<span class="k">static</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">TilesetAnim_MyTileset</span><span class="p">(</span><span class="n">u16</span><span class="w"> </span><span class="n">timer</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">timer</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">16</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">        </span><span class="n">QueueAnimTiles_MyTileset_Flower</span><span class="p">(</span><span class="n">timer</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">16</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1">// The entry point referenced by the tileset header.</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">InitTilesetAnim_MyTileset</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">sPrimaryTilesetAnimCounter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="n">sPrimaryTilesetAnimCounterMax</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">256</span><span class="p">;</span>
+<span class="w">    </span><span class="n">sPrimaryTilesetAnimCallback</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">TilesetAnim_MyTileset</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="4">
+<li><p><strong>Hook it up.</strong> Declare <code class="docutils literal notranslate"><span class="pre">InitTilesetAnim_MyTileset</span></code> in
+<code class="docutils literal notranslate"><span class="pre">include/tileset_anims.h</span></code>, and set it as the <code class="docutils literal notranslate"><span class="pre">.callback</span></code> in the tileset’s
+<code class="docutils literal notranslate"><span class="pre">headers.h</span></code> entry.
+(Secondary tilesets use the <code class="docutils literal notranslate"><span class="pre">sSecondaryTilesetAnim*</span></code> counterparts;
+again, copy a vanilla example like <code class="docutils literal notranslate"><span class="pre">gTileset_Mauville</span></code>.)</p></li>
+</ol>
+<p>The fragile part is the coupling:
+the tile index in the C code, the tiles in <code class="docutils literal notranslate"><span class="pre">tiles.png</span></code>, and the metatiles
+painted in Porymap must all agree, and nothing checks this for you.
+Move the animation’s tiles in the sheet and forget to update the C constant,
+and the animation cheerfully overwrites the wrong tiles at runtime.</p>
+<p>Porytiles replaces all of this with frame images plus a <code class="docutils literal notranslate"><span class="pre">key.png</span></code>,
+generates or updates the C wiring, and keeps the indices consistent;
+see <a class="reference internal" href="animations.html"><span class="doc">Animations</span></a>.</p>
+</section>
+<section id="why-people-automate-this">
+<h2>Why people automate this<a class="headerlink" href="#why-people-automate-this" title="Link to this heading"></a></h2>
+<p>None of the steps above is impossible.
+The problem is the loop.
+Some sample scenarios that each restart a chunk of the process:</p>
+<ul class="simple">
+<li><p><strong>Any palette change re-opens Step 3.</strong>
+Add one color, and the affected group’s tiles must be re-indexed;
+reorder slots, and every tile that used that palette renders wrong until fixed.</p></li>
+<li><p><strong>Any new art re-opens Steps 3-5.</strong>
+New tiles must be indexed, deduplicated against the existing sheet by eye,
+appended (never inserted!), and painted into metatiles palette-by-palette.</p></li>
+<li><p><strong>Any animation layout change re-opens Step 7,</strong>
+with the failure mode being silent graphical corruption rather than an error.</p></li>
+</ul>
+<p>Multiply this across the dozens of tilesets a full project needs,
+and the appeal of describing your tileset as three RGBA layer images and
+letting a compiler handle the rest becomes obvious.
+That workflow is the subject of <a class="reference internal" href="creating-your-first-tileset.html"><span class="doc">Creating Your First Tileset</span></a>.</p>
+</section>
+<section id="when-manual-is-still-the-right-choice">
+<h2>When manual is still the right choice<a class="headerlink" href="#when-manual-is-still-the-right-choice" title="Link to this heading"></a></h2>
+<p>A compiler works within the rules it models.
+Two situations remain where experienced tileset authors reach past Porytiles:</p>
+<ul class="simple">
+<li><p><strong>Cross-tileset sharing tricks.</strong>
+As explained in <a class="reference internal" href="gba-decomp-tileset-system.html"><span class="doc">How the GBA + Gen III Decomp Tileset System Works</span></a>, a primary metatile <em>can</em>
+reference secondary tile indices, provided every secondary paired with that
+primary keeps identical content at the borrowed slots.
+Porytiles deliberately does not model this kind of arrangement;
+maintaining one is manual work by definition.</p></li>
+<li><p><strong>Hand-tuned squeezing.</strong>
+When a tileset sits right at the edge of its tile or palette budget,
+a human who knows the art can sometimes out-pack the optimizer:
+restructuring art so regions share palettes, or reshaping tiles so more of
+them deduplicate.
+Porytiles has knobs to guide its packing (see <a class="reference internal" href="palette-packing.html"><span class="doc">Palette Packing</span></a>),
+but the last few percent can still favor hand work.</p></li>
+</ul>
+<p>Expect this list to shrink.
+Porytiles development keeps chipping away at these cases,
+and the goal is for manual insertion to be a hobby rather than a necessity:
+something you do because you enjoy it, not because the tooling made you.</p>
+<p>Even when part of a tileset is hand-tuned, you rarely have to choose sides
+permanently: <code class="docutils literal notranslate"><span class="pre">import-tileset</span></code> and <code class="docutils literal notranslate"><span class="pre">decompile-tileset</span></code> can bring manually
+built assets under Porytiles management later
+(see <a class="reference internal" href="importing-an-existing-tileset.html"><span class="doc">Importing an Existing Tileset</span></a>).</p>
+</section>
 </section>
 
 
