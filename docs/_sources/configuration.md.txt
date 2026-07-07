@@ -29,13 +29,13 @@ a command-line option can override one key while the rest still come from your Y
 | 4 | Project local YAML | `porytiles/config.local.yaml` |
 | 5 | Project YAML | `porytiles/config.yaml` |
 | 6 | Fieldmap header | The `#define`s in `include/fieldmap.h` |
-| 7 | Metatiles header | Inferred from `src/data/tilesets/metatiles.h` |
+| 7 | Attribute inference | The metatile attribute schema inferred from your project's own attribute declarations |
 | 8 (lowest) | Built-in default | The default baked into Porytiles |
 
 Two critical consequences worth reiterating:
 
 - **Per-tileset beats project-wide, and local beats committed.** A key set in a tileset's `config.yaml` overrides the same key in the project-wide `config.yaml`, and either `config.local.yaml` overrides its committed sibling at the same scope.
-- **The `fieldmap.*` values come from your project for free.** Sources 6 and 7 read your decomp project's own headers, so the tile, metatile, and palette limits already match your build. You only set them by hand when your project diverges from those headers.
+- **The `fieldmap.*` values come from your project for free.** Sources 6 and 7 read your decomp project's own source files, so the tile, metatile, and palette limits (and the metatile attribute schema, see {doc}`metatile-attributes`) already match your build. You only set them by hand when for some reason, your project (or specific tileset) diverges from those sources.
 
 ## Where configuration YAML files live
 
@@ -91,12 +91,12 @@ A few conventions:
 
 - **Boolean values** also get a `--no-` form to turn them off, for example `--no-verify-checksums` or `--no-pal-hints-enabled`.
 - **List values** (such as `--primary-pairing-partners` or `--diagnostic-warnings-exclude`) accept multiple arguments.
-- **Three values are YAML-only.** Palette hints, packing strategy parameters, and per-animation overrides are too structured to express as a flag, so they can only be set in a config file. They're marked *YAML-only* in the reference.
+- **Five values are YAML-only.** Palette hints, packing strategy parameters, per-animation overrides, and the metatile attribute field lists (`metatile_attr_fields` and `metatile_attr_field_overrides`) are too structured to express as a flag, so they can only be set in a config file. They're marked *YAML-only* in the reference.
 
 ```{tip}
 Option names don't always match the YAML path one-to-one.
 A few are abbreviated (`tileset.palettes.edit_mode` is `--pals-edit-mode`,
-`fieldmap.metatile_attribute_size` is `--metatile-attr-size`).
+`tileset.animations.palette_resolution_strategy` is `--anim-pal-resolution-strategy`).
 When in doubt, trust the reference tables below or `--help` rather than guessing from the path.
 You can also set up shell completion to make it even easier, see {doc}`installation`.
 ```
@@ -129,7 +129,7 @@ Number Of Tiles In Primary
     ○ CliOptionProvider (not provided)
     ○ YamlFileProvider (not provided)
     ✓ HeaderDefineProvider = 512
-    ○ MetatilesHeaderProvider (not provided)
+    ○ MetatileAttributeConfigProvider (not provided)
     ○ DefaultProvider = 512
 ```
 
@@ -161,9 +161,9 @@ Each group links to the guide that explains the underlying subsystem in depth.
 ### `fieldmap` — hardware layout
 
 These describe your tile, metatile, and palette budget.
-Porytiles reads the first eight from `include/fieldmap.h` and the last from `src/data/tilesets/metatiles.h` automatically,
+Porytiles reads all of them from `include/fieldmap.h` automatically,
 so in a normal decomp project you never set them by hand.
-Override them only when you explicitly want a particular run's values to differ from those headers.
+Override them only when you explicitly want a particular run's values to differ from that header.
 
 | YAML key | CLI flag | Default | Description |
 |----------|----------|---------|-------------|
@@ -175,7 +175,50 @@ Override them only when you explicitly want a particular run's values to differ 
 | `fieldmap.num_pals_total` | `--num-pals-total` | `13` | Total hardware palettes available. |
 | `fieldmap.max_map_data_size` | `--max-map-data-size` | `10240` | The `MAX_MAP_DATA_SIZE` map-buffer limit. |
 | `fieldmap.num_tiles_per_metatile` | `--num-tiles-per-metatile` | `8` | `8` for dual-layer tilesets, `12` for triple-layer. |
-| `fieldmap.metatile_attribute_size` | `--metatile-attr-size` | `2` | Bytes per metatile attribute: `2` (Emerald/Ruby) or `4` (FireRed). Auto-detected from the C type used in `metatiles.h`. |
+
+### `fieldmap` — metatile attributes
+
+These control the metatile attribute schema: which fields exist in each metatile's packed attribute value,
+and how the `attributes.csv` layer type column and the FireRed/LeafGreen alternate masks behave.
+The whole system, including the field and override formats, is documented in {doc}`metatile-attributes`;
+this table is just the key listing.
+
+The *size-based default* referenced below is Porytiles's last-resort fallback for the layer-type mask.
+It's borrowed from the vanilla decomp codebases and dependent on attribute size:
+`0x60000000` (the FRLG position) for 4-byte attributes, `0xF000` (the Emerald position) for 2-byte, disabled for 1-byte.
+
+| YAML key | CLI flag | Default | Description |
+|----------|----------|---------|-------------|
+| `fieldmap.metatile_attr_fields` | *YAML-only* | (inferred) | Declare the attribute field list yourself, replacing schema inference. |
+| `fieldmap.metatile_attr_field_overrides` | *YAML-only* | (none) | Adjust individual fields on top of the inferred or declared list. |
+| `fieldmap.write_layer_type_column` | `--write-layer-type-column` | `false` | Emit and honor a `layer_type` column in `attributes.csv`. |
+| `fieldmap.use_frlg_alternate_masks` | `--use-frlg-alternate-masks` | `automatic` | Whether a tileset uses the FRLG alternate attribute masks. |
+| `fieldmap.metatile_layer_type_mask` | `--metatile-layer-type-mask` | (inferred, then size-based default) | Bit mask for the layer-type bits (a hex literal like `0xF000`); `0` disables the layer type. |
+| `fieldmap.metatile_layer_type_mask_frlg` | `--metatile-layer-type-mask-frlg` | (inferred, then size-based default) | Same, for the FRLG alternate layout. |
+
+**`metatile_attr_fields`** and **`metatile_attr_field_overrides`** normally stay unset:
+Porytiles infers the attribute schema from your project's own declarations
+(that inference is priority 7 in the resolution table above).
+Set `metatile_attr_field_overrides` to tweak individual fields (a mask, a default, a value-name provider),
+and use the full `metatile_attr_fields` list
+only if your project's attribute layout is sufficiently customized that inference cannot describe it.
+
+**`write_layer_type_column`** adds a trailing `layer_type` column to `attributes.csv`,
+letting you pin a metatile's layer type instead of relying on inference.
+
+**`use_frlg_alternate_masks`**:
+
+- `automatic` *(default)* — cross-reference `data/layouts/layouts.json`; a tileset used only by `layout_version: "frlg"` layouts gets the FRLG masks.
+- `always` — force the FRLG alternate masks (`true` works as an alias).
+- `never` — force the primary masks (`false` works as an alias).
+
+**`metatile_layer_type_mask`** (and its `_frlg` variant) normally stay unset:
+Porytiles infers the layer-type bit position from the base game and falls back to the size-based default above.
+Set one only to override that, if your project moved the layer-type bits.
+See {doc}`metatile-attributes` for more information: inference sources, disabling with `0`, and width limits.
+
+Both `write_layer_type_column` and `use_frlg_alternate_masks` are really per-tileset settings,
+so prefer setting them in `porytiles/tilesets/<tileset_name>/config.yaml`.
 
 ### `tileset.paths` — asset directories
 
@@ -375,9 +418,12 @@ A violation stops the compile with an explanatory error:
 - `fieldmap.num_metatiles_in_primary` ≤ `fieldmap.num_metatiles_total`.
 - `fieldmap.num_pals_in_primary` ≤ `fieldmap.num_pals_total`.
 - `fieldmap.num_tiles_per_metatile` must be `8` or `12`.
-- `fieldmap.metatile_attribute_size` must be `2` or `4`.
 - `tileset.extrinsic_transparency` must be fully opaque (alpha `255`).
 - `tileset.tiles.sharing.packing` requires `tileset.palettes.packing.strategy` to be `backtracking`.
+
+The metatile attribute schema has its own validation rules
+(contiguous masks, no overlaps, defaults in range, and so on),
+listed in {doc}`metatile-attributes`.
 
 (not-yet-implemented)=
 ## Not yet implemented
@@ -432,5 +478,5 @@ in the source repository, and remember the {ref}`not-yet-implemented <not-yet-im
 
 - {doc}`quickstart` — the short tour of the configuration system.
 - {doc}`cli-reference` — the complete command and flag listing.
-- {doc}`palette-packing`, {doc}`tile-sharing`, {doc}`animations`, {doc}`diagnostics` — the subsystems behind the values above.
+- {doc}`palette-packing`, {doc}`tile-sharing`, {doc}`animations`, {doc}`diagnostics`, {doc}`metatile-attributes` — the subsystems behind the values above.
 - `porytiles dump-tileset-config <name>` — confirm what's actually in effect for a tileset.

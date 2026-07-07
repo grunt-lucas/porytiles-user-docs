@@ -512,7 +512,10 @@ See <a class="reference internal" href="configuration.html"><span class="doc">Co
 <p class="admonition-title">Note</p>
 <p><code class="docutils literal notranslate"><span class="pre">pokeemerald-expansion</span></code>’s <code class="docutils literal notranslate"><span class="pre">include/fieldmap.h</span></code> now contains both the Emerald and FRLG specific constants
 and adds an <code class="docutils literal notranslate"><span class="pre">isFrlg</span></code> flag on each map layout, so a single project can host Emerald-split and FRLG-split maps
-side by side.</p>
+side by side.
+The runtime also selects the metatile attribute stride per layout by pointer cast
+(<code class="docutils literal notranslate"><span class="pre">u16</span></code> for Emerald layouts, <code class="docutils literal notranslate"><span class="pre">u32</span></code> for FRLG layouts),
+so the <code class="docutils literal notranslate"><span class="pre">INCBIN</span></code> declaration type in <code class="docutils literal notranslate"><span class="pre">metatiles.h</span></code> does not indicate the FRLG entry width.</p>
 </div>
 </section>
 <section id="the-files-on-disk">

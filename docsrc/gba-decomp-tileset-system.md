@@ -296,6 +296,9 @@ See {doc}`configuration` for how overriding works.
 `pokeemerald-expansion`'s `include/fieldmap.h` now contains both the Emerald and FRLG specific constants
 and adds an `isFrlg` flag on each map layout, so a single project can host Emerald-split and FRLG-split maps
 side by side.
+The runtime also selects the metatile attribute stride per layout by pointer cast
+(`u16` for Emerald layouts, `u32` for FRLG layouts),
+so the `INCBIN` declaration type in `metatiles.h` does not indicate the FRLG entry width.
 ```
 
 ## The files on disk
