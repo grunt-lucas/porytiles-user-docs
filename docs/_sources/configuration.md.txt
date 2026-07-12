@@ -91,7 +91,7 @@ A few conventions:
 
 - **Boolean values** also get a `--no-` form to turn them off, for example `--no-verify-checksums` or `--no-pal-hints-enabled`.
 - **List values** (such as `--primary-pairing-partners` or `--diagnostic-warnings-exclude`) accept multiple arguments.
-- **Five values are YAML-only.** Palette hints, packing strategy parameters, per-animation overrides, and the metatile attribute field lists (`metatile_attr_fields` and `metatile_attr_field_overrides`) are too structured to express as a flag, so they can only be set in a config file. They're marked *YAML-only* in the reference.
+- **Five values are YAML-only.** Palette hints, packing strategy parameters, per-animation overrides, and the metatile attribute field lists (`metatile_attribute_fields` and `metatile_attribute_field_overrides`) are too structured to express as a flag, so they can only be set in a config file. They're marked *YAML-only* in the reference.
 
 ```{tip}
 Option names don't always match the YAML path one-to-one.
@@ -171,8 +171,8 @@ Override them only when you explicitly want a particular run's values to differ 
 | `fieldmap.num_tiles_total` | `--num-tiles-total` | `1024` | Total tile capacity (primary plus secondary). |
 | `fieldmap.num_metatiles_in_primary` | `--num-metatiles-in-primary` | `512` | Metatiles reserved for the primary tileset. |
 | `fieldmap.num_metatiles_total` | `--num-metatiles-total` | `1024` | Total metatile capacity. |
-| `fieldmap.num_pals_in_primary` | `--num-pals-in-primary` | `6` | Hardware palettes reserved for the primary tileset. |
-| `fieldmap.num_pals_total` | `--num-pals-total` | `13` | Total hardware palettes available. |
+| `fieldmap.num_palettes_in_primary` | `--num-pals-in-primary` | `6` | Hardware palettes reserved for the primary tileset. |
+| `fieldmap.num_palettes_total` | `--num-pals-total` | `13` | Total hardware palettes available. |
 | `fieldmap.max_map_data_size` | `--max-map-data-size` | `10240` | The `MAX_MAP_DATA_SIZE` map-buffer limit. |
 | `fieldmap.num_tiles_per_metatile` | `--num-tiles-per-metatile` | `8` | `8` for dual-layer tilesets, `12` for triple-layer. |
 
@@ -189,18 +189,18 @@ It's borrowed from the vanilla decomp codebases and dependent on attribute size:
 
 | YAML key | CLI flag | Default | Description |
 |----------|----------|---------|-------------|
-| `fieldmap.metatile_attr_fields` | *YAML-only* | (inferred) | Declare the attribute field list yourself, replacing schema inference. |
-| `fieldmap.metatile_attr_field_overrides` | *YAML-only* | (none) | Adjust individual fields on top of the inferred or declared list. |
+| `fieldmap.metatile_attribute_fields` | *YAML-only* | (inferred) | Declare the attribute field list yourself, replacing schema inference. |
+| `fieldmap.metatile_attribute_field_overrides` | *YAML-only* | (none) | Adjust individual fields on top of the inferred or declared list. |
 | `fieldmap.write_layer_type_column` | `--write-layer-type-column` | `false` | Emit and honor a `layer_type` column in `attributes.csv`. |
 | `fieldmap.use_frlg_alternate_masks` | `--use-frlg-alternate-masks` | `automatic` | Whether a tileset uses the FRLG alternate attribute masks. |
 | `fieldmap.metatile_layer_type_mask` | `--metatile-layer-type-mask` | (inferred, then size-based default) | Bit mask for the layer-type bits (a hex literal like `0xF000`); `0` disables the layer type. |
 | `fieldmap.metatile_layer_type_mask_frlg` | `--metatile-layer-type-mask-frlg` | (inferred, then size-based default) | Same, for the FRLG alternate layout. |
 
-**`metatile_attr_fields`** and **`metatile_attr_field_overrides`** normally stay unset:
+**`metatile_attribute_fields`** and **`metatile_attribute_field_overrides`** normally stay unset:
 Porytiles infers the attribute schema from your project's own declarations
 (that inference is priority 7 in the resolution table above).
-Set `metatile_attr_field_overrides` to tweak individual fields (a mask, a default, a value-name provider),
-and use the full `metatile_attr_fields` list
+Set `metatile_attribute_field_overrides` to tweak individual fields (a mask, a default, a value-name provider),
+and use the full `metatile_attribute_fields` list
 only if your project's attribute layout is sufficiently customized that inference cannot describe it.
 
 **`write_layer_type_column`** adds a trailing `layer_type` column to `attributes.csv`,
@@ -416,7 +416,7 @@ A violation stops the compile with an explanatory error:
 - Every `fieldmap.*` count must be greater than zero.
 - `fieldmap.num_tiles_in_primary` ≤ `fieldmap.num_tiles_total`.
 - `fieldmap.num_metatiles_in_primary` ≤ `fieldmap.num_metatiles_total`.
-- `fieldmap.num_pals_in_primary` ≤ `fieldmap.num_pals_total`.
+- `fieldmap.num_palettes_in_primary` ≤ `fieldmap.num_palettes_total`.
 - `fieldmap.num_tiles_per_metatile` must be `8` or `12`.
 - `tileset.extrinsic_transparency` must be fully opaque (alpha `255`).
 - `tileset.tiles.sharing.packing` requires `tileset.palettes.packing.strategy` to be `backtracking`.

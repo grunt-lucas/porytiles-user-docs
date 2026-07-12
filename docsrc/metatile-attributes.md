@@ -145,15 +145,15 @@ You almost never have to write a schema yourself.
 Porytiles resolves it per tileset, in this order:
 
 1. **Explicit config.**
-   If `fieldmap.metatile_attr_fields` is set in your Porytiles YAML config, it wins.
+   If `fieldmap.metatile_attribute_fields` is set in your Porytiles YAML config, it wins.
 2. **Inference from your project.**
    Otherwise Porytiles reads the layout your decomp code already declares (details below).
 3. **Error.**
    If neither produces fields, compilation stops with an error telling you to
-   either add a `metatile_attr_fields` list or restore the engine declarations so inference can succeed.
+   either add a `metatile_attribute_fields` list or restore the engine declarations so inference can succeed.
    There is no silent fallback.
 
-In every case, `fieldmap.metatile_attr_field_overrides` is then merged on top,
+In every case, `fieldmap.metatile_attribute_field_overrides` is then merged on top,
 so you can adjust individual fields without redeclaring the whole layout.
 Both keys are documented in [Customizing the schema](#customizing-the-schema).
 
@@ -420,14 +420,14 @@ Both work at project scope (`porytiles/config.yaml`) or tileset scope
 
 | YAML key | CLI flag | Default | Description |
 |----------|----------|---------|-------------|
-| `fieldmap.metatile_attr_fields` | *YAML-only* | inferred | Declare the full field list yourself, replacing inference |
-| `fieldmap.metatile_attr_field_overrides` | *YAML-only* | empty | Adjust individual fields on top of the global baseline |
+| `fieldmap.metatile_attribute_fields` | *YAML-only* | inferred | Declare the full field list yourself, replacing inference |
+| `fieldmap.metatile_attribute_field_overrides` | *YAML-only* | empty | Adjust individual fields on top of the global baseline |
 | `fieldmap.write_layer_type_column` | `--write-layer-type-column` | `false` | Emit and honor the `layer_type` CSV column |
 | `fieldmap.use_frlg_alternate_masks` | `--use-frlg-alternate-masks` | `automatic` | Select the FRLG alternate masks for a tileset |
 
 ### Overriding individual fields
 
-`metatile_attr_field_overrides` lets you make small adjustments.
+`metatile_attribute_field_overrides` lets you make small adjustments.
 It merges onto the resolved baseline, inferred or explicit,
 so you can keep the inferred values and change only what you explicitly want overridden.
 Each entry may set `mask`, `frlg_mask`, `default`, and `provider`;
@@ -435,7 +435,7 @@ anything you do not set falls through to the baseline.
 
 ```yaml
 fieldmap:
-  metatile_attr_field_overrides:
+  metatile_attribute_field_overrides:
     # Repurpose FireRed's unused attribute_3 bits and give them a default
     attribute_3:
       default: 1
@@ -455,7 +455,7 @@ Overriding a field that does not exist in the baseline is an error
 ### Declaring fields from scratch
 
 If your project's attribute layout is sufficiently customized that inference cannot describe it,
-declare the whole layout explicitly with `metatile_attr_fields`.
+declare the whole layout explicitly with `metatile_attribute_fields`.
 Each entry takes `name`, `mask`, optional `frlg_mask`, optional `default`, and an optional `provider` map
 with `header`, `prefix`, optional `skipped`, and optional `format`
 (`defines-only`, `enums-only`, or `either`; the default is `either`).
@@ -464,7 +464,7 @@ Here is a custom 4-byte layout for a project that added a light level and a room
 
 ```yaml
 fieldmap:
-  metatile_attr_fields:
+  metatile_attribute_fields:
     - name: behavior
       mask: 0x000001FF
       provider:

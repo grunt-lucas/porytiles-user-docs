@@ -312,15 +312,15 @@ It no longer exists; the size now follows from <code class="docutils literal not
 Porytiles resolves it per tileset, in this order:</p>
 <ol class="arabic simple">
 <li><p><strong>Explicit config.</strong>
-If <code class="docutils literal notranslate"><span class="pre">fieldmap.metatile_attr_fields</span></code> is set in your Porytiles YAML config, it wins.</p></li>
+If <code class="docutils literal notranslate"><span class="pre">fieldmap.metatile_attribute_fields</span></code> is set in your Porytiles YAML config, it wins.</p></li>
 <li><p><strong>Inference from your project.</strong>
 Otherwise Porytiles reads the layout your decomp code already declares (details below).</p></li>
 <li><p><strong>Error.</strong>
 If neither produces fields, compilation stops with an error telling you to
-either add a <code class="docutils literal notranslate"><span class="pre">metatile_attr_fields</span></code> list or restore the engine declarations so inference can succeed.
+either add a <code class="docutils literal notranslate"><span class="pre">metatile_attribute_fields</span></code> list or restore the engine declarations so inference can succeed.
 There is no silent fallback.</p></li>
 </ol>
-<p>In every case, <code class="docutils literal notranslate"><span class="pre">fieldmap.metatile_attr_field_overrides</span></code> is then merged on top,
+<p>In every case, <code class="docutils literal notranslate"><span class="pre">fieldmap.metatile_attribute_field_overrides</span></code> is then merged on top,
 so you can adjust individual fields without redeclaring the whole layout.
 Both keys are documented in <a class="reference internal" href="#customizing-the-schema">Customizing the schema</a>.</p>
 <section id="schema-inference">
@@ -594,12 +594,12 @@ Both work at project scope (<code class="docutils literal notranslate"><span cla
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fieldmap.metatile_attr_fields</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fieldmap.metatile_attribute_fields</span></code></p></td>
 <td><p><em>YAML-only</em></p></td>
 <td><p>inferred</p></td>
 <td><p>Declare the full field list yourself, replacing inference</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fieldmap.metatile_attr_field_overrides</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fieldmap.metatile_attribute_field_overrides</span></code></p></td>
 <td><p><em>YAML-only</em></p></td>
 <td><p>empty</p></td>
 <td><p>Adjust individual fields on top of the global baseline</p></td>
@@ -618,13 +618,13 @@ Both work at project scope (<code class="docutils literal notranslate"><span cla
 </table>
 <section id="overriding-individual-fields">
 <h3>Overriding individual fields<a class="headerlink" href="#overriding-individual-fields" title="Link to this heading"></a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">metatile_attr_field_overrides</span></code> lets you make small adjustments.
+<p><code class="docutils literal notranslate"><span class="pre">metatile_attribute_field_overrides</span></code> lets you make small adjustments.
 It merges onto the resolved baseline, inferred or explicit,
 so you can keep the inferred values and change only what you explicitly want overridden.
 Each entry may set <code class="docutils literal notranslate"><span class="pre">mask</span></code>, <code class="docutils literal notranslate"><span class="pre">frlg_mask</span></code>, <code class="docutils literal notranslate"><span class="pre">default</span></code>, and <code class="docutils literal notranslate"><span class="pre">provider</span></code>;
 anything you do not set falls through to the baseline.</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">fieldmap</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">metatile_attr_field_overrides</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">metatile_attribute_field_overrides</span><span class="p">:</span>
 <span class="w">    </span><span class="c1"># Repurpose FireRed&#39;s unused attribute_3 bits and give them a default</span>
 <span class="w">    </span><span class="nt">attribute_3</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
@@ -644,13 +644,13 @@ Overriding a field that does not exist in the baseline is an error
 <section id="declaring-fields-from-scratch">
 <h3>Declaring fields from scratch<a class="headerlink" href="#declaring-fields-from-scratch" title="Link to this heading"></a></h3>
 <p>If your project’s attribute layout is sufficiently customized that inference cannot describe it,
-declare the whole layout explicitly with <code class="docutils literal notranslate"><span class="pre">metatile_attr_fields</span></code>.
+declare the whole layout explicitly with <code class="docutils literal notranslate"><span class="pre">metatile_attribute_fields</span></code>.
 Each entry takes <code class="docutils literal notranslate"><span class="pre">name</span></code>, <code class="docutils literal notranslate"><span class="pre">mask</span></code>, optional <code class="docutils literal notranslate"><span class="pre">frlg_mask</span></code>, optional <code class="docutils literal notranslate"><span class="pre">default</span></code>, and an optional <code class="docutils literal notranslate"><span class="pre">provider</span></code> map
 with <code class="docutils literal notranslate"><span class="pre">header</span></code>, <code class="docutils literal notranslate"><span class="pre">prefix</span></code>, optional <code class="docutils literal notranslate"><span class="pre">skipped</span></code>, and optional <code class="docutils literal notranslate"><span class="pre">format</span></code>
 (<code class="docutils literal notranslate"><span class="pre">defines-only</span></code>, <code class="docutils literal notranslate"><span class="pre">enums-only</span></code>, or <code class="docutils literal notranslate"><span class="pre">either</span></code>; the default is <code class="docutils literal notranslate"><span class="pre">either</span></code>).</p>
 <p>Here is a custom 4-byte layout for a project that added a light level and a room type to its attributes:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">fieldmap</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">metatile_attr_fields</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">metatile_attribute_fields</span><span class="p">:</span>
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">behavior</span>
 <span class="w">      </span><span class="nt">mask</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0x000001FF</span>
 <span class="w">      </span><span class="nt">provider</span><span class="p">:</span>

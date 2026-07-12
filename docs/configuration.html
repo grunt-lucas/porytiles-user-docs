@@ -243,7 +243,7 @@ A few conventions:</p>
 <ul class="simple">
 <li><p><strong>Boolean values</strong> also get a <code class="docutils literal notranslate"><span class="pre">--no-</span></code> form to turn them off, for example <code class="docutils literal notranslate"><span class="pre">--no-verify-checksums</span></code> or <code class="docutils literal notranslate"><span class="pre">--no-pal-hints-enabled</span></code>.</p></li>
 <li><p><strong>List values</strong> (such as <code class="docutils literal notranslate"><span class="pre">--primary-pairing-partners</span></code> or <code class="docutils literal notranslate"><span class="pre">--diagnostic-warnings-exclude</span></code>) accept multiple arguments.</p></li>
-<li><p><strong>Five values are YAML-only.</strong> Palette hints, packing strategy parameters, per-animation overrides, and the metatile attribute field lists (<code class="docutils literal notranslate"><span class="pre">metatile_attr_fields</span></code> and <code class="docutils literal notranslate"><span class="pre">metatile_attr_field_overrides</span></code>) are too structured to express as a flag, so they can only be set in a config file. They’re marked <em>YAML-only</em> in the reference.</p></li>
+<li><p><strong>Five values are YAML-only.</strong> Palette hints, packing strategy parameters, per-animation overrides, and the metatile attribute field lists (<code class="docutils literal notranslate"><span class="pre">metatile_attribute_fields</span></code> and <code class="docutils literal notranslate"><span class="pre">metatile_attribute_field_overrides</span></code>) are too structured to express as a flag, so they can only be set in a config file. They’re marked <em>YAML-only</em> in the reference.</p></li>
 </ul>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
@@ -338,12 +338,12 @@ Override them only when you explicitly want a particular run’s values to diffe
 <td><p><code class="docutils literal notranslate"><span class="pre">1024</span></code></p></td>
 <td><p>Total metatile capacity.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fieldmap.num_pals_in_primary</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fieldmap.num_palettes_in_primary</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">--num-pals-in-primary</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">6</span></code></p></td>
 <td><p>Hardware palettes reserved for the primary tileset.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fieldmap.num_pals_total</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fieldmap.num_palettes_total</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">--num-pals-total</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">13</span></code></p></td>
 <td><p>Total hardware palettes available.</p></td>
@@ -379,12 +379,12 @@ It’s borrowed from the vanilla decomp codebases and dependent on attribute siz
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fieldmap.metatile_attr_fields</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fieldmap.metatile_attribute_fields</span></code></p></td>
 <td><p><em>YAML-only</em></p></td>
 <td><p>(inferred)</p></td>
 <td><p>Declare the attribute field list yourself, replacing schema inference.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fieldmap.metatile_attr_field_overrides</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fieldmap.metatile_attribute_field_overrides</span></code></p></td>
 <td><p><em>YAML-only</em></p></td>
 <td><p>(none)</p></td>
 <td><p>Adjust individual fields on top of the inferred or declared list.</p></td>
@@ -411,11 +411,11 @@ It’s borrowed from the vanilla decomp codebases and dependent on attribute siz
 </tr>
 </tbody>
 </table>
-<p><strong><code class="docutils literal notranslate"><span class="pre">metatile_attr_fields</span></code></strong> and <strong><code class="docutils literal notranslate"><span class="pre">metatile_attr_field_overrides</span></code></strong> normally stay unset:
+<p><strong><code class="docutils literal notranslate"><span class="pre">metatile_attribute_fields</span></code></strong> and <strong><code class="docutils literal notranslate"><span class="pre">metatile_attribute_field_overrides</span></code></strong> normally stay unset:
 Porytiles infers the attribute schema from your project’s own declarations
 (that inference is priority 7 in the resolution table above).
-Set <code class="docutils literal notranslate"><span class="pre">metatile_attr_field_overrides</span></code> to tweak individual fields (a mask, a default, a value-name provider),
-and use the full <code class="docutils literal notranslate"><span class="pre">metatile_attr_fields</span></code> list
+Set <code class="docutils literal notranslate"><span class="pre">metatile_attribute_field_overrides</span></code> to tweak individual fields (a mask, a default, a value-name provider),
+and use the full <code class="docutils literal notranslate"><span class="pre">metatile_attribute_fields</span></code> list
 only if your project’s attribute layout is sufficiently customized that inference cannot describe it.</p>
 <p><strong><code class="docutils literal notranslate"><span class="pre">write_layer_type_column</span></code></strong> adds a trailing <code class="docutils literal notranslate"><span class="pre">layer_type</span></code> column to <code class="docutils literal notranslate"><span class="pre">attributes.csv</span></code>,
 letting you pin a metatile’s layer type instead of relying on inference.</p>
@@ -794,7 +794,7 @@ A violation stops the compile with an explanatory error:</p>
 <li><p>Every <code class="docutils literal notranslate"><span class="pre">fieldmap.*</span></code> count must be greater than zero.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">fieldmap.num_tiles_in_primary</span></code> ≤ <code class="docutils literal notranslate"><span class="pre">fieldmap.num_tiles_total</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">fieldmap.num_metatiles_in_primary</span></code> ≤ <code class="docutils literal notranslate"><span class="pre">fieldmap.num_metatiles_total</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">fieldmap.num_pals_in_primary</span></code> ≤ <code class="docutils literal notranslate"><span class="pre">fieldmap.num_pals_total</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fieldmap.num_palettes_in_primary</span></code> ≤ <code class="docutils literal notranslate"><span class="pre">fieldmap.num_palettes_total</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">fieldmap.num_tiles_per_metatile</span></code> must be <code class="docutils literal notranslate"><span class="pre">8</span></code> or <code class="docutils literal notranslate"><span class="pre">12</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">tileset.extrinsic_transparency</span></code> must be fully opaque (alpha <code class="docutils literal notranslate"><span class="pre">255</span></code>).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">tileset.tiles.sharing.packing</span></code> requires <code class="docutils literal notranslate"><span class="pre">tileset.palettes.packing.strategy</span></code> to be <code class="docutils literal notranslate"><span class="pre">backtracking</span></code>.</p></li>
