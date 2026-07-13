@@ -128,19 +128,20 @@
              
   <section id="how-the-gba-gen-iii-decomp-tileset-system-works">
 <h1>How the GBA + Gen III Decomp Tileset System Works<a class="headerlink" href="#how-the-gba-gen-iii-decomp-tileset-system-works" title="Link to this heading"></a></h1>
-<p>Porytiles exists so you don’t have to hand-manage most of what this page describes.
-You should still read it. The tile limits, palette slots, file names, and error messages you will
-run into all trace back to how the Game Boy Advance draws the overworld. Once you know
-the hardware underneath, a diagnostic with GBA jargon like like “ran out of palette slots”
+<p>Porytiles exists so you don’t have to hand-manage most of the systems described in this page.
+However, they’re still important to know.
+The tile limits, palette slots, file conventions, and error messages
+you will run into all trace back to how the Game Boy Advance draws the overworld.
+Once you know the hardware underneath, a diagnostic with GBA jargon like like “ran out of palette slots”
 will feel a lot less frustrating.</p>
 <p>This page uses <code class="docutils literal notranslate"><span class="pre">pokeemerald</span></code> as its reference.
-FireRed/LeafGreen (<code class="docutils literal notranslate"><span class="pre">pokefirered</span></code>) differences are called out where they matter,
+FireRed/LeafGreen (<code class="docutils literal notranslate"><span class="pre">pokefirered</span></code>) differences are called out where relevant,
 and everything here applies to <code class="docutils literal notranslate"><span class="pre">pokeemerald-expansion</span></code> as well.</p>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
 <p>You do not need to memorize this page before using Porytiles.
-Skim it once to understand the basics, then come back
-when a diagnostic mentions palettes, tile limits, layer types, etc.</p>
+Read through it once to understand the basics, then come back
+when a diagnostic or another docs page mentions a concept you don’t fully understand.</p>
 </div>
 <section id="start-with-the-hardware">
 <h2>Start with the hardware<a class="headerlink" href="#start-with-the-hardware" title="Link to this heading"></a></h2>
@@ -155,9 +156,9 @@ goes where. The PPU assembles the picture live, every frame.</p>
 <p>There are three key facts about the hardware setup.
 If you understand these, everything else will start to make sense.</p>
 <ol class="arabic simple">
-<li><p>Tiles are 8x8 pixels and use indexed color.</p></li>
-<li><p>Each cell of the background grid is a 16-bit value with only 10 bits to name a tile
-and 4 bits to name a palette.</p></li>
+<li><p>Tiles are 8x8 pixels and use <em>indexed</em> color.</p></li>
+<li><p>Each cell of the background grid is a fancy 16-bit pointer: 10 bits to name the tile at the given cell
+and 4 bits to name the palette.</p></li>
 <li><p>There are four background layers, and the games use three of them for the map.</p></li>
 </ol>
 <p>The rest of this page walks you all the way up from the hardware to the decomp system:
@@ -180,8 +181,9 @@ backgrounds. This page summarizes just the parts that matter for decomp tilesets
 </div>
 <p>Important: each pixel is not actually a color. It is a number from 0 to 15
 that points into a <strong>palette</strong> of 16 colors. When the hardware draws the tile, it looks
-up each pixel’s number in whichever palette the tile was assigned and paints the color it
-finds there. At 4 bits per pixel, a tile occupies just 32 bytes of video memory.</p>
+up each pixel’s number in whichever palette the tile was assigned (more on this later)
+and paints the color it finds there.
+At 4 bits per pixel, a tile occupies just 32 bytes of video memory.</p>
 <p>The GBA provides 16 of these background palettes. Each color slot is a 15-bit value
 (5 bits each for red, green, and blue), which gives two important takeaways:</p>
 <ul class="simple">
@@ -249,7 +251,7 @@ tiles.</p></li>
 </section>
 <section id="metatiles-the-map-building-unit">
 <h2>Metatiles: the map-building unit<a class="headerlink" href="#metatiles-the-map-building-unit" title="Link to this heading"></a></h2>
-<p>Nobody lays out an overworld map one 8x8 tile at a time. The games group tiles into
+<p>Overworld maps are not laid out one 8x8 tile at a time. Instead, the games group tiles into
 <strong>metatiles</strong>: 16x16 pixel blocks, each a 2x2 arrangement of tiles. Map layouts are grids
 of metatile IDs, and metatiles are what you paint with in Porymap.</p>
 <p>A metatile is defined by a list of tilemap entries, in row-major order per layer:</p>
@@ -421,6 +423,9 @@ absolute indices, nothing stops a secondary metatile from referencing the primar
 and palettes. This is not just allowed, it is the normal case. A town’s building
 metatiles sit on the primary’s grass and path tiles, and secondary tiles routinely color
 themselves with primary palettes instead of spending one of the secondary’s own slots.</p>
+<p>Porytiles understands this pairing. When you compile a secondary tileset, it resolves
+the partner primary and reuses primary tiles and palettes automatically where it can.
+See <a class="reference internal" href="configuration.html"><span class="doc">Configuration Reference</span></a> for how the partner primary is resolved (<code class="docutils literal notranslate"><span class="pre">tileset.primary_pairing</span></code>).</p>
 <p>The relationship only goes one way, though. A primary is shared by many maps, and each
 map pairs it with a different secondary. If a primary metatile referenced tile 700, it
 would draw whatever the <em>current</em> map’s secondary keeps at index 700: a rock wall on one
@@ -428,9 +433,6 @@ map, a building window on the next. So in practice, primary metatiles stick to p
 tiles and palettes. (Projects occasionally break this rule on purpose, but that only
 works if every secondary paired with that primary keeps identical content at the
 borrowed indices. It’s a very deliberate, carefully maintained setup.)</p>
-<p>Porytiles understands this pairing. When you compile a secondary tileset, it resolves
-the partner primary and reuses primary tiles and palettes automatically where it can.
-See <a class="reference internal" href="configuration.html"><span class="doc">Configuration Reference</span></a> for how the partner primary is resolved (<code class="docutils literal notranslate"><span class="pre">tileset.primary_pairing</span></code>).</p>
 </section>
 <section id="why-the-split-exists">
 <h3>Why the split exists<a class="headerlink" href="#why-the-split-exists" title="Link to this heading"></a></h3>
@@ -508,15 +510,6 @@ come with instructions for which constants to change.</p>
 your build. You can override them for specific use cases.
 Don’t worry about that now, it will make more sense later as you play with the tool.
 See <a class="reference internal" href="configuration.html"><span class="doc">Configuration Reference</span></a> for how overriding works.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p><code class="docutils literal notranslate"><span class="pre">pokeemerald-expansion</span></code>’s <code class="docutils literal notranslate"><span class="pre">include/fieldmap.h</span></code> now contains both the Emerald and FRLG specific constants
-and adds an <code class="docutils literal notranslate"><span class="pre">isFrlg</span></code> flag on each map layout, so a single project can host Emerald-split and FRLG-split maps
-side by side.
-The runtime also selects the metatile attribute stride per layout by pointer cast
-(<code class="docutils literal notranslate"><span class="pre">u16</span></code> for Emerald layouts, <code class="docutils literal notranslate"><span class="pre">u32</span></code> for FRLG layouts),
-so the <code class="docutils literal notranslate"><span class="pre">INCBIN</span></code> declaration type in <code class="docutils literal notranslate"><span class="pre">metatiles.h</span></code> does not indicate the FRLG entry width.</p>
-</div>
 </section>
 <section id="the-files-on-disk">
 <h2>The files on disk<a class="headerlink" href="#the-files-on-disk" title="Link to this heading"></a></h2>
