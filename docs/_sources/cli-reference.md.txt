@@ -14,7 +14,8 @@ Man-page style reference for all commands:
   - `compile-tileset` --- synopsis, description, positional args
   - `decompile-tileset` --- synopsis, description, positional args
 - **Utilities:**
-  - `dump-tileset-config` --- synopsis, description, output format
+  - `dump-tileset-config` --- synopsis, description, output format, `--allow-missing-tileset`
+  - `dump-attribute-schema` --- synopsis, description, output format, `--allow-missing-tileset`
   - `list-tilesets` --- synopsis, filtering modes (all/managed/unmanaged), `--prefix`
   - `completion` --- synopsis, supported shells (bash/zsh/fish), setup instructions
 

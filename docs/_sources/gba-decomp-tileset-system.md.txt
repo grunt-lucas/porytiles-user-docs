@@ -1,19 +1,20 @@
 # How the GBA + Gen III Decomp Tileset System Works
 
-Porytiles exists so you don't have to hand-manage most of what this page describes.
-You should still read it. The tile limits, palette slots, file names, and error messages you will
-run into all trace back to how the Game Boy Advance draws the overworld. Once you know
-the hardware underneath, a diagnostic with GBA jargon like like "ran out of palette slots"
+Porytiles exists so you don't have to hand-manage most of the systems described in this page.
+However, they're still important to know.
+The tile limits, palette slots, file conventions, and error messages
+you will run into all trace back to how the Game Boy Advance draws the overworld.
+Once you know the hardware underneath, a diagnostic with GBA jargon like like "ran out of palette slots"
 will feel a lot less frustrating.
 
 This page uses `pokeemerald` as its reference.
-FireRed/LeafGreen (`pokefirered`) differences are called out where they matter,
+FireRed/LeafGreen (`pokefirered`) differences are called out where relevant,
 and everything here applies to `pokeemerald-expansion` as well.
 
 ```{tip}
 You do not need to memorize this page before using Porytiles.
-Skim it once to understand the basics, then come back
-when a diagnostic mentions palettes, tile limits, layer types, etc.
+Read through it once to understand the basics, then come back
+when a diagnostic or another docs page mentions a concept you don't fully understand.
 ```
 
 ## Start with the hardware
@@ -30,9 +31,9 @@ TODO: insert cool pic of GBA screen
 There are three key facts about the hardware setup.
 If you understand these, everything else will start to make sense.
 
-1. Tiles are 8x8 pixels and use indexed color.
-2. Each cell of the background grid is a 16-bit value with only 10 bits to name a tile
-   and 4 bits to name a palette.
+1. Tiles are 8x8 pixels and use *indexed* color.
+2. Each cell of the background grid is a fancy 16-bit pointer: 10 bits to name the tile at the given cell
+   and 4 bits to name the palette.
 3. There are four background layers, and the games use three of them for the map.
 
 The rest of this page walks you all the way up from the hardware to the decomp system:
@@ -56,8 +57,9 @@ TODO: insert screencap of a tile
 
 Important: each pixel is not actually a color. It is a number from 0 to 15
 that points into a **palette** of 16 colors. When the hardware draws the tile, it looks
-up each pixel's number in whichever palette the tile was assigned and paints the color it
-finds there. At 4 bits per pixel, a tile occupies just 32 bytes of video memory.
+up each pixel's number in whichever palette the tile was assigned (more on this later)
+and paints the color it finds there.
+At 4 bits per pixel, a tile occupies just 32 bytes of video memory.
 
 The GBA provides 16 of these background palettes. Each color slot is a 15-bit value
 (5 bits each for red, green, and blue), which gives two important takeaways:
@@ -107,7 +109,7 @@ TODO: insert screencap of flipped tiles
 
 ## Metatiles: the map-building unit
 
-Nobody lays out an overworld map one 8x8 tile at a time. The games group tiles into
+Overworld maps are not laid out one 8x8 tile at a time. Instead, the games group tiles into
 **metatiles**: 16x16 pixel blocks, each a 2x2 arrangement of tiles. Map layouts are grids
 of metatile IDs, and metatiles are what you paint with in Porymap.
 
@@ -240,6 +242,10 @@ and palettes. This is not just allowed, it is the normal case. A town's building
 metatiles sit on the primary's grass and path tiles, and secondary tiles routinely color
 themselves with primary palettes instead of spending one of the secondary's own slots.
 
+Porytiles understands this pairing. When you compile a secondary tileset, it resolves
+the partner primary and reuses primary tiles and palettes automatically where it can.
+See {doc}`configuration` for how the partner primary is resolved (`tileset.primary_pairing`).
+
 The relationship only goes one way, though. A primary is shared by many maps, and each
 map pairs it with a different secondary. If a primary metatile referenced tile 700, it
 would draw whatever the *current* map's secondary keeps at index 700: a rock wall on one
@@ -247,10 +253,6 @@ map, a building window on the next. So in practice, primary metatiles stick to p
 tiles and palettes. (Projects occasionally break this rule on purpose, but that only
 works if every secondary paired with that primary keeps identical content at the
 borrowed indices. It's a very deliberate, carefully maintained setup.)
-
-Porytiles understands this pairing. When you compile a secondary tileset, it resolves
-the partner primary and reuses primary tiles and palettes automatically where it can.
-See {doc}`configuration` for how the partner primary is resolved (`tileset.primary_pairing`).
 
 ### Why the split exists
 
@@ -291,15 +293,6 @@ Porytiles and Porymap read all of these from your project automatically, so the 
 your build. You can override them for specific use cases.
 Don't worry about that now, it will make more sense later as you play with the tool.
 See {doc}`configuration` for how overriding works.
-
-```{note}
-`pokeemerald-expansion`'s `include/fieldmap.h` now contains both the Emerald and FRLG specific constants
-and adds an `isFrlg` flag on each map layout, so a single project can host Emerald-split and FRLG-split maps
-side by side.
-The runtime also selects the metatile attribute stride per layout by pointer cast
-(`u16` for Emerald layouts, `u32` for FRLG layouts),
-so the `INCBIN` declaration type in `metatiles.h` does not indicate the FRLG entry width.
-```
 
 ## The files on disk
 

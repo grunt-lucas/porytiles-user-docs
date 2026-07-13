@@ -245,7 +245,10 @@ porytiles<span class="w"> </span>-C<span class="w"> </span>path/to/pokeemerald-e
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dump-tileset-config</span> <span class="pre">&lt;name&gt;</span></code></p></td>
 <td><p>Print the full, resolved config for a tileset (great for “why did it do that?”).</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">completion</span> <span class="pre">&lt;bash|zsh|fish&gt;</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dump-attribute-schema</span> <span class="pre">&lt;name&gt;</span></code></p></td>
+<td><p>Print the resolved metatile attribute schema (the fields your <code class="docutils literal notranslate"><span class="pre">attributes.csv</span></code> needs).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">completion</span> <span class="pre">&lt;bash|zsh|fish&gt;</span></code></p></td>
 <td><p>Generate a shell completion script.</p></td>
 </tr>
 </tbody>
@@ -443,6 +446,7 @@ To verify what’s actually in effect after layering, use <code class="docutils 
 <li><p>What’s that flag name again? <code class="docutils literal notranslate"><span class="pre">porytiles</span> <span class="pre">--help</span></code> and <code class="docutils literal notranslate"><span class="pre">porytiles</span> <span class="pre">&lt;command&gt;</span> <span class="pre">--help</span></code></p></li>
 <li><p>What’s that YAML key again? <code class="docutils literal notranslate"><span class="pre">porytiles/config_templates/porytiles.example.yaml</span></code></p></li>
 <li><p>Why is my config not what I expected? <code class="docutils literal notranslate"><span class="pre">porytiles</span> <span class="pre">dump-tileset-config</span> <span class="pre">&lt;name&gt;</span></code></p></li>
+<li><p>Which columns does my <code class="docutils literal notranslate"><span class="pre">attributes.csv</span></code> need? <code class="docutils literal notranslate"><span class="pre">porytiles</span> <span class="pre">dump-attribute-schema</span> <span class="pre">&lt;name&gt;</span></code></p></li>
 <li><p>Where can I see some example tilesets? <code class="docutils literal notranslate"><span class="pre">resources/examples/</span></code></p></li>
 <li><p>What does this diagnostic message mean? <a class="reference internal" href="diagnostics.html"><span class="doc">Understanding Diagnostics</span></a></p></li>
 </ul>

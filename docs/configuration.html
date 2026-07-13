@@ -86,6 +86,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#fieldmap-metatile-attributes"><code class="docutils literal notranslate"><span class="pre">fieldmap</span></code> — metatile attributes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#tileset-paths-asset-directories"><code class="docutils literal notranslate"><span class="pre">tileset.paths</span></code> — asset directories</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#tileset-transparency"><code class="docutils literal notranslate"><span class="pre">tileset</span></code> — transparency</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tileset-layer-mode-content"><code class="docutils literal notranslate"><span class="pre">tileset</span></code> — layer mode content</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#tileset-tiles-the-tiles-png-artifact"><code class="docutils literal notranslate"><span class="pre">tileset.tiles</span></code> — the <code class="docutils literal notranslate"><span class="pre">tiles.png</span></code> artifact</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#tileset-palettes-palette-packing"><code class="docutils literal notranslate"><span class="pre">tileset.palettes</span></code> — palette packing</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#tileset-animations-animation-handling"><code class="docutils literal notranslate"><span class="pre">tileset.animations</span></code> — animation handling</a></li>
@@ -180,11 +181,7 @@ a command-line option can override one key while the rest still come from your Y
 <td><p>Fieldmap header</p></td>
 <td><p>The <code class="docutils literal notranslate"><span class="pre">#define</span></code>s in <code class="docutils literal notranslate"><span class="pre">include/fieldmap.h</span></code></p></td>
 </tr>
-<tr class="row-even"><td class="text-right"><p>7</p></td>
-<td><p>Attribute inference</p></td>
-<td><p>The metatile attribute schema inferred from your project’s own attribute declarations</p></td>
-</tr>
-<tr class="row-odd"><td class="text-right"><p>8 (lowest)</p></td>
+<tr class="row-even"><td class="text-right"><p>7 (lowest)</p></td>
 <td><p>Built-in default</p></td>
 <td><p>The default baked into Porytiles</p></td>
 </tr>
@@ -193,7 +190,7 @@ a command-line option can override one key while the rest still come from your Y
 <p>Two critical consequences worth reiterating:</p>
 <ul class="simple">
 <li><p><strong>Per-tileset beats project-wide, and local beats committed.</strong> A key set in a tileset’s <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code> overrides the same key in the project-wide <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code>, and either <code class="docutils literal notranslate"><span class="pre">config.local.yaml</span></code> overrides its committed sibling at the same scope.</p></li>
-<li><p><strong>The <code class="docutils literal notranslate"><span class="pre">fieldmap.*</span></code> values come from your project for free.</strong> Sources 6 and 7 read your decomp project’s own source files, so the tile, metatile, and palette limits (and the metatile attribute schema, see <a class="reference internal" href="metatile-attributes.html"><span class="doc">Metatile Attributes Reference</span></a>) already match your build. You only set them by hand when for some reason, your project (or specific tileset) diverges from those sources.</p></li>
+<li><p><strong>The <code class="docutils literal notranslate"><span class="pre">fieldmap.*</span></code> values come from your project for free.</strong> Source 6 reads your decomp project’s own <code class="docutils literal notranslate"><span class="pre">include/fieldmap.h</span></code>, so the tile, metatile, and palette limits already match your build. The metatile attribute sizes and schema are likewise derived from your project’s own attribute masks and declarations whenever you leave those keys unset (see <a class="reference internal" href="metatile-attributes.html"><span class="doc">Metatile Attributes Reference</span></a>). You only set them by hand when for some reason, your project diverges from those sources.</p></li>
 </ul>
 </section>
 <section id="where-configuration-yaml-files-live">
@@ -256,7 +253,7 @@ You can also set up shell completion to make it even easier, see <a class="refer
 </section>
 <section id="inspecting-the-resolved-configuration">
 <span id="dump-config"></span><h2>Inspecting the resolved configuration<a class="headerlink" href="#inspecting-the-resolved-configuration" title="Link to this heading"></a></h2>
-<p>Because values come from up to eight places, “what is this key actually set to, and why?” is a real question.
+<p>Because values come from up to seven places, “what is this key actually set to, and why?” is a real question.
 <code class="docutils literal notranslate"><span class="pre">dump-tileset-config</span></code> provides the answer for a specific tileset:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>porytiles<span class="w"> </span>dump-tileset-config<span class="w"> </span>gTileset_Example
 </pre></div>
@@ -277,7 +274,6 @@ You can also set up shell completion to make it even easier, see <a class="refer
     ○ CliOptionProvider (not provided)
     ○ YamlFileProvider (not provided)
     ✓ HeaderDefineProvider = 512
-    ○ MetatileAttributeConfigProvider (not provided)
     ○ DefaultProvider = 512
 </pre></div>
 </div>
@@ -289,8 +285,12 @@ You can see in the above example
 that some providers did not provide a value for the key at all,
 while others provided a value but were superseded by a provider with higher priority.
 For a value that fell through to its default, the source reads <code class="docutils literal notranslate"><span class="pre">default</span> <span class="pre">value</span></code> and only <code class="docutils literal notranslate"><span class="pre">DefaultProvider</span></code> is checked.</p>
-<p>This is the fastest way to debug a surprising result:
-dump the config, find the key, and the chain shows you which file (or flag) to change.</p>
+<p>This is the fastest way to debug a surprising result.
+Just dump the config, find the relevant key, and the chain shows you which file (or flag) to change.</p>
+<p>The tileset has to exist in the project, so a misspelled name errors out instead of dumping
+a plausible-looking chain of project-level values.
+To preview the config a not-yet-created tileset would inherit,
+pass <code class="docutils literal notranslate"><span class="pre">--allow-missing-tileset</span></code> which overrides this behavior.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>The chain collapses all four YAML files into a single <code class="docutils literal notranslate"><span class="pre">YamlFileProvider</span></code> row,
@@ -364,12 +364,12 @@ Override them only when you explicitly want a particular run’s values to diffe
 <section id="fieldmap-metatile-attributes">
 <h3><code class="docutils literal notranslate"><span class="pre">fieldmap</span></code> — metatile attributes<a class="headerlink" href="#fieldmap-metatile-attributes" title="Link to this heading"></a></h3>
 <p>These control the metatile attribute schema: which fields exist in each metatile’s packed attribute value,
-and how the <code class="docutils literal notranslate"><span class="pre">attributes.csv</span></code> layer type column and the FireRed/LeafGreen alternate masks behave.
+how wide each attribute entry is, and how the <code class="docutils literal notranslate"><span class="pre">attributes.csv</span></code> layer type column behaves.
+The schema is a project-level property (a project has exactly one attribute layout, shared by every tileset),
+so set these keys in <code class="docutils literal notranslate"><span class="pre">porytiles/config.yaml</span></code>, not per tileset.
+Setting these keys to different values in different tilesets can result in inconsistent, buggy behavior.
 The whole system, including the field and override formats, is documented in <a class="reference internal" href="metatile-attributes.html"><span class="doc">Metatile Attributes Reference</span></a>;
 this table is just the key listing.</p>
-<p>The <em>size-based default</em> referenced below is Porytiles’s last-resort fallback for the layer-type mask.
-It’s borrowed from the vanilla decomp codebases and dependent on attribute size:
-<code class="docutils literal notranslate"><span class="pre">0x60000000</span></code> (the FRLG position) for 4-byte attributes, <code class="docutils literal notranslate"><span class="pre">0xF000</span></code> (the Emerald position) for 2-byte, disabled for 1-byte.</p>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>YAML key</p></th>
@@ -379,6 +379,16 @@ It’s borrowed from the vanilla decomp codebases and dependent on attribute siz
 </tr>
 </thead>
 <tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fieldmap.metatile_attribute_size</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--metatile-attribute-size</span></code></p></td>
+<td><p>(inferred)</p></td>
+<td><p>The size in bytes of each metatile attribute entry (<code class="docutils literal notranslate"><span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">2</span></code>, or <code class="docutils literal notranslate"><span class="pre">4</span></code>).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fieldmap.metatile_attribute_declaration_size</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--metatile-attribute-declaration-size</span></code></p></td>
+<td><p>(inferred, then the attribute size)</p></td>
+<td><p>The declared element width of generated <code class="docutils literal notranslate"><span class="pre">gMetatileAttributes_*</span></code> arrays (<code class="docutils literal notranslate"><span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">2</span></code>, or <code class="docutils literal notranslate"><span class="pre">4</span></code>).</p></td>
+</tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fieldmap.metatile_attribute_fields</span></code></p></td>
 <td><p><em>YAML-only</em></p></td>
 <td><p>(inferred)</p></td>
@@ -389,48 +399,44 @@ It’s borrowed from the vanilla decomp codebases and dependent on attribute siz
 <td><p>(none)</p></td>
 <td><p>Adjust individual fields on top of the inferred or declared list.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fieldmap.write_layer_type_column</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">--write-layer-type-column</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
-<td><p>Emit and honor a <code class="docutils literal notranslate"><span class="pre">layer_type</span></code> column in <code class="docutils literal notranslate"><span class="pre">attributes.csv</span></code>.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fieldmap.use_frlg_alternate_masks</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">--use-frlg-alternate-masks</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">automatic</span></code></p></td>
-<td><p>Whether a tileset uses the FRLG alternate attribute masks.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fieldmap.metatile_layer_type_mask</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">--metatile-layer-type-mask</span></code></p></td>
-<td><p>(inferred, then size-based default)</p></td>
-<td><p>Bit mask for the layer-type bits (a hex literal like <code class="docutils literal notranslate"><span class="pre">0xF000</span></code>); <code class="docutils literal notranslate"><span class="pre">0</span></code> disables the layer type.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fieldmap.metatile_layer_type_mask_frlg</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">--metatile-layer-type-mask-frlg</span></code></p></td>
-<td><p>(inferred, then size-based default)</p></td>
-<td><p>Same, for the FRLG alternate layout.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fieldmap.role_pins</span></code></p></td>
+<td><p><em>YAML-only</em></p></td>
+<td><p>(none)</p></td>
+<td><p>Emit and honor a trailing pin column in <code class="docutils literal notranslate"><span class="pre">attributes.csv</span></code> for a schema role.</p></td>
 </tr>
 </tbody>
 </table>
+<p><code class="docutils literal notranslate"><span class="pre">fieldmap.role_pins</span></code> is an exception to the project-level rule:
+it never touches the binary attribute layout, only the CSV pin columns,
+so setting it per tileset is fine and often what you want.</p>
+<p><strong><code class="docutils literal notranslate"><span class="pre">metatile_attribute_size</span></code></strong> normally stays unset:
+Porytiles derives the attribute width from the attribute masks your project declares
+(the <code class="docutils literal notranslate"><span class="pre">METATILE_ATTR_*_MASK</span></code> defines and the <code class="docutils literal notranslate"><span class="pre">sMetatileAttrMasks</span></code> table).
+Two situations require it:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">pokeemerald-expansion</span></code>, which declares both the emerald and FRLG mask layouts and picks one per build (<code class="docutils literal notranslate"><span class="pre">make</span></code> vs <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">firered</span></code>),
+so you must set the size explicitly and it selects the matching layout (<code class="docutils literal notranslate"><span class="pre">2</span></code> for emerald, <code class="docutils literal notranslate"><span class="pre">4</span></code> for FRLG).</p></li>
+<li><p>Projects whose <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">Tileset</span></code> declares a wider element type than the masks need,
+where the two sources contradict each other and Porytiles asks for the size rather than guessing.</p></li>
+</ol>
+<p>See <a class="reference internal" href="metatile-attributes.html"><span class="doc">Metatile Attributes Reference</span></a> for more details.</p>
+<p><strong><code class="docutils literal notranslate"><span class="pre">metatile_attribute_declaration_size</span></code></strong> normally stays unset:
+Porytiles infers the declared element width from <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">Tileset</span></code>’s <code class="docutils literal notranslate"><span class="pre">metatileAttributes</span></code> member
+in <code class="docutils literal notranslate"><span class="pre">include/global.fieldmap.h</span></code>, and it defaults to the attribute size when that inference finds nothing.
+The case where the two differ is Expansion’s FRLG flavor,
+whose 4-byte attribute entries are declared as <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">u16</span></code> arrays.</p>
 <p><strong><code class="docutils literal notranslate"><span class="pre">metatile_attribute_fields</span></code></strong> and <strong><code class="docutils literal notranslate"><span class="pre">metatile_attribute_field_overrides</span></code></strong> normally stay unset:
-Porytiles infers the attribute schema from your project’s own declarations
-(that inference is priority 7 in the resolution table above).
-Set <code class="docutils literal notranslate"><span class="pre">metatile_attribute_field_overrides</span></code> to tweak individual fields (a mask, a default, a value-name provider),
+Porytiles infers the attribute schema from your project’s own declarations,
+including the layer-type field, which is an ordinary schema field marked with <code class="docutils literal notranslate"><span class="pre">role:</span> <span class="pre">layer_type</span></code>.
+Set <code class="docutils literal notranslate"><span class="pre">metatile_attribute_field_overrides</span></code> to tweak individual fields (a mask, a default, a value-name provider, the role),
 and use the full <code class="docutils literal notranslate"><span class="pre">metatile_attribute_fields</span></code> list
 only if your project’s attribute layout is sufficiently customized that inference cannot describe it.</p>
-<p><strong><code class="docutils literal notranslate"><span class="pre">write_layer_type_column</span></code></strong> adds a trailing <code class="docutils literal notranslate"><span class="pre">layer_type</span></code> column to <code class="docutils literal notranslate"><span class="pre">attributes.csv</span></code>,
-letting you pin a metatile’s layer type instead of relying on inference.</p>
-<p><strong><code class="docutils literal notranslate"><span class="pre">use_frlg_alternate_masks</span></code></strong>:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">automatic</span></code> <em>(default)</em> — cross-reference <code class="docutils literal notranslate"><span class="pre">data/layouts/layouts.json</span></code>; a tileset used only by <code class="docutils literal notranslate"><span class="pre">layout_version:</span> <span class="pre">&quot;frlg&quot;</span></code> layouts gets the FRLG masks.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">always</span></code> — force the FRLG alternate masks (<code class="docutils literal notranslate"><span class="pre">true</span></code> works as an alias).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">never</span></code> — force the primary masks (<code class="docutils literal notranslate"><span class="pre">false</span></code> works as an alias).</p></li>
-</ul>
-<p><strong><code class="docutils literal notranslate"><span class="pre">metatile_layer_type_mask</span></code></strong> (and its <code class="docutils literal notranslate"><span class="pre">_frlg</span></code> variant) normally stay unset:
-Porytiles infers the layer-type bit position from the base game and falls back to the size-based default above.
-Set one only to override that, if your project moved the layer-type bits.
-See <a class="reference internal" href="metatile-attributes.html"><span class="doc">Metatile Attributes Reference</span></a> for more information: inference sources, disabling with <code class="docutils literal notranslate"><span class="pre">0</span></code>, and width limits.</p>
-<p>Both <code class="docutils literal notranslate"><span class="pre">write_layer_type_column</span></code> and <code class="docutils literal notranslate"><span class="pre">use_frlg_alternate_masks</span></code> are really per-tileset settings,
-so prefer setting them in <code class="docutils literal notranslate"><span class="pre">porytiles/tilesets/&lt;tileset_name&gt;/config.yaml</span></code>.</p>
+<p><strong><code class="docutils literal notranslate"><span class="pre">role_pins</span></code></strong> adds a trailing pin column to <code class="docutils literal notranslate"><span class="pre">attributes.csv</span></code> for a schema role (currently only <code class="docutils literal notranslate"><span class="pre">layer_type</span></code>),
+letting you pin a metatile’s layer type instead of relying on inference.
+The column header defaults to the role name but can be renamed with a <code class="docutils literal notranslate"><span class="pre">column:</span></code> key.
+This is the one key in this group that makes sense per tileset,
+so prefer setting it in <code class="docutils literal notranslate"><span class="pre">porytiles/tilesets/&lt;tileset_name&gt;/config.yaml</span></code>.
+See <a class="reference internal" href="metatile-attributes.html"><span class="doc">Metatile Attributes Reference</span></a> for more on pinning.</p>
 </section>
 <section id="tileset-paths-asset-directories">
 <h3><code class="docutils literal notranslate"><span class="pre">tileset.paths</span></code> — asset directories<a class="headerlink" href="#tileset-paths-asset-directories" title="Link to this heading"></a></h3>
@@ -488,6 +494,32 @@ so prefer setting them in <code class="docutils literal notranslate"><span class
 </table>
 <p>Pixels in this color (or with an alpha of 0) become transparent in the compiled tileset.
 The mental model for source layers is covered in the <a class="reference internal" href="quickstart.html"><span class="doc">Quick Start</span></a>.</p>
+</section>
+<section id="tileset-layer-mode-content">
+<h3><code class="docutils literal notranslate"><span class="pre">tileset</span></code> — layer mode content<a class="headerlink" href="#tileset-layer-mode-content" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>YAML key</p></th>
+<th class="head"><p>CLI flag</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tileset.ignore_triple_layer_content</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--ignore-triple-layer-content</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
+<td><p>Demote the triple-layer-content-in-dual-mode error to a warning, dropping one layer group.</p></td>
+</tr>
+</tbody>
+</table>
+<p>By default, a dual-layer compile hard-errors when a metatile has visible content on all three layers.
+Turning this on demotes that error to a warning
+and lets the compilation proceed by dropping one layer group per offending metatile.
+Which group is dropped follows the metatile’s effective layer type:
+a <code class="docutils literal notranslate"><span class="pre">fieldmap.role_pins</span></code> <code class="docutils literal notranslate"><span class="pre">layer_type</span></code> pin if you set one,
+otherwise a fallback to Layer Type Normal that drops the bottom group.
+See <a class="reference internal" href="metatile-attributes.html"><span class="doc">Metatile Attributes Reference</span></a> for more information.</p>
 </section>
 <section id="tileset-tiles-the-tiles-png-artifact">
 <h3><code class="docutils literal notranslate"><span class="pre">tileset.tiles</span></code> — the <code class="docutils literal notranslate"><span class="pre">tiles.png</span></code> artifact<a class="headerlink" href="#tileset-tiles-the-tiles-png-artifact" title="Link to this heading"></a></h3>
@@ -796,6 +828,7 @@ A violation stops the compile with an explanatory error:</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">fieldmap.num_metatiles_in_primary</span></code> ≤ <code class="docutils literal notranslate"><span class="pre">fieldmap.num_metatiles_total</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">fieldmap.num_palettes_in_primary</span></code> ≤ <code class="docutils literal notranslate"><span class="pre">fieldmap.num_palettes_total</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">fieldmap.num_tiles_per_metatile</span></code> must be <code class="docutils literal notranslate"><span class="pre">8</span></code> or <code class="docutils literal notranslate"><span class="pre">12</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fieldmap.metatile_attribute_size</span></code> must be <code class="docutils literal notranslate"><span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">2</span></code>, or <code class="docutils literal notranslate"><span class="pre">4</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">tileset.extrinsic_transparency</span></code> must be fully opaque (alpha <code class="docutils literal notranslate"><span class="pre">255</span></code>).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">tileset.tiles.sharing.packing</span></code> requires <code class="docutils literal notranslate"><span class="pre">tileset.palettes.packing.strategy</span></code> to be <code class="docutils literal notranslate"><span class="pre">backtracking</span></code>.</p></li>
 </ul>
@@ -855,6 +888,7 @@ in the source repository, and remember the <a class="reference internal" href="#
 <li><p><a class="reference internal" href="cli-reference.html"><span class="doc">CLI Command Reference</span></a> — the complete command and flag listing.</p></li>
 <li><p><a class="reference internal" href="palette-packing.html"><span class="doc">Palette Packing</span></a>, <a class="reference internal" href="tile-sharing.html"><span class="doc">Tile Sharing</span></a>, <a class="reference internal" href="animations.html"><span class="doc">Animations</span></a>, <a class="reference internal" href="diagnostics.html"><span class="doc">Understanding Diagnostics</span></a>, <a class="reference internal" href="metatile-attributes.html"><span class="doc">Metatile Attributes Reference</span></a> — the subsystems behind the values above.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">porytiles</span> <span class="pre">dump-tileset-config</span> <span class="pre">&lt;name&gt;</span></code> — confirm what’s actually in effect for a tileset.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">porytiles</span> <span class="pre">dump-attribute-schema</span> <span class="pre">&lt;name&gt;</span></code> — see the metatile attribute schema those values resolve to.</p></li>
 </ul>
 </section>
 </section>

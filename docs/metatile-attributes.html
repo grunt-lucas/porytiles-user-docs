@@ -77,7 +77,10 @@
 <li class="toctree-l3"><a class="reference internal" href="#stock-layouts">Stock layouts</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#the-attribute-schema">The attribute schema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-attribute-schema">The attribute schema</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#the-declaration-size">The declaration size</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#where-the-schema-comes-from">Where the schema comes from</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#schema-inference">Schema inference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#checking-the-resolved-schema">Checking the resolved schema</a></li>
@@ -86,10 +89,12 @@
 <li class="toctree-l2"><a class="reference internal" href="#the-attributes-csv-file">The <code class="docutils literal notranslate"><span class="pre">attributes.csv</span></code> file</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#layer-types">Layer types</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#inference">Inference</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#pinning-with-the-layer-type-column">Pinning with the <code class="docutils literal notranslate"><span class="pre">layer_type</span></code> column</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pinning-with-role-pins">Pinning with <code class="docutils literal notranslate"><span class="pre">role_pins</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#round-tripping-the-pin-column">Round-tripping the pin column</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#triple-layer-content-in-a-dual-layer-tileset">Triple-layer content in a dual-layer tileset</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#emerald-style-and-firered-style-layouts-in-one-project">Emerald-style and FireRed-style layouts in one project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#expansion-s-two-build-flavors">Expansion’s two build flavors</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#customizing-the-schema">Customizing the schema</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#overriding-individual-fields">Overriding individual fields</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#declaring-fields-from-scratch">Declaring fields from scratch</a></li>
@@ -129,13 +134,6 @@
              
   <section id="metatile-attributes-reference">
 <h1>Metatile Attributes Reference<a class="headerlink" href="#metatile-attributes-reference" title="Link to this heading"></a></h1>
-<div class="admonition important">
-<p class="admonition-title">Important</p>
-<p>This page is quite detailed, but for 90% of use-cases, Porytiles’s default behavior will be sufficient.
-It tries really hard to infer the attribute schema from your decomp code,
-and editing the <code class="docutils literal notranslate"><span class="pre">attributes.csv</span></code> should be intuitive in most cases (especially if you have used <code class="docutils literal notranslate"><span class="pre">porytiles-legacy</span></code> before).
-Only read this page if your project needs heavy customization.</p>
-</div>
 <p>Every metatile in a tileset carries an <strong>attribute value</strong>:
 a small packed integer that tells the game engine about various metadata values for that metatile.
 The most important piece is the <strong>behavior</strong> (tall grass, water, a ledge, a door),
@@ -164,7 +162,7 @@ That is why Porytiles treats the layout as data, not as a hardcoded rule.</p>
 Those live in each map’s block data, packed next to the metatile ID
 (<code class="docutils literal notranslate"><span class="pre">MAPGRID_COLLISION_MASK</span></code> and <code class="docutils literal notranslate"><span class="pre">MAPGRID_ELEVATION_MASK</span></code> in <code class="docutils literal notranslate"><span class="pre">include/global.fieldmap.h</span></code>),
 and you edit them per map square in Porymap.
-Attributes describe the metatile itself. It’s the same everywhere the metatile is placed.</p>
+An attribute describes the metatile itself. It’s the same everywhere the metatile is placed.</p>
 <section id="stock-layouts">
 <h3>Stock layouts<a class="headerlink" href="#stock-layouts" title="Link to this heading"></a></h3>
 <p>Ruby, Sapphire, and Emerald use a 2-byte attribute per metatile:</p>
@@ -234,16 +232,19 @@ Attributes describe the metatile itself. It’s the same everywhere the metatile
 </tbody>
 </table>
 <p>These tables come from each decomp’s source:
-the masks are declared in <code class="docutils literal notranslate"><span class="pre">include/global.fieldmap.h</span></code> and <code class="docutils literal notranslate"><span class="pre">src/fieldmap.c</span></code>.
-Recent <code class="docutils literal notranslate"><span class="pre">pokeemerald-expansion</span></code> versions contain <em>both</em> layouts
-(<code class="docutils literal notranslate"><span class="pre">sMetatileAttrMasks</span></code> for FRLG and <code class="docutils literal notranslate"><span class="pre">sMetatileAttrMasksEmerald</span></code> in <code class="docutils literal notranslate"><span class="pre">src/fieldmap.c</span></code>)
-and pick one per map layout at runtime,
-so a single Expansion project can host Emerald-style and FRLG-style maps side by side.
-Porytiles handles that case too; see <a class="reference internal" href="#emerald-style-and-firered-style-layouts-in-one-project">Emerald-style and FireRed-style layouts in one project</a>.</p>
+the masks are declared in <code class="docutils literal notranslate"><span class="pre">include/global.fieldmap.h</span></code> and <code class="docutils literal notranslate"><span class="pre">src/fieldmap.c</span></code>.</p>
+<div class="admonition caution">
+<p class="admonition-title">Caution</p>
+<p>Recent <code class="docutils literal notranslate"><span class="pre">pokeemerald-expansion</span></code> versions declare <em>both</em> layouts in their source tree,
+but a built ROM only ever uses one of them.
+Running <code class="docutils literal notranslate"><span class="pre">make</span></code> produces an Emerald-format game and <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">firered</span></code> a FRLG-format one,
+and the build filters out every map layout belonging to the other format.
+Porytiles handles that case with a little manual fiddling; see <a class="reference internal" href="#expansions-two-build-flavors">Expansion’s two build flavors</a>.</p>
+</div>
 </section>
 </section>
 <section id="the-attribute-schema">
-<h2>The attribute schema<a class="headerlink" href="#the-attribute-schema" title="Link to this heading"></a></h2>
+<span id="id1"></span><h2>The attribute schema<a class="headerlink" href="#the-attribute-schema" title="Link to this heading"></a></h2>
 <p>Porytiles describes an attribute layout with a schema that is an ordered list of named fields.
 Each field has:</p>
 <ul class="simple">
@@ -256,65 +257,105 @@ A provider points at a C header and a name prefix,
 for example <code class="docutils literal notranslate"><span class="pre">include/constants/metatile_behaviors.h</span></code> with prefix <code class="docutils literal notranslate"><span class="pre">MB_</span></code>.
 A field with a provider takes constant names in its CSV column.
 A field without one, i.e. a <em>raw field</em>, takes plain integers.</p></li>
+<li><p><strong>role</strong> (optional): marks a field whose value Porytiles itself manages.
+The only role today is <code class="docutils literal notranslate"><span class="pre">layer_type</span></code>.</p></li>
 </ul>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
-<p>The <strong>layer type is not a schema field</strong>.
-Its position is inferred from the base game rather than declared in your schema:
-Porytiles reads <code class="docutils literal notranslate"><span class="pre">METATILE_ATTR_LAYER_MASK</span></code> or the <code class="docutils literal notranslate"><span class="pre">METATILE_ATTRIBUTE_LAYER_TYPE</span></code> entry of <code class="docutils literal notranslate"><span class="pre">sMetatileAttrMasks</span></code> and uses that mask.
-If the base game declares no layer-type mask, Porytiles falls back to a <strong>size-based default</strong> taken from the vanilla games:
-bits 12-15 for 2-byte attributes (the Emerald position), bits 29-30 for 4-byte attributes (the FRLG position), and disabled for 1-byte attributes.
-Porymap defaults to the same masks, though it selects them by base game version rather than by size.
-You can override the mask with <code class="docutils literal notranslate"><span class="pre">fieldmap.metatile_layer_type_mask</span></code> (and its FRLG variant); see
-<a class="reference internal" href="configuration.html"><span class="std std-doc">Configuration</span></a>.
-A mask of <code class="docutils literal notranslate"><span class="pre">0</span></code> <strong>disables</strong> the layer type entirely.
-Porytiles manages the layer type automatically, including the disabled case; see <a class="reference internal" href="#layer-types">Layer types</a> below.
-It rejects any field whose mask overlaps a non-zero layer-type mask.</p>
+<p>The <strong>layer type is a schema field like any other</strong>, distinguished by its <code class="docutils literal notranslate"><span class="pre">role:</span> <span class="pre">layer_type</span></code> marker.
+Its mask comes from wherever the rest of the schema comes from:
+inference reads <code class="docutils literal notranslate"><span class="pre">METATILE_ATTR_LAYER_MASK</span></code> or the <code class="docutils literal notranslate"><span class="pre">METATILE_ATTRIBUTE_LAYER_TYPE</span></code> entry of <code class="docutils literal notranslate"><span class="pre">sMetatileAttrMasks</span></code>,
+and an explicit <code class="docutils literal notranslate"><span class="pre">metatile_attribute_fields</span></code> list declares the field directly.
+What sets the role field apart is its <em>value</em>: you never type it in the way you type a <code class="docutils literal notranslate"><span class="pre">behavior</span></code> cell.
+Porytiles computes each metatile’s layer type at compile time from its layer PNGs,
+so the role field takes no <code class="docutils literal notranslate"><span class="pre">default</span></code> and no <code class="docutils literal notranslate"><span class="pre">provider</span></code>,
+and it gets no data column in <code class="docutils literal notranslate"><span class="pre">attributes.csv</span></code> the way every other field does.
+At most one field may carry the role,
+and a schema with <strong>no</strong> role field has layer types disabled: no layer-type bits are written or read.</p>
+<p>Two different things share the name <code class="docutils literal notranslate"><span class="pre">layer_type</span></code>, so keep them apart:
+the schema <em>field</em> described here, which is part of the packed binary layout and never appears as a data column,
+and an optional trailing <strong>pin column</strong> in <code class="docutils literal notranslate"><span class="pre">attributes.csv</span></code>,
+enabled by a <code class="docutils literal notranslate"><span class="pre">fieldmap.role_pins</span></code> entry for the <code class="docutils literal notranslate"><span class="pre">layer_type</span></code> role (off by default),
+which lets you hand-pick individual metatiles’ layer types instead of accepting the computed value.
+The pin column’s header defaults to the role’s name, <code class="docutils literal notranslate"><span class="pre">layer_type</span></code>, but you can rename it with a <code class="docutils literal notranslate"><span class="pre">column:</span></code> key.
+The pin column is an input to the layer-type computation, not the schema field itself;
+<a class="reference internal" href="#layer-types">Layer types</a> covers both.
+A schema field may only be named <code class="docutils literal notranslate"><span class="pre">layer_type</span></code> if it also carries the role,
+so the bare name always refers to the role, never a plain value column.</p>
 </div>
-<p>The attribute size itself (1, 2, or 4 bytes) is not something you declare in the Porytiles config.
-For the primary layout, Porytiles reads the C type of the <code class="docutils literal notranslate"><span class="pre">gMetatileAttributes_*</span></code> declarations in
-<code class="docutils literal notranslate"><span class="pre">src/data/tilesets/metatiles.h</span></code>
-(<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">u8</span></code> means 1 byte, <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">u16</span></code> means 2, <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">u32</span></code> means 4).
-This width is fixed by your game code.
-Every tileset in a decomp project uses
-the same defined <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">uN</span> <span class="pre">*metatileAttributes</span></code> pointer from <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">Tileset</span></code> in <code class="docutils literal notranslate"><span class="pre">include/global.fieldmap.h</span></code>,
-so the attribute width is shared across all tilesets, not chosen per tileset.</p>
-<p>A field mask (or an explicit layer-type mask)
-that needs <em>more</em> bits than the declared width is a misconfiguration.
-Porytiles reports it as an error and asks you to either narrow the mask,
-or change the <code class="docutils literal notranslate"><span class="pre">gMetatileAttributes_*</span></code> declarations to the wider type.
-A common way to hit this is by pasting a FireRed mask (for example the <code class="docutils literal notranslate"><span class="pre">0x60000000</span></code> layer type mask)
-into an Emerald-width (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">u16</span></code>) project.</p>
-<p>The FRLG alternate layout is the exception: when a tileset resolves the FRLG masks,
-its attribute size is always 4 bytes, no matter what <code class="docutils literal notranslate"><span class="pre">metatiles.h</span></code> declares,
-and Porytiles says so in a remark when that overrides a narrower declared width.
-<a class="reference internal" href="#emerald-style-and-firered-style-layouts-in-one-project">Emerald-style and FireRed-style layouts in one project</a>
-explains why the declared type does not count there.</p>
-<p>If <code class="docutils literal notranslate"><span class="pre">metatiles.h</span></code> is missing or Porytiles cannot recognize its attribute declarations,
-there is no declared width to honor.
-For the primary layout, Porytiles assumes 2 bytes and warns about the assumption.
-In that case only, the field masks are the sole evidence of the true width,
-so a mask using bits above 15 widens the assumed size to 4 bytes.
-Even then masks only ever widen the assumed size, never narrow it.
-So a 4-byte project whose fields all sit in the low bits needs its <code class="docutils literal notranslate"><span class="pre">metatiles.h</span></code> declarations recognizable.
-If you hit that warning on a 4-byte project,
-declare your <code class="docutils literal notranslate"><span class="pre">gMetatileAttributes_*</span></code> arrays as <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">u32</span></code>,
-or configure at least one field whose mask uses a bit at or above bit 16.</p>
-<div class="admonition attention">
-<p class="admonition-title">Attention</p>
-<p>Earlier Porytiles versions had a <code class="docutils literal notranslate"><span class="pre">fieldmap.metatile_attribute_size</span></code> config key.
-It no longer exists; the size now follows from <code class="docutils literal notranslate"><span class="pre">metatiles.h</span></code> and the field masks.</p>
-</div>
+<p>The attribute size itself (1, 2, or 4 bytes) is normally not something you declare in the Porytiles config.
+Porytiles derives it from the resolved field masks:
+the smallest of 1, 2, or 4 bytes that covers every mask
+(Emerald’s <code class="docutils literal notranslate"><span class="pre">0xF000</span></code> layer mask needs 2 bytes; FireRed’s masks reach bit 31, so 4).
+This width is a project-level fact, shared by every tileset:
+they all feed the same <code class="docutils literal notranslate"><span class="pre">metatileAttributes</span></code> pointer in <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">Tileset</span></code>,
+and the engine reads every tileset’s attributes at the same width.
+Porymap models it the same way (<code class="docutils literal notranslate"><span class="pre">metatile_attributes_size</span></code> in <code class="docutils literal notranslate"><span class="pre">porymap.project.cfg</span></code>),
+and the two settings should agree.</p>
+<p>Masks can only prove a <em>minimum</em> width, though,
+so Porytiles cross-checks the element type of <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">Tileset</span></code>’s <code class="docutils literal notranslate"><span class="pre">metatileAttributes</span></code> member:
+an attribute entry is never narrower than the array element it is stored in.
+If that declared element type is <em>wider</em> than the masks need
+(say, low-byte masks in a <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">u32</span> <span class="pre">*</span></code> array),
+the two sources contradict each other and Porytiles cannot tell which width the project actually reads.
+It stops with an error asking you to set <code class="docutils literal notranslate"><span class="pre">fieldmap.metatile_attribute_size</span></code> to settle it.</p>
+<p>When inference is impossible or wrong, set <code class="docutils literal notranslate"><span class="pre">fieldmap.metatile_attribute_size</span></code>
+(or pass <code class="docutils literal notranslate"><span class="pre">--metatile-attribute-size</span></code>) to pin the width explicitly; an explicit size always wins over inference.
+The main case that <em>requires</em> it is <code class="docutils literal notranslate"><span class="pre">pokeemerald-expansion</span></code>,
+which declares two complete mask layouts in one source tree.
+No project file records which build flavor you target (it’s a <code class="docutils literal notranslate"><span class="pre">make</span></code> argument),
+so Porytiles cannot infer the size there and stops with an error naming this key.
+See <a class="reference internal" href="#expansions-two-build-flavors">Expansion’s two build flavors</a>.</p>
+<p>An explicit size is checked in both directions:</p>
+<ul class="simple">
+<li><p>A field mask that needs <em>more</em> bits than the pinned width is an error.
+A common way to hit this is by pasting a FireRed mask (for example the <code class="docutils literal notranslate"><span class="pre">0x60000000</span></code> layer-type mask)
+into an Emerald-width project.
+Porytiles asks you to narrow the mask,
+or raise <code class="docutils literal notranslate"><span class="pre">metatile_attribute_size</span></code> if the project really uses a wider attribute.</p></li>
+<li><p>A pinned size <em>wider</em> than both the masks and the scanned <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">Tileset</span></code> declaration is allowed,
+matching Porymap (the unused high bits simply stay zero),
+but Porytiles warns, since nothing in the project corroborates the extra width.</p></li>
+</ul>
+<section id="the-declaration-size">
+<span id="id2"></span><h3>The declaration size<a class="headerlink" href="#the-declaration-size" title="Link to this heading"></a></h3>
+<p>There is a second, related width: the C element type of the <code class="docutils literal notranslate"><span class="pre">gMetatileAttributes_*</span></code> array declarations
+Porytiles generates in <code class="docutils literal notranslate"><span class="pre">src/data/tilesets/metatiles.h</span></code> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">u16</span></code> / <code class="docutils literal notranslate"><span class="pre">INCBIN_U16</span></code> and so on).
+On most projects it equals the attribute size, and you never think about it.
+Porytiles infers it from the pointed-to type of <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">Tileset</span></code>’s <code class="docutils literal notranslate"><span class="pre">metatileAttributes</span></code> member
+in <code class="docutils literal notranslate"><span class="pre">include/global.fieldmap.h</span></code>
+(<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">u16</span> <span class="pre">*</span></code> on <code class="docutils literal notranslate"><span class="pre">pokeemerald</span></code> and Expansion, <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">u32</span> <span class="pre">*</span></code> on <code class="docutils literal notranslate"><span class="pre">pokefirered</span></code>),
+and falls back to the attribute size when that inference finds nothing.</p>
+<p>The case where the two differ is Expansion’s FRLG flavor:
+attribute entries are 4 bytes, but the arrays are still declared <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">u16</span></code>
+(the engine casts the pointer at runtime).
+Porytiles gets that right automatically via the struct inference.
+If you need to force it, set <code class="docutils literal notranslate"><span class="pre">fieldmap.metatile_attribute_declaration_size</span></code>
+(or pass <code class="docutils literal notranslate"><span class="pre">--metatile-attribute-declaration-size</span></code>).</p>
+<p>Note the asymmetry between the two widths.
+An attribute entry can span <em>several</em> array elements (Expansion’s FRLG flavor), but never less than one,
+so the declaration scanned from <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">Tileset</span></code> acts as a lower bound on the attribute size,
+as described above.
+The explicit <code class="docutils literal notranslate"><span class="pre">metatile_attribute_declaration_size</span></code> knob has no such effect:
+it only changes the generated declarations, never the attribute size.</p>
+</section>
 </section>
 <section id="where-the-schema-comes-from">
 <h2>Where the schema comes from<a class="headerlink" href="#where-the-schema-comes-from" title="Link to this heading"></a></h2>
 <p>You almost never have to write a schema yourself.
-Porytiles resolves it per tileset, in this order:</p>
+Porytiles resolves one schema per project, in this order:</p>
 <ol class="arabic simple">
 <li><p><strong>Explicit config.</strong>
-If <code class="docutils literal notranslate"><span class="pre">fieldmap.metatile_attribute_fields</span></code> is set in your Porytiles YAML config, it wins.</p></li>
+If <code class="docutils literal notranslate"><span class="pre">fieldmap.metatile_attribute_fields</span></code> is set in your Porytiles YAML config, it wins,
+and inference is never consulted for the field content.
+When the project’s source still declares a usable layout that disagrees with the explicit list,
+Porytiles warns so you know you are overriding your project’s own declarations;
+the explicit fields are used as declared.</p></li>
 <li><p><strong>Inference from your project.</strong>
-Otherwise Porytiles reads the layout your decomp code already declares (details below).</p></li>
+Otherwise Porytiles reads the mask layouts your decomp code already declares (details below).
+A single declared layout is used directly.
+A project that declares more than one (like <code class="docutils literal notranslate"><span class="pre">pokeemerald-expansion</span></code>) must set
+<code class="docutils literal notranslate"><span class="pre">fieldmap.metatile_attribute_size</span></code>, and the size selects the matching layout.</p></li>
 <li><p><strong>Error.</strong>
 If neither produces fields, compilation stops with an error telling you to
 either add a <code class="docutils literal notranslate"><span class="pre">metatile_attribute_fields</span></code> list or restore the engine declarations so inference can succeed.
@@ -335,15 +376,12 @@ It scans:</p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">include/global.fieldmap.h</span></code></p></td>
-<td><p>the <code class="docutils literal notranslate"><span class="pre">METATILE_ATTRIBUTE_*</span></code> enum (which fields exist, in order) and any <code class="docutils literal notranslate"><span class="pre">METATILE_ATTR_*_MASK</span></code> defines</p></td>
+<td><p>the <code class="docutils literal notranslate"><span class="pre">METATILE_ATTRIBUTE_*</span></code> enum (which fields exist, in order), any <code class="docutils literal notranslate"><span class="pre">METATILE_ATTR_*_MASK</span></code> defines, and <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">Tileset</span></code> (the declaration size)</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">src/fieldmap.c</span></code></p></td>
 <td><p>the <code class="docutils literal notranslate"><span class="pre">sMetatileAttrMasks</span></code> and <code class="docutils literal notranslate"><span class="pre">sMetatileAttrShifts</span></code> tables (mask values per field)</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">src/data/tilesets/metatiles.h</span></code></p></td>
-<td><p>the primary-layout attribute size (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">u16</span></code> vs <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">u32</span></code>)</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">include/constants/metatile_behaviors.h</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">include/constants/metatile_behaviors.h</span></code></p></td>
 <td><p>the <code class="docutils literal notranslate"><span class="pre">MB_*</span></code> behavior constants (as defines or enum members)</p></td>
 </tr>
 </tbody>
@@ -352,7 +390,8 @@ It scans:</p>
 <code class="docutils literal notranslate"><span class="pre">METATILE_ATTRIBUTE_BEHAVIOR</span></code> becomes <code class="docutils literal notranslate"><span class="pre">behavior</span></code>,
 <code class="docutils literal notranslate"><span class="pre">METATILE_ATTRIBUTE_TERRAIN</span></code> becomes <code class="docutils literal notranslate"><span class="pre">terrain</span></code>,
 and a numbered entry like <code class="docutils literal notranslate"><span class="pre">METATILE_ATTRIBUTE_2</span></code> becomes the raw field <code class="docutils literal notranslate"><span class="pre">attribute_2</span></code>.
-<code class="docutils literal notranslate"><span class="pre">METATILE_ATTRIBUTE_LAYER_TYPE</span></code> is dropped, since the layer type is not a schema field (see earlier note).</p>
+<code class="docutils literal notranslate"><span class="pre">METATILE_ATTRIBUTE_LAYER_TYPE</span></code> becomes the field <code class="docutils literal notranslate"><span class="pre">layer_type</span></code> carrying the <code class="docutils literal notranslate"><span class="pre">layer_type</span></code> role
+(see the earlier note); it never gets a provider or a default.</p>
 <p>Inference also attaches providers where it can find them:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">behavior</span></code> gets the <code class="docutils literal notranslate"><span class="pre">MB_</span></code> constants from <code class="docutils literal notranslate"><span class="pre">include/constants/metatile_behaviors.h</span></code>
@@ -361,31 +400,42 @@ and a numbered entry like <code class="docutils literal notranslate"><span class
 <code class="docutils literal notranslate"><span class="pre">terrain</span></code> finds <code class="docutils literal notranslate"><span class="pre">TILE_TERRAIN_*</span></code>, <code class="docutils literal notranslate"><span class="pre">encounter_type</span></code> finds <code class="docutils literal notranslate"><span class="pre">TILE_ENCOUNTER_*</span></code>.</p></li>
 <li><p>Numbered fields (<code class="docutils literal notranslate"><span class="pre">attribute_2</span></code> and friends) stay raw.</p></li>
 </ul>
-<p>Vanilla <code class="docutils literal notranslate"><span class="pre">pokeemerald</span></code> and <code class="docutils literal notranslate"><span class="pre">pokeruby</span></code> declare no mask table for their simple 2-byte layout,
-so there is a special case:
-if the project is 2-byte and declares only behavior and layer type,
-the behavior mask is filled in as <code class="docutils literal notranslate"><span class="pre">0x00FF</span></code> silently.
-Any <em>other</em> field whose mask cannot be determined is a fatal error,
+<p>Most projects declare exactly one mask layout, and inference just uses it.
+A project can declare more than one:
+<code class="docutils literal notranslate"><span class="pre">pokeemerald-expansion</span></code>’s bare <code class="docutils literal notranslate"><span class="pre">METATILE_ATTR_*_MASK</span></code> defines describe its 2-byte Emerald layout,
+while its <code class="docutils literal notranslate"><span class="pre">*_MASK_FRLG</span></code> defines and <code class="docutils literal notranslate"><span class="pre">sMetatileAttrMasks</span></code> table describe the 4-byte FRLG layout.
+Inference keeps every layout it finds,
+and with more than one, resolution stops with an error unless <code class="docutils literal notranslate"><span class="pre">fieldmap.metatile_attribute_size</span></code> is set:
+the size selects the layout whose required width matches it
+(a layout that merely fits inside a wider configured size is accepted when it is the only one that fits),
+so on Expansion the explicit size doubles as the layout selector.
+See <a class="reference internal" href="#expansions-two-build-flavors">Expansion’s two build flavors</a>.</p>
+<p>Every field needs a mask declared somewhere in the source.
+A field whose mask cannot be determined is a fatal error,
 with a message listing your options
-(restore <code class="docutils literal notranslate"><span class="pre">sMetatileAttrMasks[]</span></code>, add a <code class="docutils literal notranslate"><span class="pre">METATILE_ATTR_&lt;NAME&gt;_MASK</span></code> define, or set the mask in Porytiles config).</p>
+(restore <code class="docutils literal notranslate"><span class="pre">sMetatileAttrMasks[]</span></code>, add a <code class="docutils literal notranslate"><span class="pre">METATILE_ATTR_&lt;NAME&gt;_MASK</span></code> define, or declare the layout in Porytiles config).
+A project that declares no attribute masks at all fails the same way:
+there is nothing to infer from, so Porytiles asks you to restore the mask declarations
+or write a <code class="docutils literal notranslate"><span class="pre">metatile_attribute_fields</span></code> list.</p>
 <p>Disagreements are handled conservatively:
 if a <code class="docutils literal notranslate"><span class="pre">METATILE_ATTR_*_MASK</span></code> define and the <code class="docutils literal notranslate"><span class="pre">sMetatileAttrMasks</span></code> table disagree, the define wins and Porytiles warns.
 If an <code class="docutils literal notranslate"><span class="pre">sMetatileAttrShifts</span></code> entry does not match its mask’s bit position, the mask wins and Porytiles warns.</p>
 </section>
 <section id="checking-the-resolved-schema">
-<span id="id1"></span><h3>Checking the resolved schema<a class="headerlink" href="#checking-the-resolved-schema" title="Link to this heading"></a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">dump-tileset-config</span></code> prints the schema Porytiles resolved for a tileset,
-after config, inference, overrides, and layout selection have all been applied.
+<span id="id3"></span><h3>Checking the resolved schema<a class="headerlink" href="#checking-the-resolved-schema" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">dump-attribute-schema</span></code> prints the schema Porytiles resolved,
+after config, inference, overrides, and mask-layout selection have all been applied.
 Run it whenever you are unsure which fields your CSV needs:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>porytiles<span class="w"> </span>dump-tileset-config<span class="w"> </span>gTileset_General
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>porytiles<span class="w"> </span>dump-attribute-schema<span class="w"> </span>gTileset_General
 </pre></div>
 </div>
-<p>Against a vanilla <code class="docutils literal notranslate"><span class="pre">pokefirered</span></code> project, the tail of the output looks like this:</p>
+<p>Against a vanilla <code class="docutils literal notranslate"><span class="pre">pokefirered</span></code> project, the output looks like this:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Resolved Metatile Attribute Schema
 ==================================
 
-  Layout: primary
-  Attribute size: 4 bytes
+  Attribute size: 4 bytes (inferred from the sMetatileAttrMasks table (./include/global.fieldmap.h))
+  Declaration size: 4 bytes (const u32, inferred from struct Tileset&#39;s metatileAttributes member (./include/global.fieldmap.h))
+  Fields from: the sMetatileAttrMasks table
 
   Fields:
     behavior  mask=0x1FF  offset=0 width=9  default=0 provider=include/constants/metatile_behaviors.h (MB_)
@@ -394,9 +444,20 @@ Run it whenever you are unsure which fields your CSV needs:</p>
     attribute_3  mask=0xFC0000  offset=18 width=6  default=0
     encounter_type  mask=0x7000000  offset=24 width=3  default=0 provider=include/global.fieldmap.h (TILE_ENCOUNTER_)
     attribute_5  mask=0x18000000  offset=27 width=2  default=0
+    layer_type  mask=0x60000000  offset=29 width=2  default=0  role=layer_type
     attribute_7  mask=0x80000000  offset=31 width=1  default=0
 </pre></div>
 </div>
+<p>The <code class="docutils literal notranslate"><span class="pre">layer_type</span></code> row carries <code class="docutils literal notranslate"><span class="pre">role=layer_type</span></code>:
+it is part of the packed layout, but Porytiles fills its value in itself,
+so it gets no data column in <code class="docutils literal notranslate"><span class="pre">attributes.csv</span></code>
+(the optional trailing pin column is a separate mechanism; see <a class="reference internal" href="#layer-types">Layer types</a>).</p>
+<p>When no schema can be resolved
+(stock Expansion without <code class="docutils literal notranslate"><span class="pre">fieldmap.metatile_attribute_size</span></code>, for example),
+the command prints the reason instead of a schema.
+To see the config values feeding into resolution,
+<code class="docutils literal notranslate"><span class="pre">dump-tileset-config</span></code> shows each <code class="docutils literal notranslate"><span class="pre">fieldmap.*</span></code> key with the full provenance chain that produced it;
+see <a class="reference internal" href="configuration.html#dump-config"><span class="std std-ref">Inspecting the resolved configuration</span></a>.</p>
 </section>
 </section>
 <section id="the-attributes-csv-file">
@@ -407,8 +468,11 @@ Porytiles reads in on compile and writes it on decompile/import.</p>
 <p>The format:</p>
 <ul class="simple">
 <li><p><strong>Header row (required).</strong>
-<code class="docutils literal notranslate"><span class="pre">id</span></code>, then one column per schema field, in schema order,
-then optionally a trailing <code class="docutils literal notranslate"><span class="pre">layer_type</span></code> column (see <a class="reference internal" href="#layer-types">Layer types</a>).
+<code class="docutils literal notranslate"><span class="pre">id</span></code>, then one column per schema field in schema order
+(excluding the <code class="docutils literal notranslate"><span class="pre">layer_type</span></code> role field, whose value Porytiles computes itself),
+then one trailing <strong>pin column</strong> for each <code class="docutils literal notranslate"><span class="pre">fieldmap.role_pins</span></code> entry, in config order
+(its header comes from the entry’s <code class="docutils literal notranslate"><span class="pre">column:</span></code> key, or the role’s name when that key is omitted;
+see <a class="reference internal" href="#layer-types">Layer types</a>).
 For stock Emerald it is <code class="docutils literal notranslate"><span class="pre">id,behavior</span></code>.
 For stock FireRed it is <code class="docutils literal notranslate"><span class="pre">id,behavior,terrain,attribute_2,attribute_3,encounter_type,attribute_5,attribute_7</span></code>.
 The header is checked against the resolved schema,
@@ -432,7 +496,7 @@ An unknown name generates an error pointing at the offending line.</p></li>
 Values are range-checked against the field’s bit width.</p></li>
 <li><p>Cells are trimmed of surrounding whitespace, blank lines are skipped,
 and there is no comment syntax.
-Empty cells are only allowed in the <code class="docutils literal notranslate"><span class="pre">layer_type</span></code> column.</p></li>
+Empty cells are only allowed in a trailing pin column.</p></li>
 </ul>
 <p>A stock Emerald example:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>id,behavior
@@ -450,7 +514,7 @@ Empty cells are only allowed in the <code class="docutils literal notranslate"><
 </div>
 </section>
 <section id="layer-types">
-<span id="id2"></span><h2>Layer types<a class="headerlink" href="#layer-types" title="Link to this heading"></a></h2>
+<span id="id4"></span><h2>Layer types<a class="headerlink" href="#layer-types" title="Link to this heading"></a></h2>
 <p>The layer type controls which screen layers a dual-layer metatile’s two tile layers render on.
 <a class="reference internal" href="gba-decomp-tileset-system.html"><span class="doc">How the GBA + Gen III Decomp Tileset System Works</span></a> explains the three values (<code class="docutils literal notranslate"><span class="pre">normal</span></code>, <code class="docutils literal notranslate"><span class="pre">covered</span></code>, <code class="docutils literal notranslate"><span class="pre">split</span></code>) and what they look like in game.
 This section covers how Porytiles decides which one each metatile gets.</p>
@@ -483,108 +547,165 @@ Triple-layer tilesets skip all of this:
 in triple-layer mode every metatile renders all three layers and the stored layer type is always <code class="docutils literal notranslate"><span class="pre">normal</span></code>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>If the layer-type mask is disabled via <code class="docutils literal notranslate"><span class="pre">fieldmap.metatile_layer_type_mask:</span> <span class="pre">0x0</span></code> or your base game has no
-layer-type mask and a 1-byte attribute layout, every metatile is stored as <code class="docutils literal notranslate"><span class="pre">normal</span></code> and no layer-type
-bits are written. This matches Porymap’s behavior when its <code class="docutils literal notranslate"><span class="pre">metatile_layer_type_mask</span></code> is <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p>
+<p>If the resolved schema has no <code class="docutils literal notranslate"><span class="pre">layer_type</span></code> role field
+(your project’s source declares no layer-type mask,
+or your explicit <code class="docutils literal notranslate"><span class="pre">metatile_attribute_fields</span></code> list omits the field),
+layer types are disabled: every metatile is treated as <code class="docutils literal notranslate"><span class="pre">normal</span></code> and no layer-type bits are written.
+This matches Porymap’s behavior when its <code class="docutils literal notranslate"><span class="pre">metatile_layer_type_mask</span></code> is <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>TODO: insert screencap of a metatile drawn across two layer PNGs and the resulting layer type in Porymap</p>
 </div>
 </section>
-<section id="pinning-with-the-layer-type-column">
-<h3>Pinning with the <code class="docutils literal notranslate"><span class="pre">layer_type</span></code> column<a class="headerlink" href="#pinning-with-the-layer-type-column" title="Link to this heading"></a></h3>
+<section id="pinning-with-role-pins">
+<h3>Pinning with <code class="docutils literal notranslate"><span class="pre">role_pins</span></code><a class="headerlink" href="#pinning-with-role-pins" title="Link to this heading"></a></h3>
+<p>This is the pin column that <a class="reference internal" href="#the-attribute-schema">The attribute schema</a> warned shares its name
+with the <code class="docutils literal notranslate"><span class="pre">layer_type</span></code> role field.
+The role field is where the layer-type bits live in the packed binary;
+the pin column is an optional CSV affordance for hand-setting the value Porytiles packs there.</p>
 <p>Inference covers basically every real metatile.
-For the rare case where for some reason you need a specific layer type that inference would not pick,
-enable the optional CSV column:</p>
+For the rare case where you need a specific layer type that inference would not pick,
+pin the <code class="docutils literal notranslate"><span class="pre">layer_type</span></code> role with a <code class="docutils literal notranslate"><span class="pre">fieldmap.role_pins</span></code> entry:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">fieldmap</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">write_layer_type_column</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">role_pins</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">role</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">layer_type</span>
 </pre></div>
 </div>
-<p>With the setting on:</p>
+<p>With the role pinned:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">attributes.csv</span></code> gains a trailing <code class="docutils literal notranslate"><span class="pre">layer_type</span></code> column,
+<li><p><code class="docutils literal notranslate"><span class="pre">attributes.csv</span></code> gains a trailing pin column (named <code class="docutils literal notranslate"><span class="pre">layer_type</span></code> by default),
 and Porytiles writes one row per metatile so every metatile has a cell to fill.</p></li>
 <li><p>A filled cell (<code class="docutils literal notranslate"><span class="pre">normal</span></code>, <code class="docutils literal notranslate"><span class="pre">covered</span></code>, or <code class="docutils literal notranslate"><span class="pre">split</span></code>, case-insensitive) <strong>pins</strong> that metatile’s layer type.
 A pinned value beats inference.</p></li>
 <li><p>A blank cell means “infer as usual”, and stays blank when Porytiles rewrites the file,
 so pins survive compile/decompile round trips.</p></li>
 </ul>
-<p>With the setting off (the default), a <code class="docutils literal notranslate"><span class="pre">layer_type</span></code> column in the file is ignored:
-Porytiles warns once per file and infers as usual.</p>
+<p>To give the column a different header (for example, to make it obvious the column belongs to Porytiles,
+or to match a column name your own tooling already expects), add a <code class="docutils literal notranslate"><span class="pre">column:</span></code> key:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">fieldmap</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">role_pins</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">role</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">layer_type</span>
+<span class="w">      </span><span class="nt">column</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_layer_type</span>
+</pre></div>
+</div>
+<p>The custom name becomes a literal CSV header cell,
+so it cannot contain commas or line breaks, and cannot start or end with whitespace.
+It also cannot be <code class="docutils literal notranslate"><span class="pre">id</span></code> or collide with any attribute field name.</p>
+<p>When the <code class="docutils literal notranslate"><span class="pre">layer_type</span></code> role is <strong>not</strong> pinned (the default), a <code class="docutils literal notranslate"><span class="pre">layer_type</span></code> column in the file is ignored:
+Porytiles emits a one-time <code class="docutils literal notranslate"><span class="pre">role-pin-column</span></code> warning and infers as usual.
+The same warning fires for a stale <code class="docutils literal notranslate"><span class="pre">layer_type</span></code> column left over after you pin the role under a different <code class="docutils literal notranslate"><span class="pre">column:</span></code> name.</p>
 <p>If a pinned (or inferred) layer type drops a layer that actually contains visible tiles,
-Porytiles warns that those tiles will be discarded.
+Porytiles warns (tag <code class="docutils literal notranslate"><span class="pre">dual-layer-drop</span></code>) that those tiles will be discarded.
 That warning usually means the pin is wrong, or content is drawn on a layer it should not be.</p>
 <p>This is a per-tileset kind of setting,
 so you should prefer setting it in <code class="docutils literal notranslate"><span class="pre">porytiles/tilesets/&lt;tileset_name&gt;/config.yaml</span></code> rather than project-wide
 (see <a class="reference internal" href="configuration.html"><span class="doc">Configuration Reference</span></a> for config file locations and layering).</p>
 </section>
-</section>
-<section id="emerald-style-and-firered-style-layouts-in-one-project">
-<span id="id3"></span><h2>Emerald-style and FireRed-style layouts in one project<a class="headerlink" href="#emerald-style-and-firered-style-layouts-in-one-project" title="Link to this heading"></a></h2>
-<p>The <code class="docutils literal notranslate"><span class="pre">pokeemerald-expansion</span></code> decomp base can host Emerald-style and FRLG-style map layouts in the same game,
-selected per layout via <code class="docutils literal notranslate"><span class="pre">layout_version</span></code> in <code class="docutils literal notranslate"><span class="pre">data/layouts/layouts.json</span></code>.
-A tileset used by FRLG layouts needs its attributes packed with the FRLG masks;
-a tileset used by Emerald layouts needs the Emerald masks.</p>
-<p>Porytiles resolves this per tileset with the <code class="docutils literal notranslate"><span class="pre">fieldmap.use_frlg_alternate_masks</span></code> key:</p>
+<section id="round-tripping-the-pin-column">
+<h3>Round-tripping the pin column<a class="headerlink" href="#round-tripping-the-pin-column" title="Link to this heading"></a></h3>
+<p>Import and decompile fill the pin column deliberately, so it survives a round trip:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">automatic</span></code> (the default): Porytiles cross-references <code class="docutils literal notranslate"><span class="pre">layouts.json</span></code>.
-If every layout using the tileset says <code class="docutils literal notranslate"><span class="pre">layout_version:</span> <span class="pre">&quot;frlg&quot;</span></code>, the tileset gets the FRLG masks.
-If they all say <code class="docutils literal notranslate"><span class="pre">&quot;emerald&quot;</span></code> (or omit the key), or the tileset appears in no layout, it gets the primary masks.
-A tileset referenced by <em>both</em> kinds of layout is an error,
-and Porytiles asks you to decide by setting the key explicitly for that tileset.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">always</span></code>: force the FRLG masks (<code class="docutils literal notranslate"><span class="pre">true</span></code> works as an alias).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">never</span></code>: force the primary masks (<code class="docutils literal notranslate"><span class="pre">false</span></code> works as an alias).</p></li>
+<li><p><strong>Import, or decompile with no <code class="docutils literal notranslate"><span class="pre">attributes.csv</span></code>:</strong> every row is pinned to the layer type decoded from
+<code class="docutils literal notranslate"><span class="pre">metatile_attributes.bin</span></code>. A fresh import therefore hands you a fully-pinned column you can edit.</p></li>
+<li><p><strong>Decompile with <code class="docutils literal notranslate"><span class="pre">attributes.csv</span></code> present:</strong></p>
+<ul>
+<li><p>If the pin column is missing, Porytiles adds it and pins every row from the bin (same as a fresh import).</p></li>
+<li><p>If the pin column is present, Porytiles preserves each row’s state: a blank cell stays blank
+(inference is trusted), and a filled cell stays pinned with its value refreshed from the bin.</p></li>
+<li><p>A row that was deleted from the file comes back unpinned (blank), like any other row you left blank.</p></li>
 </ul>
-<p>Like the layer type column config, this is really a per-tileset setting,
-so you should set it in <code class="docutils literal notranslate"><span class="pre">porytiles/tilesets/&lt;tileset_name&gt;/config.yaml</span></code>.</p>
-<p>Under the hood, every field carries up to two masks:
-<code class="docutils literal notranslate"><span class="pre">mask</span></code> for the primary layout and <code class="docutils literal notranslate"><span class="pre">frlg_mask</span></code> for the FRLG layout.
-Inference fills both automatically from Expansion’s dual mask tables and <code class="docutils literal notranslate"><span class="pre">METATILE_ATTR_*_MASK_FRLG</span></code> defines,
-and once a layout is selected, fields that have no mask for that layout are excluded.
-On a stock Expansion project, an Emerald-layout tileset keeps just <code class="docutils literal notranslate"><span class="pre">behavior</span></code> at the declared 2-byte width,
-while a FRLG-layout tileset gets the full field set (masks reaching bit 31)
-at the fixed 4-byte width (the FRLG exception in the attribute size rules above).</p>
-<p>This is different from how <code class="docutils literal notranslate"><span class="pre">pokefirered</span></code> handles its attribute size.
-<code class="docutils literal notranslate"><span class="pre">pokefirered</span></code> declares its attributes as <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">u32</span></code>,
-so the declaration and the runtime agree: the FRLG masks fit the declared 4-byte width directly.
-Expansion instead declares <em>all</em> its attributes as <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">u16</span></code>, FRLG tilesets included,
-and selects the real entry width per map layout at runtime:
-<code class="docutils literal notranslate"><span class="pre">src/fieldmap.c</span></code> casts the attribute pointer to <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">u32</span> <span class="pre">*</span></code> for FRLG layouts
-and <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">u16</span> <span class="pre">*</span></code> for Emerald layouts.
-Porytiles mirrors both conventions: a FRLG-layout tileset resolves 4 bytes regardless of the declaration
-and emits 4-byte <code class="docutils literal notranslate"><span class="pre">metatile_attributes.bin</span></code> entries
-(Expansion’s included <code class="docutils literal notranslate"><span class="pre">general_frlg/metatile_attributes.bin</span></code> is 2560 bytes, 640 metatiles at 4 bytes each),
-while generated <code class="docutils literal notranslate"><span class="pre">INCBIN</span></code> declarations keep the declared <code class="docutils literal notranslate"><span class="pre">u16</span></code> convention.</p>
+</li>
+</ul>
+</section>
+<section id="triple-layer-content-in-a-dual-layer-tileset">
+<h3>Triple-layer content in a dual-layer tileset<a class="headerlink" href="#triple-layer-content-in-a-dual-layer-tileset" title="Link to this heading"></a></h3>
+<p>A metatile with non-transparent content on all three layers can only render in a triple-layer tileset.
+In a dual-layer compile that is an error by default:
+Porytiles points at the offending subtiles and suggests either enabling triple-layer metatiles or the escape hatch below.</p>
+<p>Setting <code class="docutils literal notranslate"><span class="pre">tileset.ignore_triple_layer_content:</span> <span class="pre">true</span></code> (or <code class="docutils literal notranslate"><span class="pre">--ignore-triple-layer-content</span></code>)
+demotes the error to a warning and compiles anyway, dropping one layer group per offending metatile.
+Which group is dropped follows that metatile’s <em>effective</em> layer type.
+A <code class="docutils literal notranslate"><span class="pre">fieldmap.role_pins</span></code> <code class="docutils literal notranslate"><span class="pre">layer_type</span></code> pin, if you set one, chooses the group directly.
+Without a pin there is nothing to infer from all-three-layers content,
+so it falls back to <code class="docutils literal notranslate"><span class="pre">normal</span></code>, which drops the bottom layer.
+Note that this fallback is not a real inference:
+a genuinely triple metatile has no discernible layer type,
+so unpinned it always resolves to <code class="docutils literal notranslate"><span class="pre">normal</span></code>.</p>
+</section>
+</section>
+<section id="expansion-s-two-build-flavors">
+<span id="expansions-two-build-flavors"></span><h2>Expansion’s two build flavors<a class="headerlink" href="#expansion-s-two-build-flavors" title="Link to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">pokeemerald-expansion</span></code> decomp base can be built in two flavors:
+<code class="docutils literal notranslate"><span class="pre">make</span></code> produces a game with Emerald-format metatile attributes,
+and <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">firered</span></code> one with FRLG-format attributes.
+The source tree permanently declares <em>both</em> mask layouts
+(the bare <code class="docutils literal notranslate"><span class="pre">METATILE_ATTR_*_MASK</span></code> defines for Emerald,
+the <code class="docutils literal notranslate"><span class="pre">*_MASK_FRLG</span></code> defines and <code class="docutils literal notranslate"><span class="pre">sMetatileAttrMasks</span></code> table for FRLG),
+and each map layout in <code class="docutils literal notranslate"><span class="pre">data/layouts/layouts.json</span></code> carries a <code class="docutils literal notranslate"><span class="pre">layout_version</span></code> tag.
+At build time, the map-data generator skips every layout whose tag disagrees with the flavor being built,
+so a single ROM only ever links one attribute format.</p>
+<p>Because the flavor is a <code class="docutils literal notranslate"><span class="pre">make</span></code> argument, no project file records which one you target,
+and Porytiles cannot infer the attribute size on Expansion.
+You must set it explicitly, and the size doubles as the layout selector:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># porytiles/config.yaml on pokeemerald-expansion</span>
+<span class="nt">fieldmap</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">metatile_attribute_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span><span class="w">   </span><span class="c1"># emerald flavor; use 4 for the firered flavor</span>
+</pre></div>
+</div>
+<p>With <code class="docutils literal notranslate"><span class="pre">2</span></code>, Porytiles selects the Emerald mask layout: <code class="docutils literal notranslate"><span class="pre">behavior</span></code> (mask <code class="docutils literal notranslate"><span class="pre">0x00FF</span></code>)
+plus the <code class="docutils literal notranslate"><span class="pre">layer_type</span></code> role field (mask <code class="docutils literal notranslate"><span class="pre">0xF000</span></code>), packed into 2-byte entries.
+With <code class="docutils literal notranslate"><span class="pre">4</span></code>, it selects the FRLG layout: the full eight-field set with masks reaching bit 31,
+including the <code class="docutils literal notranslate"><span class="pre">layer_type</span></code> role field at <code class="docutils literal notranslate"><span class="pre">0x60000000</span></code>, and 4-byte entries.
+Without the key, Porytiles stops with an error naming it.</p>
+<p>One Expansion quirk Porytiles handles automatically:
+<code class="docutils literal notranslate"><span class="pre">pokefirered</span></code> declares its attribute arrays <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">u32</span></code>, so declaration and entry width agree,
+but Expansion declares <em>all</em> its attribute arrays <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">u16</span></code>, FRLG flavor included,
+and <code class="docutils literal notranslate"><span class="pre">src/fieldmap.c</span></code> casts the pointer to <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">u32</span> <span class="pre">*</span></code> at runtime for FRLG layouts.
+So on the FRLG flavor, <code class="docutils literal notranslate"><span class="pre">metatile_attributes.bin</span></code> entries are 4 bytes
+(Expansion’s included <code class="docutils literal notranslate"><span class="pre">general_frlg/metatile_attributes.bin</span></code> is 2560 bytes, 640 metatiles at 4 bytes each)
+while the generated <code class="docutils literal notranslate"><span class="pre">INCBIN</span></code> declarations stay <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">u16</span></code>.
+Porytiles reads that convention from <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">Tileset</span></code> (see <a class="reference internal" href="#the-declaration-size">The declaration size</a>),
+so the generated declarations match the surrounding code without any extra configuration.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p><code class="docutils literal notranslate"><span class="pre">pokeemerald-expansion</span></code> documents this setup in its own <code class="docutils literal notranslate"><span class="pre">docs/tutorials/how_to_frlg.md</span></code>,
-and its <code class="docutils literal notranslate"><span class="pre">frlg_metatile_behavior_converter.py</span></code> migration script reads and writes 4-byte entries.</p>
+<p><code class="docutils literal notranslate"><span class="pre">pokeemerald-expansion</span></code> documents this setup in its own
+<a class="reference external" href="https://github.com/rh-hideout/pokeemerald-expansion/blob/upcoming/docs/tutorials/how_to_frlg.md"><code class="docutils literal notranslate"><span class="pre">docs/tutorials/how_to_frlg.md</span></code></a>,
+and its
+<a class="reference external" href="https://github.com/rh-hideout/pokeemerald-expansion/blob/upcoming/migration_scripts/frlg_metatile_behavior_converter.py"><code class="docutils literal notranslate"><span class="pre">frlg_metatile_behavior_converter.py</span></code></a>
+migration script reads and writes 4-byte entries.</p>
 </div>
-<p>As elsewhere, <code class="docutils literal notranslate"><span class="pre">dump-tileset-config</span></code> shows what’s going on:
-the selected layout, the resolved size, and which fields were excluded.
-On a stock Expansion project, <code class="docutils literal notranslate"><span class="pre">porytiles</span> <span class="pre">dump-tileset-config</span> <span class="pre">gTileset_General</span></code> yields:</p>
+<p>As elsewhere, <code class="docutils literal notranslate"><span class="pre">dump-attribute-schema</span></code> shows what’s going on.
+On a stock Expansion project,
+<code class="docutils literal notranslate"><span class="pre">porytiles</span> <span class="pre">dump-attribute-schema</span> <span class="pre">gTileset_General</span> <span class="pre">--metatile-attribute-size</span> <span class="pre">2</span></code> yields:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Resolved Metatile Attribute Schema
 ==================================
 
-  Layout: primary
-  Attribute size: 2 bytes
+  Attribute size: 2 bytes (CLI)
+  Declaration size: 2 bytes (const u16, inferred from struct Tileset&#39;s metatileAttributes member (./include/global.fieldmap.h))
+  Fields from: the bare METATILE_ATTR_*_MASK defines
 
   Fields:
     behavior  mask=0xFF  offset=0 width=8  default=0 provider=include/constants/metatile_behaviors.h (MB_)
-
-  Excluded for this layout: terrain, attribute_2, attribute_3, encounter_type, attribute_5, attribute_7
+    layer_type  mask=0xF000  offset=12 width=4  default=0  role=layer_type
 </pre></div>
 </div>
-<p>Running it against <code class="docutils literal notranslate"><span class="pre">gTileset_General_Frlg</span></code> instead reports <code class="docutils literal notranslate"><span class="pre">Layout:</span> <span class="pre">frlg</span></code>, <code class="docutils literal notranslate"><span class="pre">Attribute</span> <span class="pre">size:</span> <span class="pre">4</span> <span class="pre">bytes</span></code>,
-and all seven fields, matching the <code class="docutils literal notranslate"><span class="pre">pokefirered</span></code> output shown in
-<a class="reference internal" href="#checking-the-resolved-schema">Checking the resolved schema</a>.</p>
+<p>Running it with <code class="docutils literal notranslate"><span class="pre">--metatile-attribute-size</span> <span class="pre">4</span></code> instead reports <code class="docutils literal notranslate"><span class="pre">Attribute</span> <span class="pre">size:</span> <span class="pre">4</span> <span class="pre">bytes</span> <span class="pre">(CLI)</span></code>,
+a declaration size still of 2 bytes (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">u16</span></code>),
+and all eight FRLG fields, matching the <code class="docutils literal notranslate"><span class="pre">pokefirered</span></code> output shown in
+<a class="reference internal" href="#checking-the-resolved-schema">Checking the resolved schema</a>
+(except for the declaration size, which is 4 bytes there).</p>
 </section>
 <section id="customizing-the-schema">
-<span id="id4"></span><h2>Customizing the schema<a class="headerlink" href="#customizing-the-schema" title="Link to this heading"></a></h2>
-<p>Two YAML-only config keys control the schema.
-Both work at project scope (<code class="docutils literal notranslate"><span class="pre">porytiles/config.yaml</span></code>) or tileset scope
-(<code class="docutils literal notranslate"><span class="pre">porytiles/tilesets/&lt;tileset_name&gt;/config.yaml</span></code>), see <a class="reference internal" href="configuration.html"><span class="doc">Configuration Reference</span></a>.</p>
+<span id="id5"></span><h2>Customizing the schema<a class="headerlink" href="#customizing-the-schema" title="Link to this heading"></a></h2>
+<p>Two YAML-only config keys control the schema:
+<code class="docutils literal notranslate"><span class="pre">metatile_attribute_fields</span></code> and <code class="docutils literal notranslate"><span class="pre">metatile_attribute_field_overrides</span></code>.
+The schema is a project-level property (one attribute layout per project),
+so set those two in <code class="docutils literal notranslate"><span class="pre">porytiles/config.yaml</span></code>; see <a class="reference internal" href="configuration.html"><span class="doc">Configuration Reference</span></a>.
+A third key, <code class="docutils literal notranslate"><span class="pre">role_pins</span></code>, appears alongside them below but does not control the schema:
+it only controls the CSV pin columns, never the binary layout, so it makes sense per tileset.
+All three are YAML-only (there is no CLI flag; the old <code class="docutils literal notranslate"><span class="pre">--write-layer-type-column</span></code> flag was removed in favor of
+<code class="docutils literal notranslate"><span class="pre">role_pins</span></code>).</p>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>YAML key</p></th>
@@ -604,15 +725,10 @@ Both work at project scope (<code class="docutils literal notranslate"><span cla
 <td><p>empty</p></td>
 <td><p>Adjust individual fields on top of the global baseline</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fieldmap.write_layer_type_column</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">--write-layer-type-column</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
-<td><p>Emit and honor the <code class="docutils literal notranslate"><span class="pre">layer_type</span></code> CSV column</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fieldmap.use_frlg_alternate_masks</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">--use-frlg-alternate-masks</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">automatic</span></code></p></td>
-<td><p>Select the FRLG alternate masks for a tileset</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fieldmap.role_pins</span></code></p></td>
+<td><p><em>YAML-only</em></p></td>
+<td><p>empty</p></td>
+<td><p>Emit and honor a trailing pin column per role (see below)</p></td>
 </tr>
 </tbody>
 </table>
@@ -621,7 +737,7 @@ Both work at project scope (<code class="docutils literal notranslate"><span cla
 <p><code class="docutils literal notranslate"><span class="pre">metatile_attribute_field_overrides</span></code> lets you make small adjustments.
 It merges onto the resolved baseline, inferred or explicit,
 so you can keep the inferred values and change only what you explicitly want overridden.
-Each entry may set <code class="docutils literal notranslate"><span class="pre">mask</span></code>, <code class="docutils literal notranslate"><span class="pre">frlg_mask</span></code>, <code class="docutils literal notranslate"><span class="pre">default</span></code>, and <code class="docutils literal notranslate"><span class="pre">provider</span></code>;
+Each entry may set <code class="docutils literal notranslate"><span class="pre">mask</span></code>, <code class="docutils literal notranslate"><span class="pre">default</span></code>, <code class="docutils literal notranslate"><span class="pre">provider</span></code>, and <code class="docutils literal notranslate"><span class="pre">role</span></code>;
 anything you do not set falls through to the baseline.</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">fieldmap</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">metatile_attribute_field_overrides</span><span class="p">:</span>
@@ -640,12 +756,18 @@ and the rest of the values will carry over from the global default.
 Note that a <code class="docutils literal notranslate"><span class="pre">skipped</span></code> list replaces the baseline skip list wholesale rather than adding to it.
 Overriding a field that does not exist in the baseline is an error
 (the message lists the fields that do exist).</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">role</span></code> member works the same way:
+<code class="docutils literal notranslate"><span class="pre">role:</span> <span class="pre">layer_type</span></code> puts the layer-type role on a field, and <code class="docutils literal notranslate"><span class="pre">role:</span> <span class="pre">null</span></code> clears it.
+Overrides apply per field, so to <em>move</em> the role you need both,
+<code class="docutils literal notranslate"><span class="pre">role:</span> <span class="pre">null</span></code> on the field that has it and <code class="docutils literal notranslate"><span class="pre">role:</span> <span class="pre">layer_type</span></code> on the new one
+(two fields carrying the role at once is an error).
+Clearing the role without assigning it elsewhere disables layer types.</p>
 </section>
 <section id="declaring-fields-from-scratch">
 <h3>Declaring fields from scratch<a class="headerlink" href="#declaring-fields-from-scratch" title="Link to this heading"></a></h3>
 <p>If your project’s attribute layout is sufficiently customized that inference cannot describe it,
 declare the whole layout explicitly with <code class="docutils literal notranslate"><span class="pre">metatile_attribute_fields</span></code>.
-Each entry takes <code class="docutils literal notranslate"><span class="pre">name</span></code>, <code class="docutils literal notranslate"><span class="pre">mask</span></code>, optional <code class="docutils literal notranslate"><span class="pre">frlg_mask</span></code>, optional <code class="docutils literal notranslate"><span class="pre">default</span></code>, and an optional <code class="docutils literal notranslate"><span class="pre">provider</span></code> map
+Each entry takes <code class="docutils literal notranslate"><span class="pre">name</span></code>, <code class="docutils literal notranslate"><span class="pre">mask</span></code>, optional <code class="docutils literal notranslate"><span class="pre">default</span></code>, optional <code class="docutils literal notranslate"><span class="pre">role</span></code>, and an optional <code class="docutils literal notranslate"><span class="pre">provider</span></code> map
 with <code class="docutils literal notranslate"><span class="pre">header</span></code>, <code class="docutils literal notranslate"><span class="pre">prefix</span></code>, optional <code class="docutils literal notranslate"><span class="pre">skipped</span></code>, and optional <code class="docutils literal notranslate"><span class="pre">format</span></code>
 (<code class="docutils literal notranslate"><span class="pre">defines-only</span></code>, <code class="docutils literal notranslate"><span class="pre">enums-only</span></code>, or <code class="docutils literal notranslate"><span class="pre">either</span></code>; the default is <code class="docutils literal notranslate"><span class="pre">either</span></code>).</p>
 <p>Here is a custom 4-byte layout for a project that added a light level and a room type to its attributes:</p>
@@ -666,14 +788,31 @@ with <code class="docutils literal notranslate"><span class="pre">header</span><
 <span class="w">        </span><span class="nt">header</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">include/constants/room_types.h</span>
 <span class="w">        </span><span class="nt">prefix</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ROOM_</span>
 <span class="w">        </span><span class="nt">format</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">defines-only</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">layer_type</span>
+<span class="w">      </span><span class="nt">mask</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0x60000000</span>
+<span class="w">      </span><span class="nt">role</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">layer_type</span>
 </pre></div>
 </div>
+<p>The explicit list is the complete layout, taken exactly as declared.
+Two consequences of that:</p>
+<ul class="simple">
+<li><p><strong>Omitting the layer_type role field disables layer types</strong>, with no error or warning;
+the resolved-schema remark simply reports “layer type disabled”.</p></li>
+<li><p><strong>If the project’s source still declares a usable mask layout that differs from your list</strong>,
+Porytiles warns with a summary of the differences
+(fields present on only one side, masks that disagree, role mismatches).
+The explicit fields win; the warning is a heads-up that your config
+disagrees with your own engine declarations.</p></li>
+</ul>
 <p>Porytiles validates the result the same way regardless of where it came from:</p>
 <ul class="simple">
 <li><p>every mask must be a single contiguous run of bits</p></li>
-<li><p>masks must not overlap each other or the structural layer type bits
-(bits 12-15 of a 2-byte attribute, bits 29-30 of a 4-byte attribute)</p></li>
+<li><p>masks must not overlap each other</p></li>
 <li><p>field names must be unique</p></li>
+<li><p>at most one field may carry <code class="docutils literal notranslate"><span class="pre">role:</span> <span class="pre">layer_type</span></code>,
+and a role field takes no <code class="docutils literal notranslate"><span class="pre">default</span></code> and no <code class="docutils literal notranslate"><span class="pre">provider</span></code></p></li>
+<li><p>a field may be named <code class="docutils literal notranslate"><span class="pre">layer_type</span></code> only if it carries the role
+(the bare name is reserved for the CSV pin column)</p></li>
 <li><p>every default must fit its field’s width</p></li>
 <li><p>every named constant a provider finds must fit the field’s width;
 the error shows the offending constant,
@@ -691,13 +830,15 @@ change the decomp code first, then let inference pick the change up.</p>
 <p>For completeness, the exact binary format Porytiles writes:</p>
 <ul class="simple">
 <li><p>One attribute value per metatile, in the same order as <code class="docutils literal notranslate"><span class="pre">metatiles.bin</span></code></p></li>
-<li><p>Each value is 2 or 4 bytes (the resolved attribute size), stored in <a class="reference external" href="https://en.wikipedia.org/wiki/Endianness">little-endian byte order</a></p></li>
+<li><p>Each value is 1, 2, or 4 bytes (the resolved attribute size), stored in <a class="reference external" href="https://en.wikipedia.org/wiki/Endianness">little-endian byte order</a></p></li>
 <li><p>Each field’s value is shifted to its mask position and masked in;
-the layer type value (<code class="docutils literal notranslate"><span class="pre">normal</span></code> = 0, <code class="docutils literal notranslate"><span class="pre">covered</span></code> = 1, <code class="docutils literal notranslate"><span class="pre">split</span></code> = 2) is packed into the structural layer type bits</p></li>
-<li><p>On decompile, Porytiles extracts exactly the schema fields plus the layer type;
-bits covered by neither are dropped, not preserved</p></li>
+the layer type value (<code class="docutils literal notranslate"><span class="pre">normal</span></code> = 0, <code class="docutils literal notranslate"><span class="pre">covered</span></code> = 1, <code class="docutils literal notranslate"><span class="pre">split</span></code> = 2) is packed through the
+<code class="docutils literal notranslate"><span class="pre">layer_type</span></code> role field’s mask like any other field</p></li>
+<li><p>On decompile, Porytiles extracts exactly the schema fields
+(the role field decodes into the metatile’s layer type rather than a CSV column);
+bits covered by no field are dropped, not preserved</p></li>
 <li><p>When parsing an existing binary, the file size must be a multiple of the attribute size,
-and layer type bits must decode to 0, 1, or 2</p></li>
+and the layer-type bits must decode to 0, 1, or 2</p></li>
 </ul>
 </section>
 <section id="common-behaviors">

@@ -100,6 +100,7 @@ Tileset names are the **struct names** from `src/data/tilesets/headers.h`, e.g. 
 | `compile-tileset <name>` | Compile `porytiles_src/` to Porymap-ready `porytiles_bin/`. The main command you'll use most often. |
 | `create-tileset <name>` | Create a brand-new Porytiles-managed tileset from scratch. Add `--secondary` for a secondary tileset. |
 | `dump-tileset-config <name>` | Print the full, resolved config for a tileset (great for "why did it do that?"). |
+| `dump-attribute-schema <name>` | Print the resolved metatile attribute schema (the fields your `attributes.csv` needs). |
 | `completion <bash\|zsh\|fish>` | Generate a shell completion script. |
 
 Global flags: `-V` / `--version`, `--help`, and `-C` / `--project-root <dir>` (default `.`).
@@ -325,5 +326,6 @@ To verify what's actually in effect after layering, use `porytiles dump-tileset-
 - What's that flag name again? `porytiles --help` and `porytiles <command> --help`
 - What's that YAML key again? `porytiles/config_templates/porytiles.example.yaml`
 - Why is my config not what I expected? `porytiles dump-tileset-config <name>`
+- Which columns does my `attributes.csv` need? `porytiles dump-attribute-schema <name>`
 - Where can I see some example tilesets? `resources/examples/`
 - What does this diagnostic message mean? {doc}`diagnostics`
