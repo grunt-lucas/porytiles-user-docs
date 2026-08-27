@@ -381,41 +381,42 @@ Tile sharing is **best-effort**. Not every color-isomorphic group will align suc
 (filtering-diagnostics)=
 ## Filtering Diagnostics
 
-You can control which tile sharing diagnostics appear in the output using the `--diagnostic-remarks-exclude` and `--diagnostic-remarks-include` CLI flags (or their YAML equivalents). These accept regex patterns matched against the remark tag names.
+Remarks are opt-in: Porytiles shows no remarks by default,
+so the tile sharing remarks only appear when you ask for them.
+Use the `--diagnostic-remarks-include` and `--diagnostic-remarks-exclude` CLI flags (or their YAML equivalents)
+to control which ones appear.
+These accept regex patterns that are matched against the remark tag names.
 
-Both flags are list-valued. Repeat them on the CLI to specify multiple patterns:
+**Show all tile sharing remarks:**
 
 ```
---diagnostic-remarks-exclude 'pattern1' --diagnostic-remarks-exclude 'pattern2'
+--diagnostic-remarks-include 'tile-sharing-.*'
 ```
-
-Or in YAML:
 
 ```yaml
-diagnostic:
+diagnostics:
   remarks:
-    exclude:
-      - 'pattern1'
-      - 'pattern2'
-```
-
-**Suppress all tile sharing remarks:**
-
-```
---diagnostic-remarks-exclude 'tile-sharing-.*'
+    include:
+      - 'tile-sharing-.*'
 ```
 
 **Show only the final summary:**
 
 ```
---diagnostic-remarks-exclude 'tile-sharing-.*' --diagnostic-remarks-include 'tile-sharing-result-summary'
+--diagnostic-remarks-include 'tile-sharing-result-summary'
+```
+
+```yaml
+diagnostics:
+  remarks:
+    include:
+      - 'tile-sharing-result-summary'
 ```
 
 **Show only the per-phase summaries (skip per-group details):**
 
 ```
---diagnostic-remarks-exclude 'tile-sharing-.*' \
-  --diagnostic-remarks-include 'tile-sharing-shareable-tiles-summary' \
+--diagnostic-remarks-include 'tile-sharing-shareable-tiles-summary' \
   --diagnostic-remarks-include 'tile-sharing-palette-partition-summary' \
   --diagnostic-remarks-include 'tile-sharing-result-summary'
 ```
@@ -423,10 +424,31 @@ diagnostic:
 **Or expressed more succinctly:**
 
 ```
---diagnostic-remarks-exclude 'tile-sharing-.*' --diagnostic-remarks-include 'tile-sharing-.*-summary'
+--diagnostic-remarks-include 'tile-sharing-.*-summary'
 ```
 
-Include patterns override exclude patterns, so you can exclude broadly and then selectively re-enable specific tags.
+```yaml
+diagnostics:
+  remarks:
+    include:
+      - 'tile-sharing-.*-summary'
+```
+
+Exclude patterns override include patterns, so you can include broadly and then remove specific tags.
+For example, to show every remark except the per-group tile sharing details:
+
+```
+--diagnostic-remarks-include '.*' --diagnostic-remarks-exclude 'tile-sharing-.*-[0-9]+'
+```
+
+```yaml
+diagnostics:
+  remarks:
+    include:
+      - '.*'
+    exclude:
+      - 'tile-sharing-.*-[0-9]+'
+```
 
 ## Acknowledgments
 

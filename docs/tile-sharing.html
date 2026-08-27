@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tile Sharing &mdash; Porytiles User Documentation 1.0.0 documentation</title>
+  <title>Tile Sharing &mdash; Porytiles User Documentation 2.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/css/custom.css?v=e6b1eb62" />
@@ -14,7 +14,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=8d563738"></script>
+      <script src="_static/documentation_options.js?v=51b770b3"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
@@ -141,7 +141,7 @@
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
       <li class="breadcrumb-item active">Tile Sharing</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/grunt-lucas/porytiles-user-docs/blob/develop/docsrc/tile-sharing.md" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/grunt-lucas/porytiles-user-docs/blob/master/docsrc/tile-sharing.md" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -487,39 +487,60 @@ with counts and detail lines specific to that group.</p>
 </section>
 <section id="filtering-diagnostics">
 <span id="id9"></span><h2>Filtering Diagnostics<a class="headerlink" href="#filtering-diagnostics" title="Link to this heading"></a></h2>
-<p>You can control which tile sharing diagnostics appear in the output using the <code class="docutils literal notranslate"><span class="pre">--diagnostic-remarks-exclude</span></code> and <code class="docutils literal notranslate"><span class="pre">--diagnostic-remarks-include</span></code> CLI flags (or their YAML equivalents). These accept regex patterns matched against the remark tag names.</p>
-<p>Both flags are list-valued. Repeat them on the CLI to specify multiple patterns:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">--</span><span class="n">diagnostic</span><span class="o">-</span><span class="n">remarks</span><span class="o">-</span><span class="n">exclude</span> <span class="s1">&#39;pattern1&#39;</span> <span class="o">--</span><span class="n">diagnostic</span><span class="o">-</span><span class="n">remarks</span><span class="o">-</span><span class="n">exclude</span> <span class="s1">&#39;pattern2&#39;</span>
+<p>Remarks are opt-in: Porytiles shows no remarks by default,
+so the tile sharing remarks only appear when you ask for them.
+Use the <code class="docutils literal notranslate"><span class="pre">--diagnostic-remarks-include</span></code> and <code class="docutils literal notranslate"><span class="pre">--diagnostic-remarks-exclude</span></code> CLI flags (or their YAML equivalents)
+to control which ones appear.
+These accept regex patterns that are matched against the remark tag names.</p>
+<p><strong>Show all tile sharing remarks:</strong></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">--</span><span class="n">diagnostic</span><span class="o">-</span><span class="n">remarks</span><span class="o">-</span><span class="n">include</span> <span class="s1">&#39;tile-sharing-.*&#39;</span>
 </pre></div>
 </div>
-<p>Or in YAML:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">diagnostic</span><span class="p">:</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">diagnostics</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">remarks</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">exclude</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;pattern1&#39;</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;pattern2&#39;</span>
-</pre></div>
-</div>
-<p><strong>Suppress all tile sharing remarks:</strong></p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">--</span><span class="n">diagnostic</span><span class="o">-</span><span class="n">remarks</span><span class="o">-</span><span class="n">exclude</span> <span class="s1">&#39;tile-sharing-.*&#39;</span>
+<span class="w">    </span><span class="nt">include</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;tile-sharing-.*&#39;</span>
 </pre></div>
 </div>
 <p><strong>Show only the final summary:</strong></p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">--</span><span class="n">diagnostic</span><span class="o">-</span><span class="n">remarks</span><span class="o">-</span><span class="n">exclude</span> <span class="s1">&#39;tile-sharing-.*&#39;</span> <span class="o">--</span><span class="n">diagnostic</span><span class="o">-</span><span class="n">remarks</span><span class="o">-</span><span class="n">include</span> <span class="s1">&#39;tile-sharing-result-summary&#39;</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">--</span><span class="n">diagnostic</span><span class="o">-</span><span class="n">remarks</span><span class="o">-</span><span class="n">include</span> <span class="s1">&#39;tile-sharing-result-summary&#39;</span>
+</pre></div>
+</div>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">diagnostics</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">remarks</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">include</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;tile-sharing-result-summary&#39;</span>
 </pre></div>
 </div>
 <p><strong>Show only the per-phase summaries (skip per-group details):</strong></p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">--</span><span class="n">diagnostic</span><span class="o">-</span><span class="n">remarks</span><span class="o">-</span><span class="n">exclude</span> <span class="s1">&#39;tile-sharing-.*&#39;</span> \
-  <span class="o">--</span><span class="n">diagnostic</span><span class="o">-</span><span class="n">remarks</span><span class="o">-</span><span class="n">include</span> <span class="s1">&#39;tile-sharing-shareable-tiles-summary&#39;</span> \
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">--</span><span class="n">diagnostic</span><span class="o">-</span><span class="n">remarks</span><span class="o">-</span><span class="n">include</span> <span class="s1">&#39;tile-sharing-shareable-tiles-summary&#39;</span> \
   <span class="o">--</span><span class="n">diagnostic</span><span class="o">-</span><span class="n">remarks</span><span class="o">-</span><span class="n">include</span> <span class="s1">&#39;tile-sharing-palette-partition-summary&#39;</span> \
   <span class="o">--</span><span class="n">diagnostic</span><span class="o">-</span><span class="n">remarks</span><span class="o">-</span><span class="n">include</span> <span class="s1">&#39;tile-sharing-result-summary&#39;</span>
 </pre></div>
 </div>
 <p><strong>Or expressed more succinctly:</strong></p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">--</span><span class="n">diagnostic</span><span class="o">-</span><span class="n">remarks</span><span class="o">-</span><span class="n">exclude</span> <span class="s1">&#39;tile-sharing-.*&#39;</span> <span class="o">--</span><span class="n">diagnostic</span><span class="o">-</span><span class="n">remarks</span><span class="o">-</span><span class="n">include</span> <span class="s1">&#39;tile-sharing-.*-summary&#39;</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">--</span><span class="n">diagnostic</span><span class="o">-</span><span class="n">remarks</span><span class="o">-</span><span class="n">include</span> <span class="s1">&#39;tile-sharing-.*-summary&#39;</span>
 </pre></div>
 </div>
-<p>Include patterns override exclude patterns, so you can exclude broadly and then selectively re-enable specific tags.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">diagnostics</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">remarks</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">include</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;tile-sharing-.*-summary&#39;</span>
+</pre></div>
+</div>
+<p>Exclude patterns override include patterns, so you can include broadly and then remove specific tags.
+For example, to show every remark except the per-group tile sharing details:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">--</span><span class="n">diagnostic</span><span class="o">-</span><span class="n">remarks</span><span class="o">-</span><span class="n">include</span> <span class="s1">&#39;.*&#39;</span> <span class="o">--</span><span class="n">diagnostic</span><span class="o">-</span><span class="n">remarks</span><span class="o">-</span><span class="n">exclude</span> <span class="s1">&#39;tile-sharing-.*-[0-9]+&#39;</span>
+</pre></div>
+</div>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">diagnostics</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">remarks</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">include</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;.*&#39;</span>
+<span class="w">    </span><span class="nt">exclude</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;tile-sharing-.*-[0-9]+&#39;</span>
+</pre></div>
+</div>
 </section>
 <section id="acknowledgments">
 <h2>Acknowledgments<a class="headerlink" href="#acknowledgments" title="Link to this heading"></a></h2>

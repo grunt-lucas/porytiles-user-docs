@@ -14,7 +14,7 @@ Deep guide structured as "basics first, tuning later":
   - backtracking: `search_algorithm`, `node_cutoff`, `best_branches`, `smart_prune`
   - overload_and_remove: `max_attempts`, `seed`, `shuffle_strategy`
 - Palette hints: what they are, YAML syntax, when they help
-- `pal_hints_enabled` toggle
+- `palette_hints_enabled` toggle
 - How to troubleshoot, common failure causes
 - Relationship to tile sharing packing modes
 

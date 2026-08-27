@@ -21,21 +21,20 @@ For **every individual key**, it walks the list below from top to bottom and use
 Resolution is per-key, not per-file:
 a command-line option can override one key while the rest still come from your YAML or the built-in defaults.
 
-| Priority | Source | Where the value comes from |
-|---------:|--------|----------------------------|
-| 1 (highest) | Command-line option | A `--key value` flag any of the relevant commands |
-| 2 | Per-tileset local YAML | `porytiles/tilesets/<tileset_name>/config.local.yaml` |
-| 3 | Per-tileset YAML | `porytiles/tilesets/<tileset_name>/config.yaml` |
-| 4 | Project local YAML | `porytiles/config.local.yaml` |
-| 5 | Project YAML | `porytiles/config.yaml` |
-| 6 | Fieldmap header | The `#define`s in `include/fieldmap.h` |
-| 7 | Metatiles header | Inferred from `src/data/tilesets/metatiles.h` |
-| 8 (lowest) | Built-in default | The default baked into Porytiles |
+|    Priority | Source                 | Where the value comes from                            |
+|------------:|------------------------|-------------------------------------------------------|
+| 1 (highest) | Command-line option    | A `--key value` flag any of the relevant commands     |
+|           2 | Per-tileset local YAML | `porytiles/tilesets/<tileset_name>/config.local.yaml` |
+|           3 | Per-tileset YAML       | `porytiles/tilesets/<tileset_name>/config.yaml`       |
+|           4 | Project local YAML     | `porytiles/config.local.yaml`                         |
+|           5 | Project YAML           | `porytiles/config.yaml`                               |
+|           6 | Fieldmap header        | The `#define`s in `include/fieldmap.h`                |
+|  7 (lowest) | Built-in default       | The default baked into Porytiles                      |
 
 Two critical consequences worth reiterating:
 
 - **Per-tileset beats project-wide, and local beats committed.** A key set in a tileset's `config.yaml` overrides the same key in the project-wide `config.yaml`, and either `config.local.yaml` overrides its committed sibling at the same scope.
-- **The `fieldmap.*` values come from your project for free.** Sources 6 and 7 read your decomp project's own headers, so the tile, metatile, and palette limits already match your build. You only set them by hand when your project diverges from those headers.
+- **The `fieldmap.*` values come from your project for free.** Source 6 reads your decomp project's own `include/fieldmap.h`, so the tile, metatile, and palette limits already match your build. The metatile attribute sizes and schema are likewise derived from your project's own attribute masks and declarations whenever you leave those keys unset (see {doc}`metatile-attributes`). You only set them by hand when for some reason, your project diverges from those sources.
 
 ## Where configuration YAML files live
 
@@ -91,12 +90,12 @@ A few conventions:
 
 - **Boolean values** also get a `--no-` form to turn them off, for example `--no-verify-checksums` or `--no-pal-hints-enabled`.
 - **List values** (such as `--primary-pairing-partners` or `--diagnostic-warnings-exclude`) accept multiple arguments.
-- **Three values are YAML-only.** Palette hints, packing strategy parameters, and per-animation overrides are too structured to express as a flag, so they can only be set in a config file. They're marked *YAML-only* in the reference.
+- **Five values are YAML-only.** Palette hints, packing strategy parameters, per-animation overrides, and the metatile attribute field lists (`metatile_attribute_fields` and `metatile_attribute_field_overrides`) are too structured to express as a flag, so they can only be set in a config file. They're marked *YAML-only* in the reference.
 
 ```{tip}
 Option names don't always match the YAML path one-to-one.
 A few are abbreviated (`tileset.palettes.edit_mode` is `--pals-edit-mode`,
-`fieldmap.metatile_attribute_size` is `--metatile-attr-size`).
+`tileset.animations.palette_resolution_strategy` is `--anim-pal-resolution-strategy`).
 When in doubt, trust the reference tables below or `--help` rather than guessing from the path.
 You can also set up shell completion to make it even easier, see {doc}`installation`.
 ```
@@ -104,7 +103,7 @@ You can also set up shell completion to make it even easier, see {doc}`installat
 (dump-config)=
 ## Inspecting the resolved configuration
 
-Because values come from up to eight places, "what is this key actually set to, and why?" is a real question.
+Because values come from up to seven places, "what is this key actually set to, and why?" is a real question.
 `dump-tileset-config` provides the answer for a specific tileset:
 
 ```bash
@@ -129,7 +128,6 @@ Number Of Tiles In Primary
     ○ CliOptionProvider (not provided)
     ○ YamlFileProvider (not provided)
     ✓ HeaderDefineProvider = 512
-    ○ MetatilesHeaderProvider (not provided)
     ○ DefaultProvider = 512
 ```
 
@@ -142,8 +140,13 @@ that some providers did not provide a value for the key at all,
 while others provided a value but were superseded by a provider with higher priority.
 For a value that fell through to its default, the source reads `default value` and only `DefaultProvider` is checked.
 
-This is the fastest way to debug a surprising result:
-dump the config, find the key, and the chain shows you which file (or flag) to change.
+This is the fastest way to debug a surprising result.
+Just dump the config, find the relevant key, and the chain shows you which file (or flag) to change.
+
+The tileset has to exist in the project, so a misspelled name errors out instead of dumping
+a plausible-looking chain of project-level values.
+To preview the config a not-yet-created tileset would inherit,
+pass `--allow-missing-tileset` which overrides this behavior.
 
 ```{important}
 The chain collapses all four YAML files into a single `YamlFileProvider` row,
@@ -161,51 +164,121 @@ Each group links to the guide that explains the underlying subsystem in depth.
 ### `fieldmap` — hardware layout
 
 These describe your tile, metatile, and palette budget.
-Porytiles reads the first eight from `include/fieldmap.h` and the last from `src/data/tilesets/metatiles.h` automatically,
+Porytiles reads all of them from `include/fieldmap.h` automatically,
 so in a normal decomp project you never set them by hand.
-Override them only when you explicitly want a particular run's values to differ from those headers.
+Override them only when you explicitly want a particular run's values to differ from that header.
 
-| YAML key | CLI flag | Default | Description |
-|----------|----------|---------|-------------|
-| `fieldmap.num_tiles_in_primary` | `--num-tiles-in-primary` | `512` | Tiles reserved for the primary tileset. |
-| `fieldmap.num_tiles_total` | `--num-tiles-total` | `1024` | Total tile capacity (primary plus secondary). |
-| `fieldmap.num_metatiles_in_primary` | `--num-metatiles-in-primary` | `512` | Metatiles reserved for the primary tileset. |
-| `fieldmap.num_metatiles_total` | `--num-metatiles-total` | `1024` | Total metatile capacity. |
-| `fieldmap.num_pals_in_primary` | `--num-pals-in-primary` | `6` | Hardware palettes reserved for the primary tileset. |
-| `fieldmap.num_pals_total` | `--num-pals-total` | `13` | Total hardware palettes available. |
-| `fieldmap.max_map_data_size` | `--max-map-data-size` | `10240` | The `MAX_MAP_DATA_SIZE` map-buffer limit. |
-| `fieldmap.num_tiles_per_metatile` | `--num-tiles-per-metatile` | `8` | `8` for dual-layer tilesets, `12` for triple-layer. |
-| `fieldmap.metatile_attribute_size` | `--metatile-attr-size` | `2` | Bytes per metatile attribute: `2` (Emerald/Ruby) or `4` (FireRed). Auto-detected from the C type used in `metatiles.h`. |
+| YAML key                            | CLI flag                     | Default | Description                                         |
+|-------------------------------------|------------------------------|---------|-----------------------------------------------------|
+| `fieldmap.num_tiles_in_primary`     | `--num-tiles-in-primary`     | `512`   | Tiles reserved for the primary tileset.             |
+| `fieldmap.num_tiles_total`          | `--num-tiles-total`          | `1024`  | Total tile capacity (primary plus secondary).       |
+| `fieldmap.num_metatiles_in_primary` | `--num-metatiles-in-primary` | `512`   | Metatiles reserved for the primary tileset.         |
+| `fieldmap.num_metatiles_total`      | `--num-metatiles-total`      | `1024`  | Total metatile capacity.                            |
+| `fieldmap.num_palettes_in_primary`  | `--num-pals-in-primary`      | `6`     | Hardware palettes reserved for the primary tileset. |
+| `fieldmap.num_palettes_total`       | `--num-pals-total`           | `13`    | Total hardware palettes available.                  |
+| `fieldmap.max_map_data_size`        | `--max-map-data-size`        | `10240` | The `MAX_MAP_DATA_SIZE` map-buffer limit.           |
+| `fieldmap.num_tiles_per_metatile`   | `--num-tiles-per-metatile`   | `8`     | `8` for dual-layer tilesets, `12` for triple-layer. |
+
+### `fieldmap` — metatile attributes
+
+These control the metatile attribute schema: which fields exist in each metatile's packed attribute value,
+how wide each attribute entry is, and how the `attributes.csv` layer type column behaves.
+The schema is a project-level property (a project has exactly one attribute layout, shared by every tileset),
+so set these keys in `porytiles/config.yaml`, not per tileset.
+Setting these keys to different values in different tilesets can result in inconsistent, buggy behavior.
+The whole system, including the field and override formats, is documented in {doc}`metatile-attributes`;
+this table is just the key listing.
+
+| YAML key                                        | CLI flag                                | Default                             | Description                                                                                  |
+|-------------------------------------------------|-----------------------------------------|-------------------------------------|----------------------------------------------------------------------------------------------|
+| `fieldmap.metatile_attribute_size`              | `--metatile-attribute-size`             | (inferred)                          | The size in bytes of each metatile attribute entry (`1`, `2`, or `4`).                       |
+| `fieldmap.metatile_attribute_declaration_size`  | `--metatile-attribute-declaration-size` | (inferred; required if that fails)  | The declared element width of generated `gMetatileAttributes_*` arrays (`1`, `2`, or `4`).   |
+| `fieldmap.metatile_attribute_fields`            | *YAML-only*                             | (inferred)                          | Declare the attribute field list yourself, replacing schema inference.                       |
+| `fieldmap.metatile_attribute_field_overrides`   | *YAML-only*                             | (none)                              | Adjust individual fields on top of the inferred or declared list.                            |
+| `fieldmap.role_pins`                            | *YAML-only*                             | (none)                              | Emit and honor a trailing pin column in `attributes.csv` for a schema role.                  |
+
+`fieldmap.role_pins` is an exception to the project-level rule:
+it never touches the binary attribute layout, only the CSV pin columns,
+so setting it per tileset is fine and often what you want.
+
+**`metatile_attribute_size`** normally stays unset:
+Porytiles derives the attribute width from the attribute masks your project declares
+(the `METATILE_ATTR_*_MASK` defines and the `sMetatileAttrMasks` table),
+cross-referenced with the element type `struct Tileset` declares for its `metatileAttributes` member.
+You need it in two situations:
+1. `pokeemerald-expansion`, which declares both the emerald and FRLG mask layouts and picks one per build (`make` vs `make firered`),
+   so you must set the size explicitly (`2` for emerald, `4` for FRLG). Porytiles selects the matching layout.
+2. Projects whose masks and `struct Tileset` declaration disagree (in either direction),
+   or whose declaration is missing or unusable. Since these settings control a binary file layout, Porytiles won't guess.
+
+See {doc}`metatile-attributes` for more details.
+
+**`metatile_attribute_declaration_size`** normally stays unset:
+Porytiles infers the declared element width from `struct Tileset`'s `metatileAttributes` member
+in `include/global.fieldmap.h`.
+That declaration is the only source for this width, so you have to set it manually if it is missing,
+unreadable, or written with a type other than `u8`, `u16`, or `u32`.
+
+**`metatile_attribute_fields`** and **`metatile_attribute_field_overrides`** normally stay unset:
+Porytiles infers the attribute schema from your project's own declarations,
+including the layer-type field, which is an ordinary schema field marked with `role: layer_type`.
+Set `metatile_attribute_field_overrides` to tweak individual fields (a mask, a default, a value-name provider, the role),
+and use the full `metatile_attribute_fields` list
+only if your project's attribute layout is sufficiently customized that inference cannot describe it.
+
+**`role_pins`** adds a trailing pin column to `attributes.csv` for a schema role,
+letting you pin a role's value instead of relying on Porytiles's automatic inference.
+Currently, `layer_type` is the only supported role.
+The column header must be `pin::<role>`, i.e. `pin::layer_type`.
+The `pin::` prefix is reserved: it marks the column as a pin column rather than an attribute field,
+so no attribute field may be named with it.
+This is the one key in this group that makes sense per tileset,
+so prefer setting it in `porytiles/tilesets/<tileset_name>/config.yaml`.
+See {doc}`metatile-attributes` for more on pinning.
 
 ### `tileset.paths` — asset directories
 
 Where each tileset's source and binary assets live, relative to the project root.
 `src` holds the editable `porytiles_src/` assets; `bin` holds the generated `porytiles_bin/` files that Porymap reads.
 
-| YAML key | CLI flag | Default | Description |
-|----------|----------|---------|-------------|
-| `tileset.paths.primary.src` | `--tileset-paths-primary-src` | `data/tilesets/primary` | Source directory for primary tilesets. |
-| `tileset.paths.primary.bin` | `--tileset-paths-primary-bin` | `data/tilesets/primary` | Binary directory for primary tilesets. |
+| YAML key                      | CLI flag                        | Default                   | Description                              |
+|-------------------------------|---------------------------------|---------------------------|------------------------------------------|
+| `tileset.paths.primary.src`   | `--tileset-paths-primary-src`   | `data/tilesets/primary`   | Source directory for primary tilesets.   |
+| `tileset.paths.primary.bin`   | `--tileset-paths-primary-bin`   | `data/tilesets/primary`   | Binary directory for primary tilesets.   |
 | `tileset.paths.secondary.src` | `--tileset-paths-secondary-src` | `data/tilesets/secondary` | Source directory for secondary tilesets. |
 | `tileset.paths.secondary.bin` | `--tileset-paths-secondary-bin` | `data/tilesets/secondary` | Binary directory for secondary tilesets. |
 
 ### `tileset` — transparency
 
-| YAML key | CLI flag | Default | Description |
-|----------|----------|---------|-------------|
+| YAML key                         | CLI flag                         | Default                   | Description                                                                    |
+|----------------------------------|----------------------------------|---------------------------|--------------------------------------------------------------------------------|
 | `tileset.extrinsic_transparency` | `--extrinsic-transparency R,G,B` | `[255, 0, 255]` (magenta) | The RGB color treated as transparent during compilation. Must be fully opaque. |
 
 Pixels in this color (or with an alpha of 0) become transparent in the compiled tileset.
 The mental model for source layers is covered in the {doc}`quickstart`.
 
+### `tileset` — layer mode content
+
+| YAML key                              | CLI flag                        | Default | Description                                                                                |
+|---------------------------------------|---------------------------------|---------|--------------------------------------------------------------------------------------------|
+| `tileset.ignore_triple_layer_content` | `--ignore-triple-layer-content` | `false` | Demote the triple-layer-content-in-dual-mode error to a warning, dropping one layer group. |
+
+By default, a dual-layer compile hard-errors when a metatile has visible content on all three layers.
+Turning this on demotes that error to a warning
+and lets the compilation proceed by dropping one layer group per offending metatile.
+Which group is dropped follows the metatile's effective layer type:
+a `fieldmap.role_pins` `layer_type` pin if you set one,
+otherwise a fallback to Layer Type Normal that drops the bottom group.
+See {doc}`metatile-attributes` for more information.
+
 ### `tileset.tiles` — the `tiles.png` artifact
 
-| YAML key | CLI flag | Default | Description |
-|----------|----------|---------|-------------|
-| `tileset.tiles.edit_mode` | `--tiles-edit-mode` | `optimize` | How much `tiles.png` may change during a compile. |
-| `tileset.tiles.palette_mode` | `--tiles-pal-mode` | `true-color` | The color mode used when writing `tiles.png`. |
-| `tileset.tiles.sharing.packing` | `--tile-sharing-packing` | `off` | Whether the packer accounts for tile-sharing shape groups. |
-| `tileset.tiles.sharing.alignment` | `--tile-sharing-alignment` | `off` | The palette-slot alignment strategy for tile sharing. |
+| YAML key                          | CLI flag                   | Default      | Description                                                |
+|-----------------------------------|----------------------------|--------------|------------------------------------------------------------|
+| `tileset.tiles.edit_mode`         | `--tiles-edit-mode`        | `optimize`   | How much `tiles.png` may change during a compile.          |
+| `tileset.tiles.palette_mode`      | `--tiles-pal-mode`         | `true-color` | The color mode used when writing `tiles.png`.              |
+| `tileset.tiles.sharing.packing`   | `--tile-sharing-packing`   | `off`        | Whether the packer accounts for tile-sharing shape groups. |
+| `tileset.tiles.sharing.alignment` | `--tile-sharing-alignment` | `off`        | The palette-slot alignment strategy for tile sharing.      |
 
 **`edit_mode`** controls how freely a compile may rewrite the tiles artifact:
 
@@ -227,13 +300,13 @@ The full mechanism is explained in {doc}`tile-sharing`.
 
 ### `tileset.palettes` — palette packing
 
-| YAML key | CLI flag | Default | Description |
-|----------|----------|---------|-------------|
-| `tileset.palettes.edit_mode` | `--pals-edit-mode` | `optimize` | How much the palette files may change during a compile. |
-| `tileset.palettes.packing.strategy` | `--packing-strategy` | `backtracking` | The palette-packing algorithm. |
-| `tileset.palettes.packing.strategy_params` | *YAML-only* | (preset) | Per-strategy tuning parameters. |
-| `tileset.palettes.packing.hints_enabled` | `--pal-hints-enabled` | `true` | Whether palette hints are fed to the packer. |
-| `tileset.palettes.packing.hints` | *YAML-only* | (none) | Named color groups the packer should keep together. |
+| YAML key                                   | CLI flag              | Default        | Description                                             |
+|--------------------------------------------|-----------------------|----------------|---------------------------------------------------------|
+| `tileset.palettes.edit_mode`               | `--pals-edit-mode`    | `optimize`     | How much the palette files may change during a compile. |
+| `tileset.palettes.packing.strategy`        | `--packing-strategy`  | `backtracking` | The palette-packing algorithm.                          |
+| `tileset.palettes.packing.strategy_params` | *YAML-only*           | (preset)       | Per-strategy tuning parameters.                         |
+| `tileset.palettes.packing.hints_enabled`   | `--pal-hints-enabled` | `true`         | Whether palette hints are fed to the packer.            |
+| `tileset.palettes.packing.hints`           | *YAML-only*           | (none)         | Named color groups the packer should keep together.     |
 
 **`edit_mode`** takes the same `locked` / `patch` / `optimize` values as `tiles.edit_mode` above, applied to the palette files.
 
@@ -284,15 +357,15 @@ The packing algorithms and when to tune them are covered in {doc}`palette-packin
 
 ### `tileset.animations` — animation handling
 
-| YAML key | CLI flag | Default | Description |
-|----------|----------|---------|-------------|
-| `tileset.animations.frame_linking` | `--frame-linking` | `automatic` | How animation frames link to metatile entries. |
-| `tileset.animations.wire_anim_code` | `--tileset-animations-wire-anim-code` | `true` | Whether Porytiles wires generated animation code into `tileset_anims.c/h`. |
-| `tileset.animations.cross_tileset_linking` | `--cross-tileset-anim-linking` | `true` | Match secondary tiles against a primary's animation key frames. |
-| `tileset.animations.palette_resolution_strategy` | `--anim-pal-resolution-strategy` | `scan-local-metatiles` | Which palette to use for animation tiles when decompiling. |
-| `tileset.animations.key_frame_resolution_strategy` | `--anim-key-frame-resolution-strategy` | `error` | How to handle duplicate key-frame tiles when decompiling. |
-| `tileset.animations.multi_palette_subtile_resolution_strategy` | `--anim-multi-pal-subtile-resolution-strategy` | `error` | How to handle subtiles referenced with multiple palettes when decompiling. |
-| `tileset.animations.per_animation_overrides` | *YAML-only* | (none) | Per-animation settings, keyed by animation name. |
+| YAML key                                                       | CLI flag                                       | Default                | Description                                                                |
+|----------------------------------------------------------------|------------------------------------------------|------------------------|----------------------------------------------------------------------------|
+| `tileset.animations.frame_linking`                             | `--frame-linking`                              | `automatic`            | How animation frames link to metatile entries.                             |
+| `tileset.animations.wire_anim_code`                            | `--tileset-animations-wire-anim-code`          | `true`                 | Whether Porytiles wires generated animation code into `tileset_anims.c/h`. |
+| `tileset.animations.cross_tileset_linking`                     | `--cross-tileset-anim-linking`                 | `true`                 | Match secondary tiles against a primary's animation key frames.            |
+| `tileset.animations.palette_resolution_strategy`               | `--anim-pal-resolution-strategy`               | `scan-local-metatiles` | Which palette to use for animation tiles when decompiling.                 |
+| `tileset.animations.key_frame_resolution_strategy`             | `--anim-key-frame-resolution-strategy`         | `error`                | How to handle duplicate key-frame tiles when decompiling.                  |
+| `tileset.animations.multi_palette_subtile_resolution_strategy` | `--anim-multi-pal-subtile-resolution-strategy` | `error`                | How to handle subtiles referenced with multiple palettes when decompiling. |
+| `tileset.animations.per_animation_overrides`                   | *YAML-only*                                    | (none)                 | Per-animation settings, keyed by animation name.                           |
 
 **`frame_linking`**: `automatic` *(default,* uses `key.png`*)*, `manual` (uses explicit overrides in `anim.json`), or `hybrid` *(planned)*.
 
@@ -324,10 +397,10 @@ The animation pipeline is documented in {doc}`animations`.
 
 When you compile a secondary tileset, Porytiles needs the compiled primary to produce correct global tile indices and palette references.
 
-| YAML key | CLI flag | Default | Description |
-|----------|----------|---------|-------------|
-| `tileset.primary_pairing.mode` | `--primary-pairing-mode` | `automatic` | How the partner primary is resolved. |
-| `tileset.primary_pairing.partners` | `--primary-pairing-partners` | (none) | Partner primary tileset names, used in `manual` mode. |
+| YAML key                           | CLI flag                     | Default     | Description                                           |
+|------------------------------------|------------------------------|-------------|-------------------------------------------------------|
+| `tileset.primary_pairing.mode`     | `--primary-pairing-mode`     | `automatic` | How the partner primary is resolved.                  |
+| `tileset.primary_pairing.partners` | `--primary-pairing-partners` | (none)      | Partner primary tileset names, used in `manual` mode. |
 
 **`mode`**: `automatic` *(default,* scans layout metadata to find the partner primary*)*, `manual` (use the names in `partners`), or `off` (compile as a standalone secondary).
 `partners` is only consulted when `mode` is `manual`.
@@ -335,35 +408,36 @@ Primary pairing is introduced in {doc}`creating-your-first-tileset`.
 
 ### `diagnostics` — warning and remark filters
 
-Filter Porytiles' warnings and remarks by tag.
+Control which of Porytiles' warnings and remarks appear in the output.
 Each value is a list of regex patterns matched against diagnostic tags.
-Within a category, `include` is applied **after** `exclude`, so you can silence everything and then re-enable a few specific tags.
+Warnings and remarks are **opt-in**, so none are shown unless an `include` pattern matches their tag.
+Within a category, `exclude` overrides `include`, so a wildcard include plus targeted excludes shows everything except the excluded tags.
+Errors are always shown and cannot be filtered.
 
-| YAML key | CLI flag | Default | Description |
-|----------|----------|---------|-------------|
-| `diagnostics.warnings.exclude` | `--diagnostic-warnings-exclude` | (none) | Regex patterns for warning tags to suppress. |
-| `diagnostics.warnings.include` | `--diagnostic-warnings-include` | (none) | Regex patterns for warning tags to keep (applied after exclude). |
-| `diagnostics.remarks.exclude` | `--diagnostic-remarks-exclude` | (none) | Regex patterns for remark tags to suppress. |
-| `diagnostics.remarks.include` | `--diagnostic-remarks-include` | (none) | Regex patterns for remark tags to keep (applied after exclude). |
+| YAML key                       | CLI flag                        | Default | Description                                                      |
+|--------------------------------|---------------------------------|---------|------------------------------------------------------------------|
+| `diagnostics.warnings.exclude` | `--diagnostic-warnings-exclude` | (none)  | Regex patterns for warning tags to suppress (overrides include). |
+| `diagnostics.warnings.include` | `--diagnostic-warnings-include` | (none)  | Regex patterns for warning tags to show.                         |
+| `diagnostics.remarks.exclude`  | `--diagnostic-remarks-exclude`  | (none)  | Regex patterns for remark tags to suppress (overrides include).  |
+| `diagnostics.remarks.include`  | `--diagnostic-remarks-include`  | (none)  | Regex patterns for remark tags to show.                          |
 
 ```yaml
 diagnostics:
   warnings:
-    exclude: [ ".*" ]          # silence every warning...
-    include:                   # ...then re-enable just these two
-      - layer-mode-warning
-      - tile-color-count-warning
+    include: [ ".*" ]              # show every warning...
+    exclude: [ "nothing-to-do" ]   # ...except this one
   remarks:
-    exclude: [ ".*" ]          # silence all remarks
+    include:                       # show only the tile sharing summary remark
+      - tile-sharing-result-summary
 ```
 
 The catalog of diagnostic tags and what each one means is in {doc}`diagnostics`.
 
 ### Top-level keys
 
-| YAML key | CLI flag | Default | Description |
-|----------|----------|---------|-------------|
-| `verify_checksums` | `--verify-checksums` | `true` | Verify artifact checksums during compilation. |
+| YAML key           | CLI flag             | Default | Description                                   |
+|--------------------|----------------------|---------|-----------------------------------------------|
+| `verify_checksums` | `--verify-checksums` | `true`  | Verify artifact checksums during compilation. |
 
 ### Validation rules
 
@@ -373,11 +447,15 @@ A violation stops the compile with an explanatory error:
 - Every `fieldmap.*` count must be greater than zero.
 - `fieldmap.num_tiles_in_primary` ≤ `fieldmap.num_tiles_total`.
 - `fieldmap.num_metatiles_in_primary` ≤ `fieldmap.num_metatiles_total`.
-- `fieldmap.num_pals_in_primary` ≤ `fieldmap.num_pals_total`.
+- `fieldmap.num_palettes_in_primary` ≤ `fieldmap.num_palettes_total`.
 - `fieldmap.num_tiles_per_metatile` must be `8` or `12`.
-- `fieldmap.metatile_attribute_size` must be `2` or `4`.
+- `fieldmap.metatile_attribute_size` must be `1`, `2`, or `4`.
 - `tileset.extrinsic_transparency` must be fully opaque (alpha `255`).
 - `tileset.tiles.sharing.packing` requires `tileset.palettes.packing.strategy` to be `backtracking`.
+
+The metatile attribute schema has its own validation rules
+(contiguous masks, no overlaps, defaults in range, and so on),
+listed in {doc}`metatile-attributes`.
 
 (not-yet-implemented)=
 ## Not yet implemented
@@ -432,5 +510,6 @@ in the source repository, and remember the {ref}`not-yet-implemented <not-yet-im
 
 - {doc}`quickstart` — the short tour of the configuration system.
 - {doc}`cli-reference` — the complete command and flag listing.
-- {doc}`palette-packing`, {doc}`tile-sharing`, {doc}`animations`, {doc}`diagnostics` — the subsystems behind the values above.
+- {doc}`palette-packing`, {doc}`tile-sharing`, {doc}`animations`, {doc}`diagnostics`, {doc}`metatile-attributes` — the subsystems behind the values above.
 - `porytiles dump-tileset-config <name>` — confirm what's actually in effect for a tileset.
+- `porytiles dump-attribute-schema <name>` — see the metatile attribute schema those values resolve to.
