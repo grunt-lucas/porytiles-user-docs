@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Understanding Diagnostics &mdash; Porytiles User Documentation 1.0.0 documentation</title>
+  <title>Understanding Diagnostics &mdash; Porytiles User Documentation 2.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/css/custom.css?v=e6b1eb62" />
@@ -14,7 +14,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=8d563738"></script>
+      <script src="_static/documentation_options.js?v=51b770b3"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
@@ -111,11 +111,11 @@
 <ul class="simple">
 <li><p>Four severity levels: remarks, warnings, errors, fatal</p></li>
 <li><p>How to read error chain output (proximate, steps, root cause)</p></li>
-<li><p>Tag-based regex filtering: the exclude/include system, how include overrides exclude</p></li>
+<li><p>Tag-based regex filtering: warnings and remarks are opt-in (hidden unless included), how exclude overrides include</p></li>
 <li><p>CLI flags: <code class="docutils literal notranslate"><span class="pre">--diagnostic-warnings-exclude</span></code>, <code class="docutils literal notranslate"><span class="pre">--diagnostic-warnings-include</span></code>, <code class="docutils literal notranslate"><span class="pre">--diagnostic-remarks-exclude</span></code>, <code class="docutils literal notranslate"><span class="pre">--diagnostic-remarks-include</span></code></p></li>
 <li><p>YAML equivalents</p></li>
 <li><p>Common diagnostic tags overview table (with links to topic-specific pages)</p></li>
-<li><p>Suppressing all warnings/remarks, selectively enabling specific tags</p></li>
+<li><p>Enabling all warnings/remarks with a wildcard include, selectively enabling specific tags</p></li>
 </ul>
 <p><strong>Cross-references:</strong> <a class="reference internal" href="tile-sharing.html"><span class="doc">Tile Sharing</span></a> for tile-sharing diagnostics, <a class="reference internal" href="configuration.html"><span class="doc">Configuration Reference</span></a> for diagnostic config values</p>
 </section>
