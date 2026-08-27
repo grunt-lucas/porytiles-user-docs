@@ -408,26 +408,27 @@ Primary pairing is introduced in {doc}`creating-your-first-tileset`.
 
 ### `diagnostics` — warning and remark filters
 
-Filter Porytiles' warnings and remarks by tag.
+Control which of Porytiles' warnings and remarks appear in the output.
 Each value is a list of regex patterns matched against diagnostic tags.
-Within a category, `include` is applied **after** `exclude`, so you can silence everything and then re-enable a few specific tags.
+Warnings and remarks are **opt-in**, so none are shown unless an `include` pattern matches their tag.
+Within a category, `exclude` overrides `include`, so a wildcard include plus targeted excludes shows everything except the excluded tags.
+Errors are always shown and cannot be filtered.
 
 | YAML key                       | CLI flag                        | Default | Description                                                      |
 |--------------------------------|---------------------------------|---------|------------------------------------------------------------------|
-| `diagnostics.warnings.exclude` | `--diagnostic-warnings-exclude` | (none)  | Regex patterns for warning tags to suppress.                     |
-| `diagnostics.warnings.include` | `--diagnostic-warnings-include` | (none)  | Regex patterns for warning tags to keep (applied after exclude). |
-| `diagnostics.remarks.exclude`  | `--diagnostic-remarks-exclude`  | (none)  | Regex patterns for remark tags to suppress.                      |
-| `diagnostics.remarks.include`  | `--diagnostic-remarks-include`  | (none)  | Regex patterns for remark tags to keep (applied after exclude).  |
+| `diagnostics.warnings.exclude` | `--diagnostic-warnings-exclude` | (none)  | Regex patterns for warning tags to suppress (overrides include). |
+| `diagnostics.warnings.include` | `--diagnostic-warnings-include` | (none)  | Regex patterns for warning tags to show.                         |
+| `diagnostics.remarks.exclude`  | `--diagnostic-remarks-exclude`  | (none)  | Regex patterns for remark tags to suppress (overrides include).  |
+| `diagnostics.remarks.include`  | `--diagnostic-remarks-include`  | (none)  | Regex patterns for remark tags to show.                          |
 
 ```yaml
 diagnostics:
   warnings:
-    exclude: [ ".*" ]          # silence every warning...
-    include:                   # ...then re-enable just these two
-      - layer-mode-warning
-      - tile-color-count-warning
+    include: [ ".*" ]              # show every warning...
+    exclude: [ "nothing-to-do" ]   # ...except this one
   remarks:
-    exclude: [ ".*" ]          # silence all remarks
+    include:                       # show only the tile sharing summary remark
+      - tile-sharing-result-summary
 ```
 
 The catalog of diagnostic tags and what each one means is in {doc}`diagnostics`.
