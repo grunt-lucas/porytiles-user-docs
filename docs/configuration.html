@@ -682,22 +682,27 @@ This is useful when you know certain colors co-occur within a tile and want to g
 <td><p><code class="docutils literal notranslate"><span class="pre">true</span></code></p></td>
 <td><p>Match secondary tiles against a primary’s animation key frames.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tileset.animations.palette_resolution_strategy</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tileset.animations.create_sample_anims</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--create-sample-anims</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">true</span></code></p></td>
+<td><p>Seed a new tileset with a sample flower animation (<code class="docutils literal notranslate"><span class="pre">create-tileset</span></code> only).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tileset.animations.palette_resolution_strategy</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">--anim-pal-resolution-strategy</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">scan-local-metatiles</span></code></p></td>
 <td><p>Which palette to use for animation tiles when decompiling.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tileset.animations.key_frame_resolution_strategy</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tileset.animations.key_frame_resolution_strategy</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">--anim-key-frame-resolution-strategy</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">error</span></code></p></td>
 <td><p>How to handle duplicate key-frame tiles when decompiling.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tileset.animations.multi_palette_subtile_resolution_strategy</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tileset.animations.multi_palette_subtile_resolution_strategy</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">--anim-multi-pal-subtile-resolution-strategy</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">error</span></code></p></td>
 <td><p>How to handle subtiles referenced with multiple palettes when decompiling.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tileset.animations.per_animation_overrides</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tileset.animations.per_animation_overrides</span></code></p></td>
 <td><p><em>YAML-only</em></p></td>
 <td><p>(none)</p></td>
 <td><p>Per-animation settings, keyed by animation name.</p></td>
