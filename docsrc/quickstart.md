@@ -3,7 +3,7 @@
 This page gives just enough info to install Porytiles, understand its core ideas, and do something real on your project.
 It is a deliberately high-level overview
 that sits alongside the rest of the documentation.
-When you want depth on any topic covered here,
+When you want more details on any topic covered here,
 follow the included cross-references.
 
 ```{tip}
@@ -20,23 +20,23 @@ and Porytiles builds the Porymap-ready binaries (`metatiles.bin`, `tiles.png`, p
 
 For background details on metatiles, tiles, palettes, and more, see {doc}`gba-decomp-tileset-system`.
 
-## The mental model: `src` ⇄ `bin`
+## The core data model: `src` ⇄ `bin`
 
 Every Porytiles-managed tileset has two sides:
 
-| Side | Directory | Who owns it | Contents |
-|------|-----------|-------------|----------|
-| **Source** | `porytiles_src/` | **You edit this** | `bottom.png`, `middle.png`, `top.png`, `attributes.csv`, optional `anim/` |
+| Side       | Directory        | Who owns it                  | Contents                                                                                                                           |
+|------------|------------------|------------------------------|------------------------------------------------------------------------------------------------------------------------------------|
+| **Source** | `porytiles_src/` | **You edit this**            | `bottom.png`, `middle.png`, `top.png`, `attributes.csv`, optional `anim/`                                                          |
 | **Binary** | `porytiles_bin/` | **Porytiles generates this** | `metatiles.bin`, `metatile_attributes.bin`, `tiles.png`, `tiles.4bpp`, `tiles.4bpp.lz`, `palettes/` --- this is what Porymap reads |
 
-Two commands move data between them, and they are exact inverses:
+Two commands move data between them, you can think of them as inverse operations.
 
 - **`compile-tileset`** → reads `porytiles_src/`, writes `porytiles_bin/` (make the Porymap assets match your source).
 - **`decompile-tileset`** → reads `porytiles_bin/`, writes `porytiles_src/` (make your source match the Porymap assets).
 
-The day-to-day rhythm of these two commands is covered in {doc}`compile-decompile-workflow`.
+A more detailed look at these two commands is in {doc}`compile-decompile-workflow`.
 
-## Install / sanity check
+## Basic Install
 
 Install via [Homebrew](https://brew.sh),
 which works on Linux, macOS, and WSL:
@@ -90,26 +90,24 @@ It looks for the `porytiles/` management directory, `include/fieldmap.h`, and yo
 Tileset names are the **struct names** from `src/data/tilesets/headers.h`, e.g. `gTileset_General`, `gTileset_PetalburgWoods`.
 ```
 
-## The commands
+## Some of the most useful commands
 
-| Command | What it does |
-|---------|--------------|
-| `list-tilesets` | List tilesets in the project. Flags: `--filter all\|managed\|unmanaged`, `--prefix <str>`. |
-| `import-tileset <name>` | Bring an existing Porymap tileset under Porytiles management (one-time adoption). |
-| `decompile-tileset <name>` | Regenerate editable `porytiles_src/` from the compiled Porymap tileset files. |
-| `compile-tileset <name>` | Compile `porytiles_src/` to Porymap-ready `porytiles_bin/`. The main command you'll use most often. |
-| `create-tileset <name>` | Create a brand-new Porytiles-managed tileset from scratch. Add `--secondary` for a secondary tileset. |
-| `dump-tileset-config <name>` | Print the full, resolved config for a tileset (great for "why did it do that?"). |
-| `dump-attribute-schema <name>` | Print the resolved metatile attribute schema (the fields your `attributes.csv` needs). |
-| `completion <bash\|zsh\|fish>` | Generate a shell completion script. |
+| Command                        | What it does                                                                                          |
+|--------------------------------|-------------------------------------------------------------------------------------------------------|
+| `list-tilesets`                | List tilesets in the project. Flags: `--filter all\|managed\|unmanaged`, `--prefix <str>`.            |
+| `import-tileset <name>`        | Bring an existing Porymap tileset under Porytiles management (one-time adoption).                     |
+| `decompile-tileset <name>`     | Regenerate editable `porytiles_src/` from the compiled Porymap tileset files.                         |
+| `compile-tileset <name>`       | Compile `porytiles_src/` to Porymap-ready `porytiles_bin/`. The main command you'll use most often.   |
+| `create-tileset <name>`        | Create a brand-new Porytiles-managed tileset from scratch. Add `--secondary` for a secondary tileset. |
+| `dump-tileset-config <name>`   | Print the full, resolved config for a tileset (great for "why did it do that?").                      |
 
 Global flags: `-V` / `--version`, `--help`, and `-C` / `--project-root <dir>` (default `.`).
 
 For the complete, authoritative command and flag listing, see {doc}`cli-reference`.
 
-## Three common flows
+## Three common use cases
 
-### Flow 1 --- Adopt an existing tileset and recompile it
+### Use Case 1 --- Adopt an existing tileset and recompile it
 
 The fastest way to see Porytiles do something real on your project:
 
@@ -133,7 +131,7 @@ Those can easily be resolved, but that is covered in {doc}`importing-an-existing
 Open the map in Porymap and your edits are there.
 For a deeper walkthrough of the first-time import process, see {doc}`importing-an-existing-tileset`.
 
-### Flow 2 --- Create a new tileset from scratch
+### Use Case 2 --- Create a new tileset from scratch
 
 ```bash
 porytiles create-tileset gTileset_TeamAquaHideout
@@ -175,7 +173,7 @@ The primary pairing mechanics are covered in {doc}`creating-your-first-tileset`.
 The full new-tileset tutorial, including primary pairing mechanics, viewing your work in Porymap, and fixing common first-time errors,
 is in {doc}`creating-your-first-tileset`.
 
-### Flow 3 --- Inspect what config is actually in effect
+### Use Case 3 --- Inspect what config is actually in effect
 
 Config comes from several layers (see the YAML config section below). To see the final resolved values for a tileset:
 
@@ -258,9 +256,16 @@ Note the two names: the CLI uses the **struct name** (`gTileset_TeamAquaHideout`
 while the assets live under the matching **snake_case** dir (`team_aqua_hideout/`).
 The managed-vs-unmanaged distinction and the rest of this layout are explained in {doc}`porytiles-concepts`.
 
+```{tip}
+Porytiles does try to understand shorthand names for your tilesets.
+So you can type e.g. `team_aqua_hideout` at the command line
+and Porytiles can usually resolve it to `gTileset_TeamAquaHideout`.
+In ambiguous cases, Porytiles will exit with a descriptive error.
+```
+
 ## Configuration
 
-Config is optional when you first start out; Porytiles has sensible layered defaults.
+Config is optional when you first start out, as Porytiles has sensible layered defaults.
 But you'll need it for most advanced use-cases, so you should start to get familiar with it.
 You can set things project-wide or per-tileset, with `config.local.yaml` for machine-local overrides you don't want to commit:
 

@@ -494,10 +494,28 @@ See <a class="reference internal" href="metatile-attributes.html"><span class="d
 <td><p><code class="docutils literal notranslate"><span class="pre">[255,</span> <span class="pre">0,</span> <span class="pre">255]</span></code> (magenta)</p></td>
 <td><p>The RGB color treated as transparent during compilation. Must be fully opaque.</p></td>
 </tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tileset.import_transparency</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--import-transparency</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">extrinsic</span></code></p></td>
+<td><p>How <code class="docutils literal notranslate"><span class="pre">import-tileset</span></code> and <code class="docutils literal notranslate"><span class="pre">decompile-tileset</span></code> write transparent pixels: <code class="docutils literal notranslate"><span class="pre">alpha</span></code>, <code class="docutils literal notranslate"><span class="pre">extrinsic</span></code>, or <code class="docutils literal notranslate"><span class="pre">mixed</span></code>.</p></td>
+</tr>
 </tbody>
 </table>
 <p>Pixels in this color (or with an alpha of 0) become transparent in the compiled tileset.
 The mental model for source layers is covered in the <a class="reference internal" href="quickstart.html"><span class="doc">Quick Start</span></a>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">import_transparency</span></code> only affects the output RGBA layer images and animation frames from an <code class="docutils literal notranslate"><span class="pre">import-tileset</span></code> or <code class="docutils literal notranslate"><span class="pre">decompile-tileset</span></code> run.
+Every index 0 pixel in the Porymap assets is transparent,
+and the <code class="docutils literal notranslate"><span class="pre">import_transparency</span></code> value decides which pixel value represents transparency in the Porytiles-format RGBA PNGs:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">alpha</span></code>: every transparent pixel is written with the alpha channel set to 0.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">extrinsic</span></code> (default): every transparent pixel is written as the opaque, configured <code class="docutils literal notranslate"><span class="pre">extrinsic_transparency</span></code> color.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mixed</span></code>: in dual-layer mode, the layer group absent from the <code class="docutils literal notranslate"><span class="pre">metatiles.bin</span></code> Porymap data is written as alpha 0,
+and truly transparent pixels on the two stored layer groups are written as the <code class="docutils literal notranslate"><span class="pre">extrinsic_transparency</span></code> color.
+In triple-layer mode there is no absent group, so <code class="docutils literal notranslate"><span class="pre">mixed</span></code> behaves like <code class="docutils literal notranslate"><span class="pre">extrinsic</span></code>.</p></li>
+</ul>
+<p>All three forms compile back to the same Porymap assets. The setting only changes how the layer images look in an image editor.
+<code class="docutils literal notranslate"><span class="pre">mixed</span></code> is nice because
+it makes the layer group you cannot edit for a dual-layer metatile visually distinct from a layer that is merely empty.</p>
 </section>
 <section id="tileset-layer-mode-content">
 <h3><code class="docutils literal notranslate"><span class="pre">tileset</span></code> — layer mode content<a class="headerlink" href="#tileset-layer-mode-content" title="Link to this heading"></a></h3>
@@ -850,23 +868,19 @@ listed in <a class="reference internal" href="metatile-attributes.html"><span cl
 <section id="not-yet-implemented">
 <span id="id1"></span><h2>Not yet implemented<a class="headerlink" href="#not-yet-implemented" title="Link to this heading"></a></h2>
 <p>The <a class="reference external" href="https://github.com/grunt-lucas/porytiles/blob/develop/porytiles/config_templates/porytiles.example.yaml">annotated example file</a>
-previews two keys that aren’t wired up yet:</p>
+previews one key that isn’t wired up yet:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">tileset.import_transparency</span></code> — transparency handling for import.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">tileset.palettes.match_candidate_top_n</span></code> — how many near-miss palettes to show when a <code class="docutils literal notranslate"><span class="pre">locked</span></code> palette compile fails to find a match.</p></li>
 </ul>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Don’t use this value in a real YAML file, you’ll get an <code class="docutils literal notranslate"><span class="pre">unknown-config-key</span></code> error.</p>
+</div>
 <p>A handful of enum values are also reserved for future work and listed above as <em>(planned)</em>:
 <code class="docutils literal notranslate"><span class="pre">tile-sharing</span></code> <code class="docutils literal notranslate"><span class="pre">optimal</span></code> (both packing and alignment),
 <code class="docutils literal notranslate"><span class="pre">frame_linking</span></code> <code class="docutils literal notranslate"><span class="pre">hybrid</span></code>,
 <code class="docutils literal notranslate"><span class="pre">palette_resolution_strategy</span></code> <code class="docutils literal notranslate"><span class="pre">scan-all-tilesets</span></code>,
 and <code class="docutils literal notranslate"><span class="pre">multi_palette_subtile_resolution_strategy</span></code> <code class="docutils literal notranslate"><span class="pre">split</span></code>.</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>These keys exist only in the annotated example, which is a documentation template Porytiles never loads.
-Don’t copy them into a real <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code> yet:
-because they aren’t recognized configuration paths, the validator rejects them as <code class="docutils literal notranslate"><span class="pre">unknown-config-key</span></code>
-and the compile fails. Use the example as a reading reference, not a starter file.</p>
-</div>
 </section>
 <section id="a-worked-example">
 <h2>A worked example<a class="headerlink" href="#a-worked-example" title="Link to this heading"></a></h2>

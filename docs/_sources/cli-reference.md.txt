@@ -14,10 +14,12 @@ Man-page style reference for all commands:
   - `compile-tileset` --- synopsis, description, positional args
   - `decompile-tileset` --- synopsis, description, positional args
 - **Utilities:**
+  - `list-tilesets` --- synopsis, filtering modes (all/managed/unmanaged), `--prefix`
   - `dump-tileset-config` / `dump-project-config` --- synopsis, description, output format, `--allow-missing-tileset`
   - `edit-tileset-config` / `edit-project-config` --- synopsis, description, output format, `--local`, `--allow-missing-tileset`
   - `dump-attribute-schema` --- synopsis, description, output format, `--allow-missing-tileset`
-  - `list-tilesets` --- synopsis, filtering modes (all/managed/unmanaged), `--prefix`
+  - `find-tileset-color` -- synopsis, description, `--limit`, `--tolerance`
+  - `dump-tileset-colors` -- synopsis, description, `--group`, `--tolerance`
   - `completion` --- synopsis, supported shells (bash/zsh/fish), setup instructions
 
 Each command gets a usage example and links to its guide page.

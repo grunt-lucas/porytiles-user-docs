@@ -250,12 +250,27 @@ Where each tileset's source and binary assets live, relative to the project root
 
 ### `tileset` — transparency
 
-| YAML key                         | CLI flag                         | Default                   | Description                                                                    |
-|----------------------------------|----------------------------------|---------------------------|--------------------------------------------------------------------------------|
-| `tileset.extrinsic_transparency` | `--extrinsic-transparency R,G,B` | `[255, 0, 255]` (magenta) | The RGB color treated as transparent during compilation. Must be fully opaque. |
+| YAML key                         | CLI flag                         | Default                   | Description                                                                                              |
+|----------------------------------|----------------------------------|---------------------------|----------------------------------------------------------------------------------------------------------|
+| `tileset.extrinsic_transparency` | `--extrinsic-transparency R,G,B` | `[255, 0, 255]` (magenta) | The RGB color treated as transparent during compilation. Must be fully opaque.                           |
+| `tileset.import_transparency`    | `--import-transparency`          | `extrinsic`               | How `import-tileset` and `decompile-tileset` write transparent pixels: `alpha`, `extrinsic`, or `mixed`. |
 
 Pixels in this color (or with an alpha of 0) become transparent in the compiled tileset.
 The mental model for source layers is covered in the {doc}`quickstart`.
+
+`import_transparency` only affects the output RGBA layer images and animation frames from an `import-tileset` or `decompile-tileset` run.
+Every index 0 pixel in the Porymap assets is transparent,
+and the `import_transparency` value decides which pixel value represents transparency in the Porytiles-format RGBA PNGs:
+
+- `alpha`: every transparent pixel is written with the alpha channel set to 0.
+- `extrinsic` (default): every transparent pixel is written as the opaque, configured `extrinsic_transparency` color.
+- `mixed`: in dual-layer mode, the layer group absent from the `metatiles.bin` Porymap data is written as alpha 0,
+  and truly transparent pixels on the two stored layer groups are written as the `extrinsic_transparency` color.
+  In triple-layer mode there is no absent group, so `mixed` behaves like `extrinsic`.
+
+All three forms compile back to the same Porymap assets. The setting only changes how the layer images look in an image editor.
+`mixed` is nice because
+it makes the layer group you cannot edit for a dual-layer metatile visually distinct from a layer that is merely empty.
 
 ### `tileset` — layer mode content
 
@@ -462,23 +477,19 @@ listed in {doc}`metatile-attributes`.
 ## Not yet implemented
 
 The [annotated example file](https://github.com/grunt-lucas/porytiles/blob/develop/porytiles/config_templates/porytiles.example.yaml)
-previews two keys that aren't wired up yet:
+previews one key that isn't wired up yet:
 
-- `tileset.import_transparency` — transparency handling for import.
 - `tileset.palettes.match_candidate_top_n` — how many near-miss palettes to show when a `locked` palette compile fails to find a match.
+
+```{warning}
+Don't use this value in a real YAML file, you'll get an `unknown-config-key` error.
+```
 
 A handful of enum values are also reserved for future work and listed above as *(planned)*:
 `tile-sharing` `optimal` (both packing and alignment),
 `frame_linking` `hybrid`,
 `palette_resolution_strategy` `scan-all-tilesets`,
 and `multi_palette_subtile_resolution_strategy` `split`.
-
-```{warning}
-These keys exist only in the annotated example, which is a documentation template Porytiles never loads.
-Don't copy them into a real `config.yaml` yet:
-because they aren't recognized configuration paths, the validator rejects them as `unknown-config-key`
-and the compile fails. Use the example as a reading reference, not a starter file.
-```
 
 ## A worked example
 

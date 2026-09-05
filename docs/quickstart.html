@@ -47,14 +47,14 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Quick Start</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#what-it-is">What it is</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#the-mental-model-src-bin">The mental model: <code class="docutils literal notranslate"><span class="pre">src</span></code> ⇄ <code class="docutils literal notranslate"><span class="pre">bin</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#install-sanity-check">Install / sanity check</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-core-data-model-src-bin">The core data model: <code class="docutils literal notranslate"><span class="pre">src</span></code> ⇄ <code class="docutils literal notranslate"><span class="pre">bin</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#basic-install">Basic Install</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#running-it-project-root">Running it: project root</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#the-commands">The commands</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#three-common-flows">Three common flows</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#flow-1-adopt-an-existing-tileset-and-recompile-it">Flow 1 — Adopt an existing tileset and recompile it</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#flow-2-create-a-new-tileset-from-scratch">Flow 2 — Create a new tileset from scratch</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#flow-3-inspect-what-config-is-actually-in-effect">Flow 3 — Inspect what config is actually in effect</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#some-of-the-most-useful-commands">Some of the most useful commands</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#three-common-use-cases">Three common use cases</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#use-case-1-adopt-an-existing-tileset-and-recompile-it">Use Case 1 — Adopt an existing tileset and recompile it</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#use-case-2-create-a-new-tileset-from-scratch">Use Case 2 — Create a new tileset from scratch</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#use-case-3-inspect-what-config-is-actually-in-effect">Use Case 3 — Inspect what config is actually in effect</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#input-files-what-you-put-in-porytiles-src">Input files (what <em>you</em> put in <code class="docutils literal notranslate"><span class="pre">porytiles_src/</span></code>)</a></li>
@@ -128,7 +128,7 @@
 <p>This page gives just enough info to install Porytiles, understand its core ideas, and do something real on your project.
 It is a deliberately high-level overview
 that sits alongside the rest of the documentation.
-When you want depth on any topic covered here,
+When you want more details on any topic covered here,
 follow the included cross-references.</p>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
@@ -143,8 +143,8 @@ You edit your tilesets as plain RGBA PNG layers,
 and Porytiles builds the Porymap-ready binaries (<code class="docutils literal notranslate"><span class="pre">metatiles.bin</span></code>, <code class="docutils literal notranslate"><span class="pre">tiles.png</span></code>, palettes, etc.) for you.</p>
 <p>For background details on metatiles, tiles, palettes, and more, see <a class="reference internal" href="gba-decomp-tileset-system.html"><span class="doc">How the GBA + Gen III Decomp Tileset System Works</span></a>.</p>
 </section>
-<section id="the-mental-model-src-bin">
-<h2>The mental model: <code class="docutils literal notranslate"><span class="pre">src</span></code> ⇄ <code class="docutils literal notranslate"><span class="pre">bin</span></code><a class="headerlink" href="#the-mental-model-src-bin" title="Link to this heading"></a></h2>
+<section id="the-core-data-model-src-bin">
+<h2>The core data model: <code class="docutils literal notranslate"><span class="pre">src</span></code> ⇄ <code class="docutils literal notranslate"><span class="pre">bin</span></code><a class="headerlink" href="#the-core-data-model-src-bin" title="Link to this heading"></a></h2>
 <p>Every Porytiles-managed tileset has two sides:</p>
 <table class="docutils align-default">
 <thead>
@@ -167,15 +167,15 @@ and Porytiles builds the Porymap-ready binaries (<code class="docutils literal n
 </tr>
 </tbody>
 </table>
-<p>Two commands move data between them, and they are exact inverses:</p>
+<p>Two commands move data between them, you can think of them as inverse operations.</p>
 <ul class="simple">
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">compile-tileset</span></code></strong> → reads <code class="docutils literal notranslate"><span class="pre">porytiles_src/</span></code>, writes <code class="docutils literal notranslate"><span class="pre">porytiles_bin/</span></code> (make the Porymap assets match your source).</p></li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">decompile-tileset</span></code></strong> → reads <code class="docutils literal notranslate"><span class="pre">porytiles_bin/</span></code>, writes <code class="docutils literal notranslate"><span class="pre">porytiles_src/</span></code> (make your source match the Porymap assets).</p></li>
 </ul>
-<p>The day-to-day rhythm of these two commands is covered in <a class="reference internal" href="compile-decompile-workflow.html"><span class="doc">The Compile/Decompile Workflow</span></a>.</p>
+<p>A more detailed look at these two commands is in <a class="reference internal" href="compile-decompile-workflow.html"><span class="doc">The Compile/Decompile Workflow</span></a>.</p>
 </section>
-<section id="install-sanity-check">
-<h2>Install / sanity check<a class="headerlink" href="#install-sanity-check" title="Link to this heading"></a></h2>
+<section id="basic-install">
+<h2>Basic Install<a class="headerlink" href="#basic-install" title="Link to this heading"></a></h2>
 <p>Install via <a class="reference external" href="https://brew.sh">Homebrew</a>,
 which works on Linux, macOS, and WSL:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Latest versioned release:</span>
@@ -218,8 +218,8 @@ porytiles<span class="w"> </span>-C<span class="w"> </span>path/to/pokeemerald-e
 <p>Tileset names are the <strong>struct names</strong> from <code class="docutils literal notranslate"><span class="pre">src/data/tilesets/headers.h</span></code>, e.g. <code class="docutils literal notranslate"><span class="pre">gTileset_General</span></code>, <code class="docutils literal notranslate"><span class="pre">gTileset_PetalburgWoods</span></code>.</p>
 </div>
 </section>
-<section id="the-commands">
-<h2>The commands<a class="headerlink" href="#the-commands" title="Link to this heading"></a></h2>
+<section id="some-of-the-most-useful-commands">
+<h2>Some of the most useful commands<a class="headerlink" href="#some-of-the-most-useful-commands" title="Link to this heading"></a></h2>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>Command</p></th>
@@ -245,21 +245,15 @@ porytiles<span class="w"> </span>-C<span class="w"> </span>path/to/pokeemerald-e
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dump-tileset-config</span> <span class="pre">&lt;name&gt;</span></code></p></td>
 <td><p>Print the full, resolved config for a tileset (great for “why did it do that?”).</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dump-attribute-schema</span> <span class="pre">&lt;name&gt;</span></code></p></td>
-<td><p>Print the resolved metatile attribute schema (the fields your <code class="docutils literal notranslate"><span class="pre">attributes.csv</span></code> needs).</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">completion</span> <span class="pre">&lt;bash|zsh|fish&gt;</span></code></p></td>
-<td><p>Generate a shell completion script.</p></td>
-</tr>
 </tbody>
 </table>
 <p>Global flags: <code class="docutils literal notranslate"><span class="pre">-V</span></code> / <code class="docutils literal notranslate"><span class="pre">--version</span></code>, <code class="docutils literal notranslate"><span class="pre">--help</span></code>, and <code class="docutils literal notranslate"><span class="pre">-C</span></code> / <code class="docutils literal notranslate"><span class="pre">--project-root</span> <span class="pre">&lt;dir&gt;</span></code> (default <code class="docutils literal notranslate"><span class="pre">.</span></code>).</p>
 <p>For the complete, authoritative command and flag listing, see <a class="reference internal" href="cli-reference.html"><span class="doc">CLI Command Reference</span></a>.</p>
 </section>
-<section id="three-common-flows">
-<h2>Three common flows<a class="headerlink" href="#three-common-flows" title="Link to this heading"></a></h2>
-<section id="flow-1-adopt-an-existing-tileset-and-recompile-it">
-<h3>Flow 1 — Adopt an existing tileset and recompile it<a class="headerlink" href="#flow-1-adopt-an-existing-tileset-and-recompile-it" title="Link to this heading"></a></h3>
+<section id="three-common-use-cases">
+<h2>Three common use cases<a class="headerlink" href="#three-common-use-cases" title="Link to this heading"></a></h2>
+<section id="use-case-1-adopt-an-existing-tileset-and-recompile-it">
+<h3>Use Case 1 — Adopt an existing tileset and recompile it<a class="headerlink" href="#use-case-1-adopt-an-existing-tileset-and-recompile-it" title="Link to this heading"></a></h3>
 <p>The fastest way to see Porytiles do something real on your project:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># See what&#39;s there</span>
 porytiles<span class="w"> </span>list-tilesets
@@ -280,8 +274,8 @@ Those can easily be resolved, but that is covered in <a class="reference interna
 <p>Open the map in Porymap and your edits are there.
 For a deeper walkthrough of the first-time import process, see <a class="reference internal" href="importing-an-existing-tileset.html"><span class="doc">Importing an Existing Tileset</span></a>.</p>
 </section>
-<section id="flow-2-create-a-new-tileset-from-scratch">
-<h3>Flow 2 — Create a new tileset from scratch<a class="headerlink" href="#flow-2-create-a-new-tileset-from-scratch" title="Link to this heading"></a></h3>
+<section id="use-case-2-create-a-new-tileset-from-scratch">
+<h3>Use Case 2 — Create a new tileset from scratch<a class="headerlink" href="#use-case-2-create-a-new-tileset-from-scratch" title="Link to this heading"></a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>porytiles<span class="w"> </span>create-tileset<span class="w"> </span>gTileset_TeamAquaHideout
 </pre></div>
 </div>
@@ -312,8 +306,8 @@ Refresh Porymap and it will start working immediately.</p>
 <p>The full new-tileset tutorial, including primary pairing mechanics, viewing your work in Porymap, and fixing common first-time errors,
 is in <a class="reference internal" href="creating-your-first-tileset.html"><span class="doc">Creating Your First Tileset</span></a>.</p>
 </section>
-<section id="flow-3-inspect-what-config-is-actually-in-effect">
-<h3>Flow 3 — Inspect what config is actually in effect<a class="headerlink" href="#flow-3-inspect-what-config-is-actually-in-effect" title="Link to this heading"></a></h3>
+<section id="use-case-3-inspect-what-config-is-actually-in-effect">
+<h3>Use Case 3 — Inspect what config is actually in effect<a class="headerlink" href="#use-case-3-inspect-what-config-is-actually-in-effect" title="Link to this heading"></a></h3>
 <p>Config comes from several layers (see the YAML config section below). To see the final resolved values for a tileset:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>porytiles<span class="w"> </span>dump-tileset-config<span class="w"> </span>gTileset_TeamAquaHideout
 </pre></div>
@@ -387,10 +381,17 @@ For more details, see <a class="reference internal" href="compile-decompile-work
 <p>Note the two names: the CLI uses the <strong>struct name</strong> (<code class="docutils literal notranslate"><span class="pre">gTileset_TeamAquaHideout</span></code>) for the management dir,
 while the assets live under the matching <strong>snake_case</strong> dir (<code class="docutils literal notranslate"><span class="pre">team_aqua_hideout/</span></code>).
 The managed-vs-unmanaged distinction and the rest of this layout are explained in <a class="reference internal" href="porytiles-concepts.html"><span class="doc">Porytiles Concepts and Terminology</span></a>.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Porytiles does try to understand shorthand names for your tilesets.
+So you can type e.g. <code class="docutils literal notranslate"><span class="pre">team_aqua_hideout</span></code> at the command line
+and Porytiles can usually resolve it to <code class="docutils literal notranslate"><span class="pre">gTileset_TeamAquaHideout</span></code>.
+In ambiguous cases, Porytiles will exit with a descriptive error.</p>
+</div>
 </section>
 <section id="configuration">
 <h2>Configuration<a class="headerlink" href="#configuration" title="Link to this heading"></a></h2>
-<p>Config is optional when you first start out; Porytiles has sensible layered defaults.
+<p>Config is optional when you first start out, as Porytiles has sensible layered defaults.
 But you’ll need it for most advanced use-cases, so you should start to get familiar with it.
 You can set things project-wide or per-tileset, with <code class="docutils literal notranslate"><span class="pre">config.local.yaml</span></code> for machine-local overrides you don’t want to commit:</p>
 <ul class="simple">
